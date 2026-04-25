@@ -938,6 +938,7 @@ footer {
 }
 
 .mixelpixel-gradient-text {
+    color: #80FFFF;
     background: linear-gradient(to right, #FFFF00 0%, #FFFF00 35%, #FFFFFF 50%, #00FFFF 65%, #00FFFF 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
