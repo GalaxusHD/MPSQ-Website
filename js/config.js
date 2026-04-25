@@ -17,5 +17,5 @@ const DISCORD_CONFIG = {
 // 2. Go to Settings > API
 // 3. Copy "Project URL" into SUPABASE_URL
 // 4. Copy "anon / public" key into SUPABASE_ANON_KEY
-const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL = 'https://hbikjzzkxsvjoqnedbmm.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_cylaWduvLwmm72MeBpbTWw_8M2qVCNa';
