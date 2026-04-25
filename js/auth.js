@@ -84,6 +84,8 @@ const Auth = (() => {
         if (user) {
             const avatarUrl = user.avatar
                 ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=32`
+                // Discord's default avatar uses the snowflake timestamp bits to pick 1 of 6 default avatars
+                // Formula: (user_id_as_snowflake >> 22) % 6  per Discord API docs
                 : `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(user.id) >> 22n) % 6}.png`;
 
             container.innerHTML = `

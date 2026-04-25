@@ -269,7 +269,7 @@
                         btn.addEventListener('click', async () => {
                             const member = members.find(m => m.id == btn.dataset.id);
                             if (!member) return;
-                            if (!confirm(`"${member.minecraft_name}" wirklich löschen?`)) return;
+                            if (!confirm(`"${escapeHtml(member.minecraft_name)}" wirklich löschen?`)) return;
                             try {
                                 await SupabaseClient.deleteTeamMember(btn.dataset.id);
                                 showMessage('✅ Mitglied gelöscht.');
