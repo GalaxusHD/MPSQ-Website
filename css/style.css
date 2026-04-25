@@ -239,11 +239,12 @@ ul {
 }
 
 .hero h1 {
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-size: clamp(1.4rem, 5vw, 3rem);
     font-weight: 800;
     line-height: 1.1;
     margin-bottom: 20px;
     letter-spacing: -1px;
+    white-space: nowrap;
 }
 
 .hero h1 .gradient-text {
@@ -915,7 +916,7 @@ footer {
 }
 
 .hero-logo-img {
-    height: 120px;
+    height: 300px;
     width: auto;
     object-fit: contain;
     filter: drop-shadow(0 4px 16px rgba(255, 23, 68, 0.4));
@@ -923,7 +924,7 @@ footer {
 
 @media (max-width: 600px) {
     .hero-logo-img {
-        height: 80px;
+        height: 200px;
     }
 }
 
@@ -938,12 +939,10 @@ footer {
 
 .mixel-text {
     color: #FFFF00;
-    text-shadow: 0 0 8px #FFFF88, 0 0 16px rgba(255, 255, 0, 0.5);
 }
 
 .pixel-text {
     color: #00FFFF;
-    text-shadow: 0 0 8px #88FFFF, 0 0 16px rgba(0, 255, 255, 0.5);
 }
 
 .project-grid {
@@ -1089,7 +1088,7 @@ footer {
     }
 
     .hero h1 {
-        font-size: 2.2rem;
+        letter-spacing: -0.5px;
     }
 
     .form-container {
