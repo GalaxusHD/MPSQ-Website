@@ -5,11 +5,14 @@
 
 const SupabaseClient = (() => {
     function headers(token) {
-        return {
+        const headerObj = {
             'Content-Type': 'application/json',
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${token || SUPABASE_ANON_KEY}`
+            'apikey': SUPABASE_ANON_KEY
         };
+        if (token) {
+            headerObj['Authorization'] = `Bearer ${token}`;
+        }
+        return headerObj;
     }
 
     // Get Discord access token stored from login
