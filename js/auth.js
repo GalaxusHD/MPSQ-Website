@@ -2,6 +2,13 @@
 // DISCORD AUTHENTICATION
 // ===========================
 
+// HTML escape helper to prevent XSS when inserting user data into the DOM
+function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.appendChild(document.createTextNode(String(str)));
+    return d.innerHTML;
+}
+
 const Auth = (() => {
     const STORAGE_KEY = 'mpsq_discord_user';
     const TOKEN_KEY = 'mpsq_discord_token';
@@ -82,8 +89,8 @@ const Auth = (() => {
             container.innerHTML = `
                 <div class="nav-user-menu">
                     <button class="nav-user-btn" id="navUserBtn" aria-label="Benutzermenü">
-                        <img src="${avatarUrl}" alt="${user.username}" class="nav-user-avatar">
-                        <span class="nav-user-name">${user.username}</span>
+                        <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(user.username)}" class="nav-user-avatar">
+                        <span class="nav-user-name">${escapeHtml(user.username)}</span>
                         <svg class="nav-user-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                     <div class="nav-user-dropdown" id="navUserDropdown">

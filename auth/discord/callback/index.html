@@ -92,10 +92,21 @@
 
             function showSuccess(username) {
                 spinner.style.display = 'none';
-                box.innerHTML = `
-                    <div class="callback-icon">✅</div>
-                    <h1>Erfolgreich angemeldet!</h1>
-                    <p>Willkommen, <strong>${username}</strong>! Du wirst weitergeleitet…</p>`;
+                box.innerHTML = '';
+                const icon = document.createElement('div');
+                icon.className = 'callback-icon';
+                icon.textContent = '✅';
+                const heading = document.createElement('h1');
+                heading.textContent = 'Erfolgreich angemeldet!';
+                const para = document.createElement('p');
+                para.textContent = 'Willkommen, ';
+                const strong = document.createElement('strong');
+                strong.textContent = username;
+                para.appendChild(strong);
+                para.appendChild(document.createTextNode('! Du wirst weitergeleitet…'));
+                box.appendChild(icon);
+                box.appendChild(heading);
+                box.appendChild(para);
             }
 
             if (error) {

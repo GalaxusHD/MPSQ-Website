@@ -236,11 +236,11 @@
                     }
                     list.innerHTML = members.map(m => `
                         <div class="editing-member-row" data-id="${m.id}">
-                            <img src="https://mc-heads.net/avatar/${encodeURIComponent(m.minecraft_name)}/40" alt="${m.minecraft_name}" class="editing-member-skin">
+                            <img src="https://mc-heads.net/avatar/${encodeURIComponent(m.minecraft_name)}/40" alt="${escapeHtml(m.minecraft_name)}" class="editing-member-skin">
                             <div class="editing-member-info">
-                                <span class="editing-member-name">${m.minecraft_name}</span>
-                                <span class="editing-member-rank">${m.rank}</span>
-                                <span class="editing-member-discord">${m.discord_id}</span>
+                                <span class="editing-member-name">${escapeHtml(m.minecraft_name)}</span>
+                                <span class="editing-member-rank">${escapeHtml(m.rank)}</span>
+                                <span class="editing-member-discord">${escapeHtml(m.discord_id)}</span>
                             </div>
                             <div class="editing-member-actions">
                                 <button class="btn-icon btn-edit" data-id="${m.id}" title="Bearbeiten">✏️</button>
@@ -282,7 +282,11 @@
 
                 } catch (err) {
                     console.error(err);
-                    list.innerHTML = `<p style="color:var(--accent-red);text-align:center;">Fehler beim Laden der Mitglieder: ${err.message}</p>`;
+                    const errP = document.createElement('p');
+                    errP.style.cssText = 'color:var(--accent-red);text-align:center;';
+                    errP.textContent = 'Fehler beim Laden der Mitglieder: ' + err.message;
+                    list.innerHTML = '';
+                    list.appendChild(errP);
                 }
             }
         });

@@ -106,7 +106,6 @@
 
                 // Group members by rank
                 const grouped = {};
-                RANK_ORDER.forEach(rank => { grouped[rank] = []; });
                 members.forEach(m => {
                     (grouped[m.rank] = grouped[m.rank] || []).push(m);
                 });
@@ -118,7 +117,7 @@
 
                     html += `
                         <div class="section-header" style="margin-bottom:24px;">
-                            <h2>${rank}</h2>
+                            <h2>${escapeHtml(rank)}</h2>
                             <span class="section-divider"></span>
                         </div>
                         <div class="team-members-grid">
@@ -129,12 +128,12 @@
                                    rel="noopener noreferrer">
                                     <img
                                         src="https://mc-heads.net/avatar/${encodeURIComponent(m.minecraft_name)}/80"
-                                        alt="${m.minecraft_name}"
+                                        alt="${escapeHtml(m.minecraft_name)}"
                                         class="team-member-avatar"
                                         loading="lazy"
                                     >
-                                    <span class="team-member-mc-name">${m.minecraft_name}</span>
-                                    <span class="team-member-rank-badge">${m.rank}</span>
+                                    <span class="team-member-mc-name">${escapeHtml(m.minecraft_name)}</span>
+                                    <span class="team-member-rank-badge">${escapeHtml(m.rank)}</span>
                                 </a>`).join('')}
                         </div>`;
                 });

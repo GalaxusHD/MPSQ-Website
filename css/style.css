@@ -1308,7 +1308,7 @@ footer {
 .editing-form {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 16px;
 }
 
 .editing-form-actions {
