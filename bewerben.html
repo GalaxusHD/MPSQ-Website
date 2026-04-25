@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bewirb dich jetzt für das MPSQ – MixelPixel Squid Game Event.">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Bewerben – MPSQ</title>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-logo"><span class="logo-accent">MP</span>SQ</a>
+            <ul class="nav-links">
+                <li><a href="ueber-uns.html">Über uns</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="event.html">Event</a></li>
+                <li><a href="bewerben.html">Bewerben</a></li>
+                <li><a href="sozial-media.html">Sozial Media</a></li>
+                <li><a href="mixelpixel.html">MixelPixel</a></li>
+            </ul>
+            <button class="nav-hamburger" aria-label="Menü öffnen">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- PAGE HERO -->
+    <div class="page-hero">
+        <div class="container">
+            <h1>Jetzt <span style="color:var(--accent-red)">Bewerben</span></h1>
+            <p>Fülle das Formular aus und bewirb dich für das nächste MPSQ-Event.</p>
+        </div>
+    </div>
+
+    <!-- FORM -->
+    <section class="section">
+        <div class="container">
+            <div class="info-box" style="max-width:640px;margin:0 auto 32px;">
+                <p>
+                    ⚠️ Bewerbungen sind nur für das aktuelle Event möglich. Alle Felder mit
+                    <strong style="color:var(--accent-red);">*</strong> sind Pflichtfelder.
+                    Nach dem Absenden melden wir uns innerhalb von 48 Stunden per Discord bei dir.
+                </p>
+            </div>
+
+            <form class="form-container" id="apply-form" novalidate>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="minecraft-name">
+                            Minecraft Name <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="minecraft-name"
+                            name="minecraft-name"
+                            class="form-input"
+                            placeholder="Dein Minecraft IGN"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="discord-name">
+                            Discord Name <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="discord-name"
+                            name="discord-name"
+                            class="form-input"
+                            placeholder="user#0000 oder @user"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="age">
+                        Alter <span class="required">*</span>
+                    </label>
+                    <input
+                        type="number"
+                        id="age"
+                        name="age"
+                        class="form-input"
+                        placeholder="Dein Alter"
+                        min="10"
+                        max="99"
+                        required
+                    >
+                    <div class="form-hint">Du musst mindestens 10 Jahre alt sein.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="role">
+                        Bewerbung als <span class="required">*</span>
+                    </label>
+                    <select id="role" name="role" class="form-select" required>
+                        <option value="" disabled selected>Bitte auswählen…</option>
+                        <option value="teilnehmer">Teilnehmer (Spieler)</option>
+                        <option value="moderator">Moderator / Schiedsrichter</option>
+                        <option value="builder">Builder / Map-Designer</option>
+                        <option value="streamer">Streamer / Content Creator</option>
+                        <option value="orga">Orga-Team</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="experience">
+                        Minecraft Erfahrung <span class="required">*</span>
+                    </label>
+                    <select id="experience" name="experience" class="form-select" required>
+                        <option value="" disabled selected>Bitte auswählen…</option>
+                        <option value="beginner">Anfänger (weniger als 1 Jahr)</option>
+                        <option value="intermediate">Fortgeschritten (1–3 Jahre)</option>
+                        <option value="advanced">Erfahren (3–5 Jahre)</option>
+                        <option value="expert">Experte (5+ Jahre)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="why">
+                        Warum möchtest du mitmachen? <span class="required">*</span>
+                    </label>
+                    <textarea
+                        id="why"
+                        name="why"
+                        class="form-textarea"
+                        placeholder="Erzähl uns in ein paar Sätzen, warum du teilnehmen möchtest…"
+                        required
+                    ></textarea>
+                    <div class="form-hint">Mindestens 50 Zeichen. Sei kreativ!</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="skills">
+                        Besondere Fähigkeiten / Anmerkungen
+                    </label>
+                    <textarea
+                        id="skills"
+                        name="skills"
+                        class="form-textarea"
+                        placeholder="Hast du besondere Fähigkeiten oder möchtest du noch etwas mitteilen?"
+                        style="min-height:90px;"
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+                        <input
+                            type="checkbox"
+                            name="agb"
+                            required
+                            style="width:16px;height:16px;margin-top:3px;accent-color:var(--accent-red);flex-shrink:0;"
+                        >
+                        <span style="font-size:0.875rem;color:var(--text-secondary);">
+                            Ich habe die <a href="#" style="color:var(--accent-pink);">Regeln</a> gelesen
+                            und akzeptiere die Teilnahmebedingungen. <span class="required">*</span>
+                        </span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;">
+                    Bewerbung absenden →
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section highlight-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Häufige Fragen</h2>
+                <span class="section-divider"></span>
+            </div>
+            <div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+                <div class="card">
+                    <h3 style="margin-bottom:8px;font-size:1rem;font-weight:700;">Wann erhalte ich eine Rückmeldung?</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">
+                        Wir melden uns innerhalb von 48 Stunden per Discord-Nachricht bei dir.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom:8px;font-size:1rem;font-weight:700;">Kann ich mich für mehrere Rollen bewerben?</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">
+                        Fülle das Formular für jede Rolle separat aus. Wähle die für dich wichtigste Rolle zuerst.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom:8px;font-size:1rem;font-weight:700;">Brauche ich spezielle Vorkenntnisse?</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">
+                        Für Teilnehmer sind keine Vorkenntnisse nötig. Bei anderen Rollen sind spezifische Fähigkeiten von Vorteil.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom:8px;font-size:1rem;font-weight:700;">Ist die Teilnahme kostenlos?</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">
+                        Ja! Die Teilnahme an MPSQ ist vollständig kostenlos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand"><span>MP</span>SQ – MixelPixel Squid Game</div>
+                <nav class="footer-nav">
+                    <a href="ueber-uns.html">Über uns</a>
+                    <a href="team.html">Team</a>
+                    <a href="event.html">Event</a>
+                    <a href="bewerben.html">Bewerben</a>
+                    <a href="sozial-media.html">Sozial Media</a>
+                    <a href="mixelpixel.html">MixelPixel</a>
+                </nav>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2025 MPSQ – MixelPixel Squid Game. Ein Projekt von
+                <a href="https://mixelpixel.net" target="_blank" rel="noopener noreferrer">MixelPixel</a>.
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
