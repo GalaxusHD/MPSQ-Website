@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Bearbeiten – MPSQ</title>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-logo"><img src="assets/images/mpsq-logo.png" alt="MPSQ Logo" class="nav-logo-img"></a>
+            <ul class="nav-links">
+                <li><a href="ueber-uns.html">Über uns</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="event.html">Event</a></li>
+                <li><a href="bewerben.html">Bewerben</a></li>
+                <li><a href="sozial-media.html">Sozial Media</a></li>
+                <li><a href="mixelpixel.html">MixelPixel</a></li>
+            </ul>
+            <div class="nav-auth"></div>
+            <button class="nav-hamburger" aria-label="Menü öffnen">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- PAGE HERO -->
+    <div class="page-hero">
+        <div class="container">
+            <h1>Team <span style="color:var(--accent-red)">Bearbeiten</span></h1>
+            <p>Mitglieder hinzufügen, bearbeiten und entfernen.</p>
+        </div>
+    </div>
+
+    <!-- ACCESS CHECK OVERLAY -->
+    <div id="accessDenied" style="display:none;">
+        <section class="section">
+            <div class="container" style="text-align:center;max-width:480px;">
+                <div style="font-size:3rem;margin-bottom:16px;">🔒</div>
+                <h2 style="font-size:1.8rem;font-weight:700;margin-bottom:12px;">Kein Zugriff</h2>
+                <p style="color:var(--text-secondary);margin-bottom:24px;">Diese Seite ist nur für autorisierte Nutzer zugänglich. Bitte melde dich mit dem richtigen Discord-Account an.</p>
+                <a href="index.html" class="btn btn-primary">Zurück zur Startseite</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- MAIN EDITING CONTENT -->
+    <div id="editingContent" style="display:none;">
+
+        <!-- ADD / EDIT MEMBER FORM -->
+        <section class="section">
+            <div class="container">
+                <div class="editing-panel">
+                    <h2 class="editing-panel-title" id="formTitle">Mitglied hinzufügen</h2>
+
+                    <form id="memberForm" class="editing-form">
+                        <input type="hidden" id="memberId">
+
+                        <div class="form-group">
+                            <label for="minecraftName" class="form-label">Minecraft Name</label>
+                            <input
+                                type="text"
+                                id="minecraftName"
+                                class="form-input"
+                                placeholder="z.B. Galaxus_HD"
+                                required
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="discordId" class="form-label">Discord ID</label>
+                            <input
+                                type="text"
+                                id="discordId"
+                                class="form-input"
+                                placeholder="z.B. 826234747373617212"
+                                required
+                                pattern="[0-9]+"
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rankSelect" class="form-label">Rang</label>
+                            <div class="select-wrapper">
+                                <select id="rankSelect" class="form-select" required>
+                                    <option value="" disabled selected>Rang auswählen…</option>
+                                    <option value="Frontman | Leiter">Frontman | Leiter</option>
+                                    <option value="Quadrat | Offizier">Quadrat | Offizier</option>
+                                    <option value="Dreieck | Soldat">Dreieck | Soldat</option>
+                                    <option value="Kreis | Arbeiter">Kreis | Arbeiter</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="editing-form-actions">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">Speichern</button>
+                            <button type="button" class="btn btn-ghost" id="cancelEditBtn" style="display:none;">Abbrechen</button>
+                        </div>
+
+                        <div id="formMessage" style="display:none;" class="form-message"></div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- TEAM MEMBERS LIST -->
+        <section class="section highlight-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Aktuelle Mitglieder</h2>
+                    <span class="section-divider"></span>
+                </div>
+                <div id="membersList" class="editing-members-list">
+                    <p style="color:var(--text-secondary);text-align:center;">Lade Mitglieder…</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand"><span>MP</span>SQ – MixelPixel Squid Game</div>
+                <nav class="footer-nav">
+                    <a href="ueber-uns.html">Über uns</a>
+                    <a href="team.html">Team</a>
+                    <a href="event.html">Event</a>
+                    <a href="bewerben.html">Bewerben</a>
+                    <a href="sozial-media.html">Sozial Media</a>
+                    <a href="mixelpixel.html">MixelPixel</a>
+                </nav>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2025 MPSQ – MixelPixel Squid Game. Ein Projekt von
+                <a href="https://mixelpixel.net" target="_blank" rel="noopener noreferrer">MixelPixel</a>.
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const accessDenied = document.getElementById('accessDenied');
+            const editingContent = document.getElementById('editingContent');
+
+            // Check if user is authorized editor
+            if (!Auth.isEditor()) {
+                accessDenied.style.display = 'block';
+                // If not logged in at all, redirect to home after a moment
+                if (!Auth.getUser()) {
+                    setTimeout(() => {
+                        Auth.login();
+                    }, 1500);
+                }
+                return;
+            }
+
+            editingContent.style.display = 'block';
+            await loadMembers();
+
+            // --- Form Handling ---
+            const form = document.getElementById('memberForm');
+            const formTitle = document.getElementById('formTitle');
+            const submitBtn = document.getElementById('submitBtn');
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            const formMessage = document.getElementById('formMessage');
+
+            function showMessage(text, isError = false) {
+                formMessage.textContent = text;
+                formMessage.className = 'form-message ' + (isError ? 'form-message-error' : 'form-message-success');
+                formMessage.style.display = 'block';
+                setTimeout(() => { formMessage.style.display = 'none'; }, 4000);
+            }
+
+            function resetForm() {
+                form.reset();
+                document.getElementById('memberId').value = '';
+                formTitle.textContent = 'Mitglied hinzufügen';
+                submitBtn.textContent = 'Speichern';
+                cancelBtn.style.display = 'none';
+            }
+
+            cancelBtn.addEventListener('click', resetForm);
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Speichere…';
+
+                const id = document.getElementById('memberId').value;
+                const data = {
+                    minecraft_name: document.getElementById('minecraftName').value.trim(),
+                    discord_id: document.getElementById('discordId').value.trim(),
+                    rank: document.getElementById('rankSelect').value
+                };
+
+                try {
+                    if (id) {
+                        await SupabaseClient.updateTeamMember(id, data);
+                        showMessage('✅ Mitglied erfolgreich aktualisiert!');
+                    } else {
+                        await SupabaseClient.addTeamMember(data);
+                        showMessage('✅ Mitglied erfolgreich hinzugefügt!');
+                    }
+                    resetForm();
+                    await loadMembers();
+                } catch (err) {
+                    console.error(err);
+                    showMessage('❌ Fehler: ' + err.message, true);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Speichern';
+                }
+            });
+
+            // --- Load Members ---
+            async function loadMembers() {
+                const list = document.getElementById('membersList');
+                list.innerHTML = '<p style="color:var(--text-secondary);text-align:center;">Lade Mitglieder…</p>';
+                try {
+                    const members = await SupabaseClient.getTeamMembers();
+                    if (!members.length) {
+                        list.innerHTML = '<p style="color:var(--text-secondary);text-align:center;">Noch keine Mitglieder vorhanden.</p>';
+                        return;
+                    }
+                    list.innerHTML = members.map(m => `
+                        <div class="editing-member-row" data-id="${m.id}">
+                            <img src="https://mc-heads.net/avatar/${encodeURIComponent(m.minecraft_name)}/40" alt="${escapeHtml(m.minecraft_name)}" class="editing-member-skin">
+                            <div class="editing-member-info">
+                                <span class="editing-member-name">${escapeHtml(m.minecraft_name)}</span>
+                                <span class="editing-member-rank">${escapeHtml(m.rank)}</span>
+                                <span class="editing-member-discord">${escapeHtml(m.discord_id)}</span>
+                            </div>
+                            <div class="editing-member-actions">
+                                <button class="btn-icon btn-edit" data-id="${m.id}" title="Bearbeiten">✏️</button>
+                                <button class="btn-icon btn-delete" data-id="${m.id}" title="Löschen">🗑️</button>
+                            </div>
+                        </div>`).join('');
+
+                    // Edit buttons
+                    list.querySelectorAll('.btn-edit').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const member = members.find(m => m.id == btn.dataset.id);
+                            if (!member) return;
+                            document.getElementById('memberId').value = member.id;
+                            document.getElementById('minecraftName').value = member.minecraft_name;
+                            document.getElementById('discordId').value = member.discord_id;
+                            document.getElementById('rankSelect').value = member.rank;
+                            formTitle.textContent = 'Mitglied bearbeiten';
+                            submitBtn.textContent = 'Aktualisieren';
+                            cancelBtn.style.display = '';
+                            document.querySelector('.editing-panel').scrollIntoView({ behavior: 'smooth' });
+                        });
+                    });
+
+                    // Delete buttons
+                    list.querySelectorAll('.btn-delete').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            const member = members.find(m => m.id == btn.dataset.id);
+                            if (!member) return;
+                            if (!confirm(`"${escapeHtml(member.minecraft_name)}" wirklich löschen?`)) return;
+                            try {
+                                await SupabaseClient.deleteTeamMember(btn.dataset.id);
+                                showMessage('✅ Mitglied gelöscht.');
+                                await loadMembers();
+                            } catch (err) {
+                                showMessage('❌ Fehler beim Löschen: ' + err.message, true);
+                            }
+                        });
+                    });
+
+                } catch (err) {
+                    console.error(err);
+                    const errP = document.createElement('p');
+                    errP.style.cssText = 'color:var(--accent-red);text-align:center;';
+                    errP.textContent = 'Fehler beim Laden der Mitglieder: ' + err.message;
+                    list.innerHTML = '';
+                    list.appendChild(errP);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
