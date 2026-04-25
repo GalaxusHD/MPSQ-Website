@@ -937,12 +937,11 @@ footer {
     background: linear-gradient(180deg, rgba(255, 23, 68, 0.1) 0%, transparent 100%);
 }
 
-.mixel-text {
-    color: #FFFF00;
-}
-
-.pixel-text {
-    color: #00FFFF;
+.mixelpixel-gradient-text {
+    background: linear-gradient(to right, #FFFF00 0%, #FFFF00 35%, #FFFFFF 50%, #00FFFF 65%, #00FFFF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .project-grid {
