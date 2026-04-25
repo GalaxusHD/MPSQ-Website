@@ -96,14 +96,14 @@ ul {
 }
 
 .nav-logo-img {
-    height: 44px;
+    height: 66px;
     width: auto;
     display: block;
 }
 
 @media (max-width: 600px) {
     .nav-logo-img {
-        height: 36px;
+        height: 54px;
     }
 }
 
