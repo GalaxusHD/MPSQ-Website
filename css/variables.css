@@ -1,0 +1,48 @@
+:root {
+    /* Backgrounds */
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --bg-card: #1c2128;
+    --bg-hover: #30363d;
+
+    /* Text */
+    --text-primary: #ffffff;
+    --text-secondary: #c9d1d9;
+    --text-muted: #8b949e;
+
+    /* Accents */
+    --accent-red: #ff1744;
+    --accent-pink: #ff6b9d;
+    --accent-red-hover: #ff4569;
+    --accent-pink-hover: #ff85b3;
+    --accent-red-dim: rgba(255, 23, 68, 0.15);
+
+    /* Borders */
+    --border-default: #30363d;
+    --border-accent: #ff1744;
+    --border-muted: #21262d;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+    --shadow-accent: 0 4px 20px rgba(255, 23, 68, 0.3);
+
+    /* Spacing */
+    --nav-height: 64px;
+    --section-padding: 80px 0;
+    --container-max: 1200px;
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s ease;
+    --transition-slow: 0.4s ease;
+
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+}

@@ -1,117 +1,169 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MixelPixel – MPSQ</title>
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MixelPixel – Das kreative Minecraft-Netzwerk hinter MPSQ.">
+    <link rel="stylesheet" href="css/style.css">
+    <title>MixelPixel – MPSQ</title>
 </head>
 <body>
 
-  <!-- NAVIGATION -->
-  <nav class="navbar" aria-label="Seitennavigation">
-    <div class="navbar-inner">
-      <a href="index.html" class="nav-logo">
-        <span class="logo-accent">MPSQ</span>
-      </a>
-      <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Menü öffnen">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav-links" id="nav-links">
-        <li><a href="ueber-uns.html">Über uns</a></li>
-        <li><a href="team.html">Team</a></li>
-        <li><a href="event.html">Events</a></li>
-        <li><a href="bewerben.html">Bewerben</a></li>
-        <li><a href="sozial-media.html">Sozial Media</a></li>
-        <li><a href="mixelpixel.html">MixelPixel</a></li>
-      </ul>
-    </div>
-  </nav>
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-logo"><span class="logo-accent">MP</span>SQ</a>
+            <ul class="nav-links">
+                <li><a href="ueber-uns.html">Über uns</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="event.html">Event</a></li>
+                <li><a href="bewerben.html">Bewerben</a></li>
+                <li><a href="sozial-media.html">Sozial Media</a></li>
+                <li><a href="mixelpixel.html">MixelPixel</a></li>
+            </ul>
+            <button class="nav-hamburger" aria-label="Menü öffnen">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
 
-  <!-- CONTENT -->
-  <div class="page-wrapper">
-    <header class="page-header">
-      <h1><span class="accent">MixelPixel</span></h1>
-      <p>Das Netzwerk hinter MPSQ – erfahre mehr über die Plattform, auf der alles stattfindet.</p>
-    </header>
-
-    <div class="mp-hero">
-      <h2>🌐 MixelPixel Netzwerk</h2>
-      <p>
-        MixelPixel ist eine der bekanntesten deutschen Minecraft-Communities und bietet
-        zahlreiche Spielmodi, Events und eine aktive, freundliche Community.
-      </p>
-      <a href="https://mixelpixel.net" target="_blank" rel="noopener" class="btn-primary"
-         style="display:inline-flex;padding:0.7rem 1.5rem;border-radius:8px;font-weight:600;">
-        Zur Website ➔
-      </a>
-    </div>
-
-    <div class="card-grid" style="margin-bottom:2rem;">
-
-      <div class="card">
-        <div class="card-avatar">🏰</div>
-        <h3>Survival</h3>
-        <p class="role">Spielmodus</p>
-        <p>Klassisches Minecraft-Survival mit Community-Features und Events.</p>
-      </div>
-
-      <div class="card">
-        <div class="card-avatar">⚔️</div>
-        <h3>PvP</h3>
-        <p class="role">Spielmodus</p>
-        <p>Verschiedene PvP-Modi für Kämpfer und Wettbewerber.</p>
-      </div>
-
-      <div class="card">
-        <div class="card-avatar">🎭</div>
-        <h3>Events</h3>
-        <p class="role">Community</p>
-        <p>Regelmäßige Events wie MPSQ – für unvergessliche Erlebnisse.</p>
-      </div>
-
-      <div class="card">
-        <div class="card-avatar">👥</div>
-        <h3>Community</h3>
-        <p class="role">Netzwerk</p>
-        <p>Eine aktive, freundliche Community auf Discord und im Spiel.</p>
-      </div>
-
+    <!-- PAGE HERO -->
+    <div class="mixelpixel-hero">
+        <div class="container">
+            <span class="hero-badge">Das Netzwerk dahinter</span>
+            <h1 style="font-size:clamp(2.5rem,6vw,4rem);font-weight:800;margin:16px 0 12px;letter-spacing:-1px;">
+                <span style="background:linear-gradient(135deg,var(--accent-red),var(--accent-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Mixel</span>Pixel
+            </h1>
+            <p style="color:var(--text-secondary);font-size:1.1rem;max-width:540px;margin:0 auto 28px;">
+                Das kreative Minecraft-Netzwerk, das hinter MPSQ steht. Hochwertige Events,
+                einzigartige Maps und eine leidenschaftliche Community.
+            </p>
+            <a
+                href="https://mixelpixel.net"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-primary"
+            >Zur MixelPixel Website →</a>
+        </div>
     </div>
 
-    <div class="info-section">
-      <h2><span class="icon">🔗</span> Verbindung zwischen MPSQ und MixelPixel</h2>
-      <p>
-        MPSQ ist ein offizielles Event-Projekt des MixelPixel-Netzwerks. Alle Events finden
-        auf MixelPixel-Servern statt und werden von der Community organisiert.
-        Registrierte MixelPixel-Spieler können automatisch an MPSQ-Events teilnehmen.
-      </p>
-    </div>
+    <!-- ABOUT MIXELPIXEL -->
+    <section class="section">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-visual">🌐</div>
+                <div class="about-text">
+                    <h2>Was ist <span style="color:var(--accent-red)">MixelPixel</span>?</h2>
+                    <p>
+                        MixelPixel ist ein etabliertes Minecraft-Kreativnetzwerk, das sich auf
+                        hochwertige Events, Minispiele und Community-Projekte spezialisiert hat.
+                    </p>
+                    <p>
+                        Als die Organisation hinter MPSQ bringt MixelPixel jahrelange Erfahrung
+                        in der Event-Organisation und Server-Verwaltung mit.
+                    </p>
+                    <ul>
+                        <li>Professionelle Minecraft-Events seit 2020</li>
+                        <li>Custom-Maps und einzigartige Spielmodi</li>
+                        <li>Aktive Discord-Community</li>
+                        <li>YouTube-Kanal mit Event-Highlights</li>
+                        <li>Erfahrenes, leidenschaftliches Team</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <div class="info-section">
-      <h2><span class="icon">🚀</span> Wie starte ich auf MixelPixel?</h2>
-      <ul>
-        <li>Besuche <a href="https://mixelpixel.net" target="_blank" rel="noopener">mixelpixel.net</a> und registriere dich</li>
-        <li>Verbinde dich mit dem Minecraft-Server (Java Edition)</li>
-        <li>Tritt dem <a href="https://discord.gg/mixelpixel" target="_blank" rel="noopener">Discord-Server</a> bei</li>
-        <li>Melde dich für MPSQ-Events über <a href="bewerben.html">das Bewerbungsformular</a> an</li>
-      </ul>
-    </div>
+    <!-- PROJECTS -->
+    <section class="section highlight-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Projekte</h2>
+                <p>Entdecke weitere Projekte von MixelPixel</p>
+                <span class="section-divider"></span>
+            </div>
+            <div class="project-grid">
+                <div class="project-card">
+                    <div class="project-card-image">🦑</div>
+                    <div class="project-card-body">
+                        <h3>MPSQ – Squid Game</h3>
+                        <p>Das ikonische Squid Game als Minecraft-Event. Spannend, kompetitiv und unvergesslich.</p>
+                        <a href="index.html" class="btn btn-outline" style="margin-top:12px;font-size:0.85rem;padding:8px 16px;">Mehr erfahren</a>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-card-image">🏰</div>
+                    <div class="project-card-body">
+                        <h3>MixelPixel Survival</h3>
+                        <p>Ein klassisches Survival-Erlebnis auf dem MixelPixel-Server mit besonderen Features.</p>
+                        <a href="https://mixelpixel.net" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="margin-top:12px;font-size:0.85rem;padding:8px 16px;">Zur Website</a>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-card-image">🎪</div>
+                    <div class="project-card-body">
+                        <h3>Community Events</h3>
+                        <p>Regelmäßige Community-Events für alle Spieler – von Baucontest bis PvP-Turnier.</p>
+                        <a href="event.html" class="btn btn-outline" style="margin-top:12px;font-size:0.85rem;padding:8px 16px;">Events ansehen</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <div class="info-section">
-      <h2><span class="icon">📺</span> MixelPixel Team-Seite</h2>
-      <p>
-        Lerne das gesamte MixelPixel-Team kennen:
-        <a href="https://mixelpixel.net/team" target="_blank" rel="noopener">mixelpixel.net/team</a>
-      </p>
-    </div>
-  </div>
+    <!-- SERVER INFO -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Server-Information</h2>
+                <span class="section-divider"></span>
+            </div>
+            <div class="card-grid card-grid-2" style="max-width:800px;margin:0 auto;">
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:2rem;margin-bottom:12px;">🌐</div>
+                    <h3 style="font-weight:700;margin-bottom:8px;">Website</h3>
+                    <a href="https://mixelpixel.net" target="_blank" rel="noopener noreferrer" style="color:var(--accent-pink);font-size:1rem;">mixelpixel.net</a>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:2rem;margin-bottom:12px;">💬</div>
+                    <h3 style="font-weight:700;margin-bottom:8px;">Discord</h3>
+                    <a href="https://discord.gg/mixelpixel" target="_blank" rel="noopener noreferrer" style="color:var(--accent-pink);font-size:1rem;">discord.gg/mixelpixel</a>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:2rem;margin-bottom:12px;">📺</div>
+                    <h3 style="font-weight:700;margin-bottom:8px;">YouTube</h3>
+                    <a href="https://youtube.com/@mixelpixel" target="_blank" rel="noopener noreferrer" style="color:var(--accent-pink);font-size:1rem;">@mixelpixel</a>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:2rem;margin-bottom:12px;">🐦</div>
+                    <h3 style="font-weight:700;margin-bottom:8px;">X (Twitter)</h3>
+                    <a href="https://twitter.com/mixelpixel" target="_blank" rel="noopener noreferrer" style="color:var(--accent-pink);font-size:1rem;">@mixelpixel</a>
+                </div>
+            </div>
+        </div>
+    </section>
 
-  <footer class="footer">
-    &copy; 2024 MPSQ – MixelPixel Squid Game &nbsp;|&nbsp;
-    <a href="https://mixelpixel.net" target="_blank" rel="noopener">mixelpixel.net</a>
-  </footer>
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand"><span>MP</span>SQ – MixelPixel Squid Game</div>
+                <nav class="footer-nav">
+                    <a href="ueber-uns.html">Über uns</a>
+                    <a href="team.html">Team</a>
+                    <a href="event.html">Event</a>
+                    <a href="bewerben.html">Bewerben</a>
+                    <a href="sozial-media.html">Sozial Media</a>
+                    <a href="mixelpixel.html">MixelPixel</a>
+                </nav>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2025 MPSQ – MixelPixel Squid Game. Ein Projekt von
+                <a href="https://mixelpixel.net" target="_blank" rel="noopener noreferrer">MixelPixel</a>.
+            </div>
+        </div>
+    </footer>
 
-  <script src="js/main.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
