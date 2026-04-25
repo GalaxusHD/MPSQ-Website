@@ -21,6 +21,7 @@
                 <li><a href="sozial-media.html">Sozial Media</a></li>
                 <li><a href="mixelpixel.html">MixelPixel</a></li>
             </ul>
+            <div class="nav-auth"></div>
             <button class="nav-hamburger" aria-label="Menü öffnen">
                 <span></span><span></span><span></span>
             </button>
@@ -35,106 +36,13 @@
         </div>
     </div>
 
-    <!-- LEADERSHIP -->
-    <section class="section">
+    <!-- TEAM MEMBERS (loaded from Supabase) -->
+    <section class="section" id="team-section">
         <div class="container">
-            <div class="section-header">
-                <h2>Leitung</h2>
-                <p>Die Köpfe hinter dem MPSQ-Projekt</p>
-                <span class="section-divider"></span>
+            <div id="team-loading" style="text-align:center;padding:40px 0;">
+                <p style="color:var(--text-secondary);">Lade Team…</p>
             </div>
-            <div class="card-grid card-grid-3">
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/Galaxus_HD" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/Galaxus_HD/100" alt="Galaxus_HD Minecraft skin" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/Galaxus_HD" target="_blank" rel="noopener noreferrer">GalaxusHD</a></div>
-                    <div class="team-role">Projektleiter</div>
-                </div>
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/Co-Lead" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/Co-Lead/100" alt="Co-Lead" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/Co-Lead" target="_blank" rel="noopener noreferrer">Co-Lead</a></div>
-                    <div class="team-role">Co-Projektleiter</div>
-                </div>
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/TechLead" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/TechLead/100" alt="TechLead" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/TechLead" target="_blank" rel="noopener noreferrer">TechLead</a></div>
-                    <div class="team-role">Technische Leitung</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- STAFF -->
-    <section class="section highlight-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Orga-Team</h2>
-                <p>Unser engagiertes Organisations-Team</p>
-                <span class="section-divider"></span>
-            </div>
-            <div class="card-grid card-grid-4">
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/EventManager" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/EventManager/100" alt="EventManager" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/EventManager" target="_blank" rel="noopener noreferrer">EventManager</a></div>
-                    <div class="team-role">Event-Koordination</div>
-                </div>
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/MapBuilder" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/MapBuilder/100" alt="MapBuilder" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/MapBuilder" target="_blank" rel="noopener noreferrer">MapBuilder</a></div>
-                    <div class="team-role">Map-Design</div>
-                </div>
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/Moderator_1" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/Moderator_1/100" alt="Moderator_1" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/Moderator_1" target="_blank" rel="noopener noreferrer">Moderator_1</a></div>
-                    <div class="team-role">Moderation</div>
-                </div>
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/PRManager" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/PRManager/100" alt="PRManager" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/PRManager" target="_blank" rel="noopener noreferrer">PRManager</a></div>
-                    <div class="team-role">Öffentlichkeitsarbeit</div>
-                </div>
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/VideoEditor" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/VideoEditor/100" alt="VideoEditor" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/VideoEditor" target="_blank" rel="noopener noreferrer">VideoEditor</a></div>
-                    <div class="team-role">Video-Produktion</div>
-                </div>
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/ServerAdmin" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/ServerAdmin/100" alt="ServerAdmin" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/ServerAdmin" target="_blank" rel="noopener noreferrer">ServerAdmin</a></div>
-                    <div class="team-role">Server-Administration</div>
-                </div>
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/Designer" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/Designer/100" alt="Designer" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/Designer" target="_blank" rel="noopener noreferrer">Designer</a></div>
-                    <div class="team-role">Grafik & Design</div>
-                </div>
-                <div class="team-member">
-                    <a href="https://mixelpixel.net/profil/Support" target="_blank" rel="noopener noreferrer">
-                        <img src="https://mc-heads.net/player/Support/100" alt="Support" class="team-skin">
-                    </a>
-                    <div class="team-name"><a href="https://mixelpixel.net/profil/Support" target="_blank" rel="noopener noreferrer">Support</a></div>
-                    <div class="team-role">Community Support</div>
-                </div>
-            </div>
+            <div id="team-grid" style="display:none;"></div>
         </div>
     </section>
 
@@ -171,6 +79,79 @@
         </div>
     </footer>
 
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/supabase-client.js"></script>
     <script src="js/main.js"></script>
+    <script>
+        // Rank display order
+        const RANK_ORDER = [
+            'Frontman | Leiter',
+            'Quadrat | Offizier',
+            'Dreieck | Soldat',
+            'Kreis | Arbeiter'
+        ];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loading = document.getElementById('team-loading');
+            const grid = document.getElementById('team-grid');
+
+            try {
+                const members = await SupabaseClient.getTeamMembers();
+
+                if (!members || members.length === 0) {
+                    loading.innerHTML = '<p style="color:var(--text-secondary);">Noch keine Teammitglieder vorhanden.</p>';
+                    return;
+                }
+
+                // Group members by rank
+                const grouped = {};
+                RANK_ORDER.forEach(rank => { grouped[rank] = []; });
+                members.forEach(m => {
+                    if (grouped[m.rank]) grouped[m.rank].push(m);
+                    else {
+                        grouped[m.rank] = grouped[m.rank] || [];
+                        grouped[m.rank].push(m);
+                    }
+                });
+
+                let html = '';
+                RANK_ORDER.forEach(rank => {
+                    const rankMembers = grouped[rank];
+                    if (!rankMembers || rankMembers.length === 0) return;
+
+                    html += `
+                        <div class="section-header" style="margin-bottom:24px;">
+                            <h2>${rank}</h2>
+                            <span class="section-divider"></span>
+                        </div>
+                        <div class="team-members-grid">
+                            ${rankMembers.map(m => `
+                                <a href="https://mixelpixel.net/profil/${encodeURIComponent(m.discord_id)}"
+                                   class="team-member-card"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    <img
+                                        src="https://mc-heads.net/avatar/${encodeURIComponent(m.minecraft_name)}/80"
+                                        alt="${m.minecraft_name}"
+                                        class="team-member-avatar"
+                                        loading="lazy"
+                                    >
+                                    <span class="team-member-mc-name">${m.minecraft_name}</span>
+                                    <span class="team-member-rank-badge">${m.rank}</span>
+                                </a>`).join('')}
+                        </div>`;
+                });
+
+                grid.innerHTML = html;
+                loading.style.display = 'none';
+                grid.style.display = 'block';
+
+            } catch (err) {
+                console.error('Team load error:', err);
+                loading.innerHTML = '<p style="color:var(--text-secondary);">Team kann momentan nicht geladen werden.</p>';
+            }
+        });
+    </script>
 </body>
 </html>

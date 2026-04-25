@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <link rel="stylesheet" href="../../../css/style.css">
+    <title>Discord Login – MPSQ</title>
+    <style>
+        .callback-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+        }
+        .callback-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            padding: 48px 40px;
+            max-width: 440px;
+            width: 100%;
+        }
+        .callback-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        .callback-box h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .callback-box p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        .callback-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-default);
+            border-top-color: var(--accent-red);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="callback-container">
+        <div class="callback-box" id="callbackBox">
+            <div class="callback-spinner" id="spinner"></div>
+            <h1>Anmeldung läuft…</h1>
+            <p>Dein Discord-Account wird verifiziert. Einen Moment bitte.</p>
+        </div>
+    </div>
+
+    <script src="../../../js/config.js"></script>
+    <script>
+        (async () => {
+            const box = document.getElementById('callbackBox');
+            const spinner = document.getElementById('spinner');
+
+            // Parse the fragment (Discord OAuth2 implicit grant returns #access_token=...&...)
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            const accessToken = params.get('access_token');
+            const error = params.get('error');
+            const errorDescription = params.get('error_description');
+
+            function showError(msg) {
+                spinner.style.display = 'none';
+                box.innerHTML = `
+                    <div class="callback-icon">❌</div>
+                    <h1>Anmeldung fehlgeschlagen</h1>
+                    <p>${msg}</p>
+                    <a href="../../../index.html" class="btn btn-primary">Zurück zur Startseite</a>`;
+            }
+
+            function showSuccess(username) {
+                spinner.style.display = 'none';
+                box.innerHTML = `
+                    <div class="callback-icon">✅</div>
+                    <h1>Erfolgreich angemeldet!</h1>
+                    <p>Willkommen, <strong>${username}</strong>! Du wirst weitergeleitet…</p>`;
+            }
+
+            if (error) {
+                showError(errorDescription || 'Unbekannter Fehler bei der Discord-Anmeldung.');
+                return;
+            }
+
+            if (!accessToken) {
+                showError('Kein Zugriffstoken erhalten. Bitte versuche es erneut.');
+                return;
+            }
+
+            try {
+                // Fetch Discord user info
+                const response = await fetch('https://discord.com/api/users/@me', {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Discord API error: ${response.status}`);
+                }
+
+                const user = await response.json();
+
+                // Save session to localStorage
+                localStorage.setItem('mpsq_discord_user', JSON.stringify(user));
+                localStorage.setItem('mpsq_discord_token', accessToken);
+
+                showSuccess(user.username);
+
+                // Redirect after short delay
+                // If user is the editor, send them to editing page; otherwise go home
+                const isEditor = user.id === DISCORD_CONFIG.editorId;
+                setTimeout(() => {
+                    window.location.href = isEditor
+                        ? '../../../editing.html'
+                        : '../../../index.html';
+                }, 1500);
+
+            } catch (err) {
+                console.error('Callback error:', err);
+                showError('Fehler beim Abrufen deiner Discord-Daten. Bitte versuche es erneut.');
+            }
+        })();
+    </script>
+</body>
+</html>
