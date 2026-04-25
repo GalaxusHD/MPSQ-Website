@@ -936,25 +936,6 @@ footer {
     background: linear-gradient(180deg, rgba(255, 23, 68, 0.1) 0%, transparent 100%);
 }
 
-.mixelpixel-hero-logo-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.mixelpixel-hero-logo-img {
-    height: 120px;
-    width: auto;
-    object-fit: contain;
-    filter: drop-shadow(0 4px 16px rgba(255, 23, 68, 0.4));
-}
-
-@media (max-width: 600px) {
-    .mixelpixel-hero-logo-img {
-        height: 80px;
-    }
-}
-
 .mixel-text {
     color: #FFFF00;
     text-shadow: 0 0 8px #FFFF88, 0 0 16px rgba(255, 255, 0, 0.5);
