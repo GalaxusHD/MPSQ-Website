@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bewerben – MPSQ</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav class="navbar" aria-label="Seitennavigation">
+    <div class="navbar-inner">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-accent">MPSQ</span>
+      </a>
+      <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Menü öffnen">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="ueber-uns.html">Über uns</a></li>
+        <li><a href="team.html">Team</a></li>
+        <li><a href="event.html">Events</a></li>
+        <li><a href="bewerben.html">Bewerben</a></li>
+        <li><a href="sozial-media.html">Sozial Media</a></li>
+        <li><a href="mixelpixel.html">MixelPixel</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <div class="page-wrapper">
+    <header class="page-header">
+      <h1>Jetzt <span class="accent">Bewerben</span></h1>
+      <p>Möchtest du an einem MPSQ-Event teilnehmen oder Teil des Teams werden? Fülle das Formular aus!</p>
+    </header>
+
+    <div class="form-card">
+      <form id="bewerbung-form" action="#" method="post" novalidate>
+
+        <div class="form-group">
+          <label for="minecraft-name">Minecraft-Benutzername *</label>
+          <input type="text" id="minecraft-name" name="minecraft_name" placeholder="DeinMinecraftName" required>
+          <p class="form-hint">Dein exakter In-Game-Name (Java Edition)</p>
+        </div>
+
+        <div class="form-group">
+          <label for="discord-name">Discord-Benutzername *</label>
+          <input type="text" id="discord-name" name="discord_name" placeholder="dein_name oder dein_name#1234" required>
+        </div>
+
+        <div class="form-group">
+          <label for="alter">Alter *</label>
+          <input type="number" id="alter" name="alter" placeholder="z.B. 16" min="10" max="99" required>
+        </div>
+
+        <div class="form-group">
+          <label for="kategorie">Bewerbungskategorie *</label>
+          <select id="kategorie" name="kategorie" required>
+            <option value="" disabled selected>Bitte wählen…</option>
+            <option value="teilnehmer">🎮 Event-Teilnehmer</option>
+            <option value="team-moderator">🎙️ Team – Moderator</option>
+            <option value="team-builder">🎨 Team – Builder</option>
+            <option value="team-developer">⚙️ Team – Entwickler</option>
+            <option value="team-streamer">📹 Team – Content Creator / Streamer</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="erfahrung">Deine Erfahrung *</label>
+          <textarea id="erfahrung" name="erfahrung" placeholder="Beschreibe kurz deine Minecraft-Erfahrung, bisherige Projekte oder Fähigkeiten..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="motivation">Warum möchtest du mitmachen? *</label>
+          <textarea id="motivation" name="motivation" placeholder="Was motiviert dich, bei MPSQ dabei zu sein?" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="sonstiges">Sonstiges (optional)</label>
+          <textarea id="sonstiges" name="sonstiges" placeholder="Weitere Informationen, Links zu Social-Media-Kanälen, etc."></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          Bewerbung absenden ➔
+        </button>
+
+      </form>
+    </div>
+
+    <div class="info-section" style="margin-top: 2rem;">
+      <h2><span class="icon">❓</span> Was passiert nach der Bewerbung?</h2>
+      <ul>
+        <li>Wir prüfen deine Bewerbung innerhalb von 3–5 Werktagen</li>
+        <li>Du erhältst eine Antwort per Discord-Direktnachricht</li>
+        <li>Bei erfolgreicher Bewerbung bekommst du alle weiteren Infos</li>
+        <li>Fragen? Tritt unserem <a href="sozial-media.html">Discord</a> bei!</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    &copy; 2024 MPSQ – MixelPixel Squid Game &nbsp;|&nbsp;
+    <a href="https://mixelpixel.net" target="_blank" rel="noopener">mixelpixel.net</a>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
