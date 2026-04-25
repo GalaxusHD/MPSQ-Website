@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Outer circle -->
+  <circle cx="50" cy="50" r="47" fill="none" stroke="#ff1744" stroke-width="4"/>
+
+  <!-- Squid body -->
+  <ellipse cx="50" cy="38" rx="18" ry="22" fill="#ff1744"/>
+
+  <!-- Squid head/mantle top rounded -->
+  <ellipse cx="50" cy="22" rx="14" ry="10" fill="#ff1744"/>
+
+  <!-- Squid eyes -->
+  <circle cx="44" cy="36" r="3.5" fill="#0d1117"/>
+  <circle cx="56" cy="36" r="3.5" fill="#0d1117"/>
+  <circle cx="44.8" cy="35.2" r="1.2" fill="white"/>
+  <circle cx="56.8" cy="35.2" r="1.2" fill="white"/>
+
+  <!-- Squid tentacles (8 tentacles) -->
+  <path d="M32 56 Q28 64 30 72 Q32 68 34 72 Q36 64 36 56" fill="#ff1744"/>
+  <path d="M37 58 Q34 68 36 76 Q38 72 40 76 Q42 66 41 58" fill="#ff1744"/>
+  <path d="M43 60 Q41 70 43 78 Q45 74 47 78 Q48 68 47 60" fill="#ff1744"/>
+  <path d="M50 60 Q49 70 50 79 Q52 75 54 79 Q55 69 53 60" fill="#ff1744"/>
+  <path d="M57 60 Q56 70 57 78 Q59 74 61 78 Q63 68 62 60" fill="#ff1744"/>
+  <path d="M63 58 Q62 68 64 76 Q66 72 68 76 Q69 66 67 58" fill="#ff1744"/>
+  <path d="M68 56 Q68 64 70 72 Q72 68 74 72 Q75 62 72 56" fill="#ff1744"/>
+
+  <!-- Side fins -->
+  <path d="M32 32 Q24 36 26 44 Q30 40 32 44 Q36 36 34 32 Z" fill="#ff1744"/>
+  <path d="M68 32 Q76 36 74 44 Q70 40 68 44 Q64 36 66 32 Z" fill="#ff1744"/>
+</svg>
