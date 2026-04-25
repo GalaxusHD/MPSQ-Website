@@ -207,14 +207,10 @@
 
                 try {
                     if (id) {
-                        await SupabaseClient.updateTeamMember(id, { ...data, updated_at: new Date().toISOString() });
+                        await SupabaseClient.updateTeamMember(id, data);
                         showMessage('✅ Mitglied erfolgreich aktualisiert!');
                     } else {
-                        await SupabaseClient.addTeamMember({
-                            ...data,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        });
+                        await SupabaseClient.addTeamMember(data);
                         showMessage('✅ Mitglied erfolgreich hinzugefügt!');
                     }
                     resetForm();

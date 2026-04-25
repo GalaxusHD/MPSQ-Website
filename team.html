@@ -108,11 +108,7 @@
                 const grouped = {};
                 RANK_ORDER.forEach(rank => { grouped[rank] = []; });
                 members.forEach(m => {
-                    if (grouped[m.rank]) grouped[m.rank].push(m);
-                    else {
-                        grouped[m.rank] = grouped[m.rank] || [];
-                        grouped[m.rank].push(m);
-                    }
+                    (grouped[m.rank] = grouped[m.rank] || []).push(m);
                 });
 
                 let html = '';
@@ -127,7 +123,7 @@
                         </div>
                         <div class="team-members-grid">
                             ${rankMembers.map(m => `
-                                <a href="https://mixelpixel.net/profil/${encodeURIComponent(m.discord_id)}"
+                                <a href="https://mixelpixel.net/profil/${encodeURIComponent(m.minecraft_name)}"
                                    class="team-member-card"
                                    target="_blank"
                                    rel="noopener noreferrer">

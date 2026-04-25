@@ -28,8 +28,11 @@ CREATE POLICY "public_read_team_members"
   FOR SELECT
   USING (true);
 
--- 4. Only allow inserts/updates/deletes via the anon key from the website
---    (actual editor check is done in JavaScript by verifying Discord ID)
+-- 4. Write access via the anon key from the website
+--    NOTE: Since this is a static site without a server, the anon key is public.
+--    The editor access check is enforced in JavaScript (editing.html only loads
+--    for Discord ID 826234747373617212). For additional security you can restrict
+--    write access by IP or upgrade to Supabase Auth with proper user roles.
 CREATE POLICY "anon_write_team_members"
   ON public.team_members
   FOR ALL

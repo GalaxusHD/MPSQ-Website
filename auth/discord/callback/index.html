@@ -72,11 +72,22 @@
 
             function showError(msg) {
                 spinner.style.display = 'none';
-                box.innerHTML = `
-                    <div class="callback-icon">❌</div>
-                    <h1>Anmeldung fehlgeschlagen</h1>
-                    <p>${msg}</p>
-                    <a href="../../../index.html" class="btn btn-primary">Zurück zur Startseite</a>`;
+                const safeMsg = document.createElement('p');
+                safeMsg.textContent = msg;
+                box.innerHTML = '';
+                const icon = document.createElement('div');
+                icon.className = 'callback-icon';
+                icon.textContent = '❌';
+                const heading = document.createElement('h1');
+                heading.textContent = 'Anmeldung fehlgeschlagen';
+                const link = document.createElement('a');
+                link.href = '../../../index.html';
+                link.className = 'btn btn-primary';
+                link.textContent = 'Zurück zur Startseite';
+                box.appendChild(icon);
+                box.appendChild(heading);
+                box.appendChild(safeMsg);
+                box.appendChild(link);
             }
 
             function showSuccess(username) {
