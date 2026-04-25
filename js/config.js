@@ -18,4 +18,4 @@ const DISCORD_CONFIG = {
 // 3. Copy "Project URL" into SUPABASE_URL
 // 4. Copy "anon / public" key into SUPABASE_ANON_KEY
 const SUPABASE_URL = 'https://hbikjzzkxsvjoqnedbmm.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_secret_2An4sHVy5O82-Ufvo0__sA_BhMB35cK';
+const SUPABASE_ANON_KEY = 'sb_publishable_cylaWduvLwmm72MeBpbTWw_8M2qVCNa';
