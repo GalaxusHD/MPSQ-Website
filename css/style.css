@@ -95,6 +95,18 @@ ul {
     color: var(--accent-red);
 }
 
+.nav-logo-img {
+    height: 44px;
+    width: auto;
+    display: block;
+}
+
+@media (max-width: 600px) {
+    .nav-logo-img {
+        height: 36px;
+    }
+}
+
 .nav-links {
     display: flex;
     align-items: center;
