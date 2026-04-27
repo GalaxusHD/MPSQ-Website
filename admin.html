@@ -206,7 +206,7 @@
                     <li>Wähle oben einen Tab (<em>Über uns</em> oder <em>Event</em>).</li>
                     <li>Bearbeite die Felder nach Wunsch.</li>
                     <li>Klicke auf <strong>JSON herunterladen</strong> – die Datei wird auf deinen Computer gespeichert.</li>
-                    <li>Öffne auf GitHub die Datei <code>data/ueber-uns.json</code> bzw. <code>data/event.json</code>.</li>
+                    <li>Öffne auf GitHub die Datei <code>data/ueber-uns.json</code>, <code>data/event.json</code> bzw. <code>data/team.json</code>.</li>
                     <li>Klicke auf den Stift-Button (✏️ „Edit this file"), füge den Inhalt der heruntergeladenen Datei ein und bestätige mit <strong>Commit changes</strong>.</li>
                     <li>GitHub Pages aktualisiert sich automatisch innerhalb weniger Minuten.</li>
                 </ol>
@@ -216,6 +216,7 @@
             <div class="admin-tabs">
                 <button class="admin-tab active" data-target="panel-ueber-uns">Über uns</button>
                 <button class="admin-tab" data-target="panel-event">Event</button>
+                <button class="admin-tab" data-target="panel-team">Team</button>
             </div>
 
             <!-- ==================== ÜBER UNS PANEL ==================== -->
@@ -319,6 +320,24 @@
                 </div>
 
             </div><!-- /panel-event -->
+
+            <!-- ==================== TEAM PANEL ==================== -->
+            <div id="panel-team" class="admin-panel">
+
+                <div class="admin-section-box">
+                    <h3>Teammitglieder</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
+                        Bilder werden direkt in die JSON-Datei eingebettet (Base64). Bitte nur kleine Dateien verwenden (max. empfohlen: 200 KB).
+                    </p>
+                    <div id="team-members-list"></div>
+                    <button type="button" class="btn-add-item" id="team-add-member">＋ Mitglied hinzufügen</button>
+                </div>
+
+                <div class="download-actions">
+                    <button type="button" class="btn btn-primary" id="btn-download-team">⬇ Team JSON herunterladen</button>
+                </div>
+
+            </div><!-- /panel-team -->
 
         </div>
     </section>
@@ -766,6 +785,171 @@
         }
 
         // ==============================
+        // TEAM – Member builder
+        // ==============================
+        const TEAM_RANKS = ['Frontman', 'Quadrat', 'Dreieck', 'Kreis'];
+
+        function buildTeamMemberEl(member) {
+            const wrap = document.createElement('div');
+            wrap.className = 'admin-list-item';
+            wrap.style.flexDirection = 'column';
+
+            const inputs = document.createElement('div');
+            inputs.className = 'admin-item-inputs';
+
+            // Row 1: rank + name
+            const row1 = document.createElement('div');
+            row1.style.cssText = 'display:flex;gap:8px;';
+
+            const rankSel = document.createElement('select');
+            rankSel.className = 'tm-rank';
+            rankSel.style.cssText = 'background:var(--bg-primary);border:1px solid var(--border-default);border-radius:var(--radius-sm);color:var(--text-primary);padding:8px 10px;font-size:0.875rem;flex:0 0 130px;';
+            TEAM_RANKS.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r;
+                opt.textContent = r;
+                if (r === (member.rank || 'Kreis')) opt.selected = true;
+                rankSel.appendChild(opt);
+            });
+
+            const nameInp = document.createElement('input');
+            nameInp.type = 'text';
+            nameInp.className = 'tm-name';
+            nameInp.placeholder = 'Minecraft Name';
+            nameInp.value = member.name || '';
+            nameInp.style.flex = '1';
+
+            row1.appendChild(rankSel);
+            row1.appendChild(nameInp);
+
+            // Row 2: subrank + description
+            const row2 = document.createElement('div');
+            row2.style.cssText = 'display:flex;gap:8px;';
+
+            const subrankInp = document.createElement('input');
+            subrankInp.type = 'text';
+            subrankInp.className = 'tm-subrank';
+            subrankInp.placeholder = 'Subrank / Titel (z.B. Leiter)';
+            subrankInp.value = member.subrank || '';
+            subrankInp.style.flex = '1';
+
+            const descInp = document.createElement('input');
+            descInp.type = 'text';
+            descInp.className = 'tm-description';
+            descInp.placeholder = 'Kurzbeschreibung (optional)';
+            descInp.value = member.description || '';
+            descInp.style.flex = '1';
+
+            row2.appendChild(subrankInp);
+            row2.appendChild(descInp);
+
+            // Row 3: image upload + preview
+            const row3 = document.createElement('div');
+            row3.style.cssText = 'display:flex;gap:8px;align-items:center;';
+
+            const fileLabel = document.createElement('label');
+            fileLabel.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:6px 12px;font-size:0.8rem;color:var(--text-secondary);cursor:pointer;white-space:nowrap;';
+            fileLabel.textContent = '🖼 Bild hochladen';
+
+            const fileInp = document.createElement('input');
+            fileInp.type = 'file';
+            fileInp.accept = 'image/*';
+            fileInp.style.display = 'none';
+            fileInp.className = 'tm-file';
+            fileLabel.appendChild(fileInp);
+
+            const preview = document.createElement('img');
+            preview.className = 'tm-preview';
+            preview.style.cssText = 'width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--border-default);display:' + (member.imagePath ? 'block' : 'none') + ';';
+            if (member.imagePath) preview.src = member.imagePath;
+
+            // Store imagePath as data attribute on wrap
+            wrap.dataset.imagePath = member.imagePath || '';
+
+            fileInp.addEventListener('change', () => {
+                const file = fileInp.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    wrap.dataset.imagePath = e.target.result;
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
+
+            row3.appendChild(fileLabel);
+            row3.appendChild(preview);
+
+            // Profile URL (auto-derived but also editable)
+            const profileInp = document.createElement('input');
+            profileInp.type = 'text';
+            profileInp.className = 'tm-profileUrl';
+            profileInp.placeholder = 'Profil-URL (wird automatisch gesetzt)';
+            profileInp.value = member.profileUrl || '';
+            profileInp.style.cssText = 'font-size:0.8rem;';
+
+            // Auto-fill profileUrl when name changes
+            nameInp.addEventListener('input', () => {
+                if (!profileInp.value || profileInp.value.startsWith('https://mixelpixel.net/profil/')) {
+                    profileInp.value = nameInp.value.trim()
+                        ? 'https://mixelpixel.net/profil/' + nameInp.value.trim()
+                        : '';
+                }
+            });
+
+            inputs.appendChild(row1);
+            inputs.appendChild(row2);
+            inputs.appendChild(row3);
+            inputs.appendChild(profileInp);
+
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.className = 'btn-remove-item';
+            rmBtn.title = 'Entfernen';
+            rmBtn.textContent = '✕';
+            rmBtn.style.alignSelf = 'flex-start';
+            rmBtn.addEventListener('click', () => wrap.remove());
+
+            const topRow = document.createElement('div');
+            topRow.style.cssText = 'display:flex;gap:12px;width:100%;';
+            topRow.appendChild(inputs);
+            topRow.appendChild(rmBtn);
+            wrap.appendChild(topRow);
+            return wrap;
+        }
+
+        function addTeamMember(member) {
+            document.getElementById('team-members-list').appendChild(buildTeamMemberEl(member || {}));
+        }
+
+        document.getElementById('team-add-member').addEventListener('click', () => addTeamMember());
+
+        function readTeamData() {
+            const members = Array.from(
+                document.querySelectorAll('#team-members-list .admin-list-item')
+            ).map(el => ({
+                rank: el.querySelector('.tm-rank').value,
+                name: el.querySelector('.tm-name').value.trim(),
+                subrank: el.querySelector('.tm-subrank').value.trim(),
+                description: el.querySelector('.tm-description').value.trim(),
+                imagePath: el.dataset.imagePath || '',
+                profileUrl: el.querySelector('.tm-profileUrl').value.trim()
+            }));
+            return { members };
+        }
+
+        document.getElementById('btn-download-team').addEventListener('click', () => {
+            downloadJson(readTeamData(), 'team.json');
+        });
+
+        function populateTeam(data) {
+            if (!data) return;
+            document.getElementById('team-members-list').innerHTML = '';
+            (data.members || []).forEach(m => addTeamMember(m));
+        }
+
+        // ==============================
         // INITIAL LOAD
         // ==============================
         document.addEventListener('DOMContentLoaded', () => {
@@ -778,6 +962,11 @@
                 .then(r => r.ok ? r.json() : null)
                 .then(data => populateEvent(data))
                 .catch(err => { console.error('Failed to load event.json:', err); });
+
+            fetch('data/team.json')
+                .then(r => r.ok ? r.json() : null)
+                .then(data => populateTeam(data))
+                .catch(err => { console.error('Failed to load team.json:', err); });
         });
     </script>
 </body>
