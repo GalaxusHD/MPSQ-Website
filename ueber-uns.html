@@ -21,7 +21,6 @@
                 <li><a href="sozial-media.html">Sozial Media</a></li>
                 <li><a href="mixelpixel.html">MixelPixel</a></li>
             </ul>
-            <div class="nav-auth"></div>
             <button class="nav-hamburger" aria-label="Menü öffnen">
                 <span></span><span></span><span></span>
             </button>
@@ -32,7 +31,7 @@
     <div class="page-hero">
         <div class="container">
             <h1>Über <span style="color:var(--accent-red)">uns</span></h1>
-            <p>Erfahre mehr über das MPSQ-Projekt und unsere Mission.</p>
+            <p id="hero-subtitle">Erfahre mehr über das MPSQ-Projekt und unsere Mission.</p>
         </div>
     </div>
 
@@ -41,7 +40,7 @@
         <div class="container">
             <div class="about-grid">
                 <div class="about-visual">🎮</div>
-                <div class="about-text">
+                <div class="about-text" id="about-text">
                     <h2>Was ist <span style="color:var(--accent-red)">MPSQ</span>?</h2>
                     <p>
                         MPSQ steht für <strong>MixelPixel Squid Game</strong> – ein einzigartiges
@@ -68,11 +67,11 @@
     <section class="section highlight-section">
         <div class="container">
             <div class="section-header">
-                <h2>Unsere Mission</h2>
-                <p>Was uns antreibt und was wir erreichen wollen</p>
+                <h2 id="mission-title">Unsere Mission</h2>
+                <p id="mission-subtitle">Was uns antreibt und was wir erreichen wollen</p>
                 <span class="section-divider"></span>
             </div>
-            <div class="card-grid card-grid-3">
+            <div class="card-grid card-grid-3" id="mission-cards">
                 <div class="card">
                     <div style="font-size:2rem;margin-bottom:12px;">🌟</div>
                     <h3 style="margin-bottom:8px;font-weight:700;">Einzigartiges Erlebnis</h3>
@@ -102,10 +101,10 @@
     <section class="section">
         <div class="container">
             <div class="section-header">
-                <h2>Geschichte</h2>
+                <h2 id="history-title">Geschichte</h2>
                 <span class="section-divider"></span>
             </div>
-            <div style="max-width:700px;margin:0 auto;">
+            <div style="max-width:700px;margin:0 auto;" id="history-entries">
                 <div class="info-box" style="margin-bottom:20px;">
                     <p>
                         <strong style="color:var(--text-primary);">2023 – Die Idee entsteht</strong><br>
@@ -153,7 +152,84 @@
     </footer>
 
     <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
     <script src="js/main.js"></script>
+    <script>
+        // Helper: safely set text content
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
+
+        // Render about section from JSON data
+        // Note: paragraphs intentionally support <strong> HTML for bold formatting (trusted JSON source)
+        function renderAbout(data) {
+            const container = document.getElementById('about-text');
+            if (!container || !data.about) return;
+            const ab = data.about;
+            let html = `<h2>${escapeHtml(ab.title).replace('MPSQ', '<span style="color:var(--accent-red)">MPSQ</span>')}</h2>`;
+            (ab.paragraphs || []).forEach(p => {
+                html += `<p>${p}</p>`;
+            });
+            if (ab.listItems && ab.listItems.length) {
+                html += '<ul>' + ab.listItems.map(li => `<li>${escapeHtml(li)}</li>`).join('') + '</ul>';
+            }
+            container.innerHTML = html;
+        }
+
+        // Render mission cards from JSON data
+        function renderMission(data) {
+            if (!data.mission) return;
+            const m = data.mission;
+            setText('mission-title', m.title);
+            setText('mission-subtitle', m.subtitle);
+            const grid = document.getElementById('mission-cards');
+            if (!grid || !m.cards) return;
+            grid.innerHTML = m.cards.map(c => `
+                <div class="card">
+                    <div style="font-size:2rem;margin-bottom:12px;">${escapeHtml(c.icon)}</div>
+                    <h3 style="margin-bottom:8px;font-weight:700;">${escapeHtml(c.title)}</h3>
+                    <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">${escapeHtml(c.text)}</p>
+                </div>`).join('');
+        }
+
+        // Render history entries from JSON data
+        function renderHistory(data) {
+            if (!data.history) return;
+            const h = data.history;
+            setText('history-title', h.title);
+            const container = document.getElementById('history-entries');
+            if (!container || !h.entries) return;
+            container.innerHTML = h.entries.map((e, i) => `
+                <div class="info-box" ${i < h.entries.length - 1 ? 'style="margin-bottom:20px;"' : ''}>
+                    <p>
+                        <strong style="color:var(--text-primary);">${escapeHtml(e.year)}</strong><br>
+                        ${escapeHtml(e.text)}
+                    </p>
+                </div>`).join('');
+        }
+
+        function escapeHtml(str) {
+            const d = document.createElement('div');
+            d.appendChild(document.createTextNode(String(str)));
+            return d.innerHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('data/ueber-uns.json')
+                .then(r => {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    renderAbout(data);
+                    renderMission(data);
+                    renderHistory(data);
+                })
+                .catch(err => {
+                    // Graceful fallback: static content already rendered in HTML remains visible
+                    console.error('Failed to load ueber-uns.json:', err);
+                });
+        });
+    </script>
 </body>
 </html>

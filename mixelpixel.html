@@ -3,46 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MixelPixel</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="description" content="MixelPixel – Projekte und Server-Informationen.">
+    <link rel="stylesheet" href="css/style.css">
+    <title>MixelPixel – MPSQ</title>
 </head>
 <body>
-    <section id="projects">
-        <div class="project-card">
-            <h3>Squid Game</h3>
-            <p>Ein spannendes Projekt zur Analyse von prosocialem Verhalten.</p>
+
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-logo"><img src="assets/images/mpsq-logo.png" alt="MPSQ Logo" class="nav-logo-img"></a>
+            <ul class="nav-links">
+                <li><a href="ueber-uns.html">Über uns</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="event.html">Event</a></li>
+                <li><a href="bewerben.html">Bewerben</a></li>
+                <li><a href="sozial-media.html">Sozial Media</a></li>
+                <li><a href="mixelpixel.html">MixelPixel</a></li>
+            </ul>
+            <button class="nav-hamburger" aria-label="Menü öffnen">
+                <span></span><span></span><span></span>
+            </button>
         </div>
-        <div class="project-card">
-            <h3>Mord im Kekscafé - Video Projekt</h3>
-            <p>Eine Video-Serie über einen Detektiv und einen "Sherif", die versuchen, den Mörder zu finden, der jemanden in einem Café getötet hat.</p>
-            <a href="https://www.youtube.com/@Harryron">Zum Kanal</a>
+    </nav>
+
+    <!-- PAGE HERO -->
+    <div class="page-hero">
+        <div class="container">
+            <h1><span style="color:var(--accent-red)">MixelPixel</span></h1>
+            <p>Projekte und Informationen rund um den MixelPixel-Server.</p>
         </div>
-        <div class="project-card">
-            <h3>Stadtbauprojekt Langweid</h3>
-            <p>Das Stadtbauprojekt Wohnbau Neu-/Langweid ist zusammen mit DirtyBirdy's Shoppingmall eines der größten Stadtprojekte MixelPixels.</p>
-            <a href="https://www.youtube.com/watch?v=Vl2hfL7_nlU">Video ansehen</a>
+    </div>
+
+    <!-- PROJECTS -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Projekte</h2>
+                <span class="section-divider"></span>
+            </div>
+            <div class="card-grid card-grid-3">
+
+                <!-- MPSQ – Squid Game -->
+                <div class="card">
+                    <div style="font-size:2rem;margin-bottom:12px;">🦑</div>
+                    <h3 style="margin-bottom:8px;font-weight:700;">MPSQ – Squid Game</h3>
+                    <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
+                        Das ultimative Minecraft Squid Game Erlebnis – kompetitiv, spannend und unvergesslich.
+                    </p>
+                    <a href="index.html" class="btn btn-primary" style="display:inline-block;">Mehr erfahren →</a>
+                </div>
+
+                <!-- Mord im Kekscafé -->
+                <div class="card">
+                    <div style="font-size:2rem;margin-bottom:12px;">🔍</div>
+                    <h3 style="margin-bottom:8px;font-weight:700;">Mord im Kekscafé – Video Projekt</h3>
+                    <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
+                        Eine Video-Serie über einen Detektiv und einen &bdquo;Sherif&ldquo;, die versuchen, den Mörder zu finden,
+                        der jemanden in einem Café getötet hat.
+                    </p>
+                    <a href="https://www.youtube.com/@Harryron" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display:inline-block;">Zum Kanal →</a>
+                </div>
+
+                <!-- Stadtbauprojekt Langweid -->
+                <div class="card">
+                    <div style="font-size:2rem;margin-bottom:12px;">🏙️</div>
+                    <h3 style="margin-bottom:8px;font-weight:700;">Stadtbauprojekt Langweid</h3>
+                    <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
+                        Das Stadtbauprojekt Wohnbau Neu-/Langweid ist zusammen mit DirtyBirdy&rsquo;s Shoppingmall
+                        eines der größten Stadtprojekte MixelPixels.
+                    </p>
+                    <a href="https://www.youtube.com/watch?v=Vl2hfL7_nlU" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display:inline-block;">Video ansehen →</a>
+                </div>
+
+            </div>
         </div>
     </section>
 
-    <section id="server-info">
-        <div class="server-card">
-            <h4><a href="https://mixelpixel.net/news">News</a></h4>
-            <p>mixelpixel.net/news</p>
-        </div>
-        <div class="server-card">
-            <h4><a href="https://wiki.mixelpixel.net/">Wiki</a></h4>
-            <p>wiki.mixelpixel.net</p>
-        </div>
-        <div class="server-card">
-            <h4><a href="https://mixelpixel.net/faq">Faq</a></h4>
-            <p>mixelpixel.net/faq</p>
-        </div>
-        <div class="server-card">
-            <h4><a href="https://mixelpixel.net/regeln">Regeln</a></h4>
-            <p>mixelpixel.net/regeln</p>
+    <!-- SERVER INFORMATION -->
+    <section class="section highlight-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Server-Information</h2>
+                <span class="section-divider"></span>
+            </div>
+            <div class="card-grid card-grid-4">
+
+                <a href="https://mixelpixel.net/news" target="_blank" rel="noopener noreferrer" class="card" style="text-align:center;text-decoration:none;">
+                    <div style="font-size:2rem;margin-bottom:12px;">📰</div>
+                    <h3 style="font-weight:700;margin-bottom:8px;">News</h3>
+                    <p style="color:var(--accent-pink);font-size:0.875rem;">mixelpixel.net/news</p>
+                </a>
+
+                <a href="https://wiki.mixelpixel.net/" target="_blank" rel="noopener noreferrer" class="card" style="text-align:center;text-decoration:none;">
+                    <div style="font-size:2rem;margin-bottom:12px;">📖</div>
+                    <h3 style="font-weight:700;margin-bottom:8px;">Wiki</h3>
+                    <p style="color:var(--accent-pink);font-size:0.875rem;">wiki.mixelpixel.net</p>
+                </a>
+
+                <a href="https://mixelpixel.net/faq" target="_blank" rel="noopener noreferrer" class="card" style="text-align:center;text-decoration:none;">
+                    <div style="font-size:2rem;margin-bottom:12px;">❓</div>
+                    <h3 style="font-weight:700;margin-bottom:8px;">FAQ</h3>
+                    <p style="color:var(--accent-pink);font-size:0.875rem;">mixelpixel.net/faq</p>
+                </a>
+
+                <a href="https://mixelpixel.net/regeln" target="_blank" rel="noopener noreferrer" class="card" style="text-align:center;text-decoration:none;">
+                    <div style="font-size:2rem;margin-bottom:12px;">📋</div>
+                    <h3 style="font-weight:700;margin-bottom:8px;">Regeln</h3>
+                    <p style="color:var(--accent-pink);font-size:0.875rem;">mixelpixel.net/regeln</p>
+                </a>
+
+            </div>
         </div>
     </section>
 
-    <!-- Removed script tag for js/auth.js -->
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand"><span>MP</span>SQ – MixelPixel Squid Game</div>
+                <nav class="footer-nav">
+                    <a href="ueber-uns.html">Über uns</a>
+                    <a href="team.html">Team</a>
+                    <a href="event.html">Event</a>
+                    <a href="bewerben.html">Bewerben</a>
+                    <a href="sozial-media.html">Sozial Media</a>
+                    <a href="mixelpixel.html">MixelPixel</a>
+                </nav>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2025 MPSQ – MixelPixel Squid Game. Ein Projekt von
+                <a href="https://mixelpixel.net" target="_blank" rel="noopener noreferrer">MixelPixel</a>.
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
 </body>
 </html>

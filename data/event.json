@@ -1,0 +1,90 @@
+{
+  "pageTitle": "Kommende Events",
+  "pageSubtitle": "Verpasse kein MPSQ-Event – bleib auf dem Laufenden.",
+  "upcomingEvents": {
+    "title": "Nächste Events",
+    "events": [
+      {
+        "day": "15",
+        "month": "Jun",
+        "tag": "Hauptevent",
+        "title": "MPSQ Season 1 – Das große Finale",
+        "meta": ["🕐 20:00 Uhr", "📍 MixelPixel Server", "👥 Max. 100 Spieler"]
+      },
+      {
+        "day": "22",
+        "month": "Jun",
+        "tag": "Qualifikation",
+        "title": "Qualifikationsrunde – Wer kommt weiter?",
+        "meta": ["🕐 19:00 Uhr", "📍 MixelPixel Server", "👥 Max. 50 Spieler"]
+      },
+      {
+        "day": "01",
+        "month": "Jul",
+        "tag": "Community",
+        "title": "Community Warm-Up – Für alle!",
+        "meta": ["🕐 18:00 Uhr", "📍 MixelPixel Server", "👥 Offen für alle"]
+      }
+    ]
+  },
+  "games": {
+    "title": "Die Spiele",
+    "subtitle": "Diese Minispiele erwarten euch beim nächsten Event",
+    "items": [
+      {
+        "icon": "🟢",
+        "title": "Rotes Licht, Grünes Licht",
+        "text": "Bewege dich nur, wenn das Licht grün ist. Wer erwischt wird, scheidet aus.",
+        "badge": "Klassiker",
+        "badgeClass": "badge-red"
+      },
+      {
+        "icon": "🍬",
+        "title": "Zuckerstempel",
+        "text": "Schneide eine vorgegebene Form aus einem Keks – ohne sie zu zerbrechen.",
+        "badge": "Geschick",
+        "badgeClass": "badge-pink"
+      },
+      {
+        "icon": "🪢",
+        "title": "Tauziehen",
+        "text": "Teams kämpfen gegeneinander. Nur das stärkere Team kommt weiter.",
+        "badge": "Teamarbeit",
+        "badgeClass": "badge-red"
+      },
+      {
+        "icon": "⚪",
+        "title": "Murmeln",
+        "text": "Strategisches Glücksspiel gegen einen Partner. Nur einer geht weiter.",
+        "badge": "Strategie",
+        "badgeClass": "badge-pink"
+      },
+      {
+        "icon": "🔲",
+        "title": "Glasbrücke",
+        "text": "Überquere die Brücke – aber welches Glas hält? Falsch gewählt, raus!",
+        "badge": "Glück",
+        "badgeClass": "badge-red"
+      },
+      {
+        "icon": "🗡️",
+        "title": "Tintenfisch-Spiel",
+        "text": "Das finale Spiel. Angreifer gegen Verteidiger. Nur einer kann gewinnen.",
+        "badge": "Finale",
+        "badgeClass": "badge-red"
+      }
+    ]
+  },
+  "pastEvents": {
+    "title": "Vergangene Events",
+    "events": [
+      {
+        "day": "20",
+        "month": "Apr",
+        "tag": "Abgeschlossen",
+        "title": "MPSQ Beta – Erster Testlauf",
+        "meta": ["✅ Abgeschlossen", "👥 30 Teilnehmer"]
+      }
+    ]
+  }
+}

@@ -21,7 +21,6 @@
                 <li><a href="sozial-media.html">Sozial Media</a></li>
                 <li><a href="mixelpixel.html">MixelPixel</a></li>
             </ul>
-            <div class="nav-auth"></div>
             <button class="nav-hamburger" aria-label="Menü öffnen">
                 <span></span><span></span><span></span>
             </button>
@@ -32,7 +31,7 @@
     <div class="page-hero">
         <div class="container">
             <h1>Kommende <span style="color:var(--accent-red)">Events</span></h1>
-            <p>Verpasse kein MPSQ-Event – bleib auf dem Laufenden.</p>
+            <p id="hero-subtitle">Verpasse kein MPSQ-Event – bleib auf dem Laufenden.</p>
         </div>
     </div>
 
@@ -40,10 +39,10 @@
     <section class="section">
         <div class="container">
             <div class="section-header">
-                <h2>Nächste Events</h2>
+                <h2 id="upcoming-title">Nächste Events</h2>
                 <span class="section-divider"></span>
             </div>
-            <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;flex-direction:column;gap:16px;" id="upcoming-events">
                 <div class="event-card">
                     <div class="event-date-block">
                         <span class="day">15</span>
@@ -97,11 +96,11 @@
     <section class="section highlight-section">
         <div class="container">
             <div class="section-header">
-                <h2>Die Spiele</h2>
-                <p>Diese Minispiele erwarten euch beim nächsten Event</p>
+                <h2 id="games-title">Die Spiele</h2>
+                <p id="games-subtitle">Diese Minispiele erwarten euch beim nächsten Event</p>
                 <span class="section-divider"></span>
             </div>
-            <div class="card-grid card-grid-3">
+            <div class="card-grid card-grid-3" id="games-grid">
                 <div class="card">
                     <div style="font-size:2rem;margin-bottom:12px;">🟢</div>
                     <h3 style="margin-bottom:8px;font-weight:700;">Rotes Licht, Grünes Licht</h3>
@@ -158,10 +157,10 @@
     <section class="section">
         <div class="container">
             <div class="section-header">
-                <h2>Vergangene Events</h2>
+                <h2 id="past-title">Vergangene Events</h2>
                 <span class="section-divider"></span>
             </div>
-            <div style="display:flex;flex-direction:column;gap:16px;max-width:760px;margin:0 auto;">
+            <div style="display:flex;flex-direction:column;gap:16px;max-width:760px;margin:0 auto;" id="past-events">
                 <div class="event-card" style="opacity:0.6;">
                     <div class="event-date-block" style="background:var(--bg-tertiary);border-color:var(--border-default);">
                         <span class="day" style="color:var(--text-muted);">20</span>
@@ -213,7 +212,90 @@
     </footer>
 
     <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
     <script src="js/main.js"></script>
+    <script>
+        function escapeHtml(str) {
+            const d = document.createElement('div');
+            d.appendChild(document.createTextNode(String(str)));
+            return d.innerHTML;
+        }
+
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
+
+        function buildEventCard(ev, past) {
+            const pastStyle = past ? 'style="opacity:0.6;"' : '';
+            const dateStyle = past ? 'style="background:var(--bg-tertiary);border-color:var(--border-default);"' : '';
+            const dayStyle = past ? 'style="color:var(--text-muted);"' : '';
+            const tagStyle = past ? 'style="background:var(--bg-tertiary);color:var(--text-muted);"' : '';
+            return `
+                <div class="event-card" ${pastStyle}>
+                    <div class="event-date-block" ${dateStyle}>
+                        <span class="day" ${dayStyle}>${escapeHtml(ev.day)}</span>
+                        <span class="month">${escapeHtml(ev.month)}</span>
+                    </div>
+                    <div class="event-content">
+                        <span class="event-tag" ${tagStyle}>${escapeHtml(ev.tag)}</span>
+                        <div class="event-title">${escapeHtml(ev.title)}</div>
+                        <div class="event-meta">
+                            ${(ev.meta || []).map(m => `<span>${escapeHtml(m)}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderEvents(data) {
+            // Upcoming events
+            if (data.upcomingEvents) {
+                setText('upcoming-title', data.upcomingEvents.title);
+                const container = document.getElementById('upcoming-events');
+                if (container && data.upcomingEvents.events) {
+                    container.innerHTML = data.upcomingEvents.events.map(ev => buildEventCard(ev, false)).join('');
+                }
+            }
+
+            // Games
+            if (data.games) {
+                setText('games-title', data.games.title);
+                setText('games-subtitle', data.games.subtitle);
+                const grid = document.getElementById('games-grid');
+                if (grid && data.games.items) {
+                    grid.innerHTML = data.games.items.map(g => `
+                        <div class="card">
+                            <div style="font-size:2rem;margin-bottom:12px;">${escapeHtml(g.icon)}</div>
+                            <h3 style="margin-bottom:8px;font-weight:700;">${escapeHtml(g.title)}</h3>
+                            <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">${escapeHtml(g.text)}</p>
+                            <span class="badge ${escapeHtml(g.badgeClass)}" style="margin-top:12px;">${escapeHtml(g.badge)}</span>
+                        </div>`).join('');
+                }
+            }
+
+            // Past events
+            if (data.pastEvents) {
+                setText('past-title', data.pastEvents.title);
+                const container = document.getElementById('past-events');
+                if (container && data.pastEvents.events) {
+                    container.innerHTML = data.pastEvents.events.map(ev => buildEventCard(ev, true)).join('');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('data/event.json')
+                .then(r => {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    renderEvents(data);
+                })
+                .catch(err => {
+                    // Graceful fallback: static content already rendered in HTML remains visible
+                    console.error('Failed to load event.json:', err);
+                });
+        });
+    </script>
 </body>
 </html>
