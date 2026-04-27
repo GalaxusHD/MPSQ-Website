@@ -1,0 +1,56 @@
+{
+  "pageTitle": "Über uns",
+  "pageSubtitle": "Erfahre mehr über das MPSQ-Projekt und unsere Mission.",
+  "about": {
+    "title": "Was ist MPSQ?",
+    "paragraphs": [
+      "MPSQ steht für <strong>MixelPixel Squid Game</strong> – ein einzigartiges Minecraft-Event-Projekt, das die Welt des beliebten Netflix-Hits in die Blocky-Welt von Minecraft überträgt.",
+      "Organisiert vom MixelPixel-Team, bietet MPSQ spannende Minispiele, intensive Wettkämpfe und unvergessliche Momente für alle Teilnehmer."
+    ],
+    "listItems": [
+      "Hochwertige Custom-Maps und Minispiele",
+      "Professionelle Event-Organisation durch MixelPixel",
+      "Exklusive Preise und Auszeichnungen für die Besten",
+      "Aufzeichnung und Veröffentlichung auf YouTube",
+      "Aktive Community auf Discord"
+    ]
+  },
+  "mission": {
+    "title": "Unsere Mission",
+    "subtitle": "Was uns antreibt und was wir erreichen wollen",
+    "cards": [
+      {
+        "icon": "🌟",
+        "title": "Einzigartiges Erlebnis",
+        "text": "Wir wollen unvergessliche Momente schaffen, die Spieler lange in Erinnerung behalten."
+      },
+      {
+        "icon": "🤝",
+        "title": "Community First",
+        "text": "Die Community ist der Kern von MPSQ. Ohne euch wäre das alles nichts."
+      },
+      {
+        "icon": "📈",
+        "title": "Wachstum",
+        "text": "Wir wachsen stetig und verbessern uns mit jedem Event – für euch und mit euch."
+      }
+    ]
+  },
+  "history": {
+    "title": "Geschichte",
+    "entries": [
+      {
+        "year": "2023 – Die Idee entsteht",
+        "text": "Inspiriert von der Squid Game Serie entscheidet sich das MixelPixel-Team, ein Minecraft-Äquivalent zu erschaffen. Die erste konzeptionelle Phase beginnt."
+      },
+      {
+        "year": "2024 – Erste Events",
+        "text": "Die ersten MPSQ-Events finden statt. Die Community wächst und die Begeisterung ist riesig. Erste Verbesserungen werden eingearbeitet."
+      },
+      {
+        "year": "2025 – Neue Saison",
+        "text": "MPSQ geht in eine neue Runde mit verbessertem Gameplay, neuen Maps und einer größeren Community als je zuvor."
+      }
+    ]
+  }
+}

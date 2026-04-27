@@ -21,7 +21,6 @@
                 <li><a href="sozial-media.html">Sozial Media</a></li>
                 <li><a href="mixelpixel.html">MixelPixel</a></li>
             </ul>
-            <div class="nav-auth"></div>
             <button class="nav-hamburger" aria-label="Menü öffnen">
                 <span></span><span></span><span></span>
             </button>
@@ -36,20 +35,8 @@
         </div>
     </div>
 
-    <!-- ACCESS CHECK OVERLAY -->
-    <div id="accessDenied" style="display:none;">
-        <section class="section">
-            <div class="container" style="text-align:center;max-width:480px;">
-                <div style="font-size:3rem;margin-bottom:16px;">🔒</div>
-                <h2 style="font-size:1.8rem;font-weight:700;margin-bottom:12px;">Kein Zugriff</h2>
-                <p style="color:var(--text-secondary);margin-bottom:24px;">Diese Seite ist nur für autorisierte Nutzer zugänglich. Bitte melde dich mit dem richtigen Discord-Account an.</p>
-                <a href="index.html" class="btn btn-primary">Zurück zur Startseite</a>
-            </div>
-        </section>
-    </div>
-
     <!-- MAIN EDITING CONTENT -->
-    <div id="editingContent" style="display:none;">
+    <div id="editingContent">
 
         <!-- ADD / EDIT MEMBER FORM -->
         <section class="section">
@@ -146,27 +133,10 @@
     </footer>
 
     <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const accessDenied = document.getElementById('accessDenied');
-            const editingContent = document.getElementById('editingContent');
-
-            // Check if user is authorized editor
-            if (!Auth.isEditor()) {
-                accessDenied.style.display = 'block';
-                // If not logged in at all, redirect to home after a moment
-                if (!Auth.getUser()) {
-                    setTimeout(() => {
-                        Auth.login();
-                    }, 1500);
-                }
-                return;
-            }
-
-            editingContent.style.display = 'block';
             await loadMembers();
 
             // --- Form Handling ---

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Admin – Inhalte bearbeiten – MPSQ</title>
+    <style>
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-default);
+            padding-bottom: 0;
+        }
+        .admin-tab {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: color var(--transition-fast);
+        }
+        .admin-tab.active,
+        .admin-tab:hover {
+            color: var(--accent-red);
+            border-bottom-color: var(--accent-red);
+        }
+        .admin-panel {
+            display: none;
+        }
+        .admin-panel.active {
+            display: block;
+        }
+        .admin-field-group {
+            margin-bottom: 20px;
+        }
+        .admin-field-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .admin-field-group input,
+        .admin-field-group textarea {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+        }
+        .admin-field-group input:focus,
+        .admin-field-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-red);
+        }
+        .admin-section-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .admin-section-box h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--accent-red);
+        }
+        .admin-list-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .admin-list-item .admin-item-inputs {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .admin-list-item input,
+        .admin-list-item textarea {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            padding: 8px 10px;
+            font-size: 0.875rem;
+            width: 100%;
+        }
+        .btn-remove-item {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--accent-red);
+            font-size: 1.1rem;
+            padding: 4px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .btn-add-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: 1px dashed var(--border-default);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            width: 100%;
+            justify-content: center;
+            margin-top: 4px;
+            transition: border-color var(--transition-fast), color var(--transition-fast);
+        }
+        .btn-add-item:hover {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+        .instructions-box {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-left: 4px solid var(--accent-red);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            margin-bottom: 28px;
+            font-size: 0.875rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+        .instructions-box strong {
+            color: var(--text-primary);
+        }
+        .instructions-box ol {
+            list-style: decimal;
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+        .instructions-box code {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            color: var(--accent-pink);
+        }
+        .download-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-logo"><img src="assets/images/mpsq-logo.png" alt="MPSQ Logo" class="nav-logo-img"></a>
+            <ul class="nav-links">
+                <li><a href="ueber-uns.html">Über uns</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="event.html">Event</a></li>
+                <li><a href="bewerben.html">Bewerben</a></li>
+                <li><a href="sozial-media.html">Sozial Media</a></li>
+                <li><a href="mixelpixel.html">MixelPixel</a></li>
+            </ul>
+            <button class="nav-hamburger" aria-label="Menü öffnen">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- PAGE HERO -->
+    <div class="page-hero">
+        <div class="container">
+            <h1>Admin – <span style="color:var(--accent-red)">Inhalte</span></h1>
+            <p>Bearbeite die Inhalte von „Über uns" und „Event" direkt im Browser.</p>
+        </div>
+    </div>
+
+    <!-- EDITOR -->
+    <section class="section">
+        <div class="container" style="max-width:860px;">
+
+            <div class="instructions-box">
+                <strong>📋 So funktioniert der Editor:</strong>
+                <ol>
+                    <li>Wähle oben einen Tab (<em>Über uns</em> oder <em>Event</em>).</li>
+                    <li>Bearbeite die Felder nach Wunsch.</li>
+                    <li>Klicke auf <strong>JSON herunterladen</strong> – die Datei wird auf deinen Computer gespeichert.</li>
+                    <li>Öffne auf GitHub die Datei <code>data/ueber-uns.json</code> bzw. <code>data/event.json</code>.</li>
+                    <li>Klicke auf den Stift-Button (✏️ „Edit this file"), füge den Inhalt der heruntergeladenen Datei ein und bestätige mit <strong>Commit changes</strong>.</li>
+                    <li>GitHub Pages aktualisiert sich automatisch innerhalb weniger Minuten.</li>
+                </ol>
+            </div>
+
+            <!-- TABS -->
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-target="panel-ueber-uns">Über uns</button>
+                <button class="admin-tab" data-target="panel-event">Event</button>
+            </div>
+
+            <!-- ==================== ÜBER UNS PANEL ==================== -->
+            <div id="panel-ueber-uns" class="admin-panel active">
+
+                <div class="admin-section-box">
+                    <h3>Was ist MPSQ? – Abschnitt</h3>
+                    <div class="admin-field-group">
+                        <label>Abschnitts-Titel</label>
+                        <input type="text" id="uu-about-title" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Absatz 1 (HTML erlaubt: &lt;strong&gt;)</label>
+                        <textarea id="uu-about-p1" rows="3"></textarea>
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Absatz 2</label>
+                        <textarea id="uu-about-p2" rows="3"></textarea>
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Aufzählungspunkte</label>
+                        <div id="uu-list-items"></div>
+                        <button type="button" class="btn-add-item" id="uu-add-list-item">＋ Punkt hinzufügen</button>
+                    </div>
+                </div>
+
+                <div class="admin-section-box">
+                    <h3>Unsere Mission – Abschnitt</h3>
+                    <div class="admin-field-group">
+                        <label>Titel</label>
+                        <input type="text" id="uu-mission-title" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Untertitel</label>
+                        <input type="text" id="uu-mission-subtitle" value="">
+                    </div>
+                    <label style="display:block;font-weight:600;font-size:0.875rem;color:var(--text-secondary);margin-bottom:10px;">Karten</label>
+                    <div id="uu-mission-cards"></div>
+                    <button type="button" class="btn-add-item" id="uu-add-mission-card">＋ Karte hinzufügen</button>
+                </div>
+
+                <div class="admin-section-box">
+                    <h3>Geschichte – Abschnitt</h3>
+                    <div class="admin-field-group">
+                        <label>Titel</label>
+                        <input type="text" id="uu-history-title" value="">
+                    </div>
+                    <label style="display:block;font-weight:600;font-size:0.875rem;color:var(--text-secondary);margin-bottom:10px;">Einträge</label>
+                    <div id="uu-history-entries"></div>
+                    <button type="button" class="btn-add-item" id="uu-add-history-entry">＋ Eintrag hinzufügen</button>
+                </div>
+
+                <div class="download-actions">
+                    <button type="button" class="btn btn-primary" id="btn-download-uu">⬇ Über uns JSON herunterladen</button>
+                </div>
+
+            </div><!-- /panel-ueber-uns -->
+
+            <!-- ==================== EVENT PANEL ==================== -->
+            <div id="panel-event" class="admin-panel">
+
+                <div class="admin-section-box">
+                    <h3>Nächste Events</h3>
+                    <div class="admin-field-group">
+                        <label>Abschnitts-Titel</label>
+                        <input type="text" id="ev-upcoming-title" value="">
+                    </div>
+                    <label style="display:block;font-weight:600;font-size:0.875rem;color:var(--text-secondary);margin-bottom:10px;">Events</label>
+                    <div id="ev-upcoming-events"></div>
+                    <button type="button" class="btn-add-item" id="ev-add-upcoming">＋ Event hinzufügen</button>
+                </div>
+
+                <div class="admin-section-box">
+                    <h3>Die Spiele</h3>
+                    <div class="admin-field-group">
+                        <label>Titel</label>
+                        <input type="text" id="ev-games-title" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Untertitel</label>
+                        <input type="text" id="ev-games-subtitle" value="">
+                    </div>
+                    <label style="display:block;font-weight:600;font-size:0.875rem;color:var(--text-secondary);margin-bottom:10px;">Spiele</label>
+                    <div id="ev-games-items"></div>
+                    <button type="button" class="btn-add-item" id="ev-add-game">＋ Spiel hinzufügen</button>
+                </div>
+
+                <div class="admin-section-box">
+                    <h3>Vergangene Events</h3>
+                    <div class="admin-field-group">
+                        <label>Abschnitts-Titel</label>
+                        <input type="text" id="ev-past-title" value="">
+                    </div>
+                    <label style="display:block;font-weight:600;font-size:0.875rem;color:var(--text-secondary);margin-bottom:10px;">Events</label>
+                    <div id="ev-past-events"></div>
+                    <button type="button" class="btn-add-item" id="ev-add-past">＋ Vergangenes Event hinzufügen</button>
+                </div>
+
+                <div class="download-actions">
+                    <button type="button" class="btn btn-primary" id="btn-download-ev">⬇ Event JSON herunterladen</button>
+                </div>
+
+            </div><!-- /panel-event -->
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand"><span>MP</span>SQ – MixelPixel Squid Game</div>
+                <nav class="footer-nav">
+                    <a href="ueber-uns.html">Über uns</a>
+                    <a href="team.html">Team</a>
+                    <a href="event.html">Event</a>
+                    <a href="bewerben.html">Bewerben</a>
+                    <a href="sozial-media.html">Sozial Media</a>
+                    <a href="mixelpixel.html">MixelPixel</a>
+                </nav>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2025 MPSQ – MixelPixel Squid Game. Ein Projekt von
+                <a href="https://mixelpixel.net" target="_blank" rel="noopener noreferrer">MixelPixel</a>.
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        // ==============================
+        // TAB SWITCHING
+        // ==============================
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.target).classList.add('active');
+            });
+        });
+
+        // ==============================
+        // HELPERS
+        // ==============================
+        function downloadJson(obj, filename) {
+            const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function val(id) {
+            const el = document.getElementById(id);
+            return el ? el.value : '';
+        }
+
+        function setVal(id, v) {
+            const el = document.getElementById(id);
+            if (el) el.value = v || '';
+        }
+
+        // ==============================
+        // ÜBER UNS – List items
+        // ==============================
+        function buildListItemEl(value) {
+            const wrap = document.createElement('div');
+            wrap.className = 'admin-list-item';
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.className = 'uu-list-input';
+            inp.value = value || '';
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.className = 'btn-remove-item';
+            rmBtn.title = 'Entfernen';
+            rmBtn.textContent = '✕';
+            rmBtn.addEventListener('click', () => wrap.remove());
+            wrap.appendChild(inp);
+            wrap.appendChild(rmBtn);
+            return wrap;
+        }
+
+        function addListItem(value) {
+            document.getElementById('uu-list-items').appendChild(buildListItemEl(value));
+        }
+
+        document.getElementById('uu-add-list-item').addEventListener('click', () => addListItem(''));
+
+        // ==============================
+        // ÜBER UNS – Mission cards
+        // ==============================
+        function buildMissionCardEl(card) {
+            const wrap = document.createElement('div');
+            wrap.className = 'admin-list-item';
+            const inputs = document.createElement('div');
+            inputs.className = 'admin-item-inputs';
+            const iconInp = document.createElement('input');
+            iconInp.type = 'text';
+            iconInp.className = 'mc-icon';
+            iconInp.placeholder = 'Icon (Emoji)';
+            iconInp.value = card.icon || '';
+            const titleInp = document.createElement('input');
+            titleInp.type = 'text';
+            titleInp.className = 'mc-title';
+            titleInp.placeholder = 'Titel';
+            titleInp.value = card.title || '';
+            const textTA = document.createElement('textarea');
+            textTA.className = 'mc-text';
+            textTA.placeholder = 'Text';
+            textTA.rows = 2;
+            textTA.value = card.text || '';
+            inputs.appendChild(iconInp);
+            inputs.appendChild(titleInp);
+            inputs.appendChild(textTA);
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.className = 'btn-remove-item';
+            rmBtn.title = 'Entfernen';
+            rmBtn.textContent = '✕';
+            rmBtn.addEventListener('click', () => wrap.remove());
+            wrap.appendChild(inputs);
+            wrap.appendChild(rmBtn);
+            return wrap;
+        }
+
+        function addMissionCard(card) {
+            document.getElementById('uu-mission-cards').appendChild(buildMissionCardEl(card || {}));
+        }
+
+        document.getElementById('uu-add-mission-card').addEventListener('click', () => addMissionCard());
+
+        // ==============================
+        // ÜBER UNS – History entries
+        // ==============================
+        function buildHistoryEntryEl(entry) {
+            const wrap = document.createElement('div');
+            wrap.className = 'admin-list-item';
+            const inputs = document.createElement('div');
+            inputs.className = 'admin-item-inputs';
+            const yearInp = document.createElement('input');
+            yearInp.type = 'text';
+            yearInp.className = 'he-year';
+            yearInp.placeholder = 'Jahres-Label (z.B. 2025 – Neue Saison)';
+            yearInp.value = entry.year || '';
+            const textTA = document.createElement('textarea');
+            textTA.className = 'he-text';
+            textTA.placeholder = 'Beschreibung';
+            textTA.rows = 3;
+            textTA.value = entry.text || '';
+            inputs.appendChild(yearInp);
+            inputs.appendChild(textTA);
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.className = 'btn-remove-item';
+            rmBtn.title = 'Entfernen';
+            rmBtn.textContent = '✕';
+            rmBtn.addEventListener('click', () => wrap.remove());
+            wrap.appendChild(inputs);
+            wrap.appendChild(rmBtn);
+            return wrap;
+        }
+
+        function addHistoryEntry(entry) {
+            document.getElementById('uu-history-entries').appendChild(buildHistoryEntryEl(entry || {}));
+        }
+
+        document.getElementById('uu-add-history-entry').addEventListener('click', () => addHistoryEntry());
+
+        // ==============================
+        // EVENT – Event card builder
+        // ==============================
+        function buildEventCardEl(ev) {
+            const wrap = document.createElement('div');
+            wrap.className = 'admin-list-item';
+            const inputs = document.createElement('div');
+            inputs.className = 'admin-item-inputs';
+
+            const row1 = document.createElement('div');
+            row1.style.cssText = 'display:flex;gap:8px;';
+            const dayInp = document.createElement('input');
+            dayInp.type = 'text';
+            dayInp.className = 'ev-day';
+            dayInp.placeholder = 'Tag (z.B. 15)';
+            dayInp.value = ev.day || '';
+            dayInp.style.width = '80px';
+            const monthInp = document.createElement('input');
+            monthInp.type = 'text';
+            monthInp.className = 'ev-month';
+            monthInp.placeholder = 'Monat (z.B. Jun)';
+            monthInp.value = ev.month || '';
+            monthInp.style.width = '100px';
+            const tagInp = document.createElement('input');
+            tagInp.type = 'text';
+            tagInp.className = 'ev-tag';
+            tagInp.placeholder = 'Tag-Label';
+            tagInp.value = ev.tag || '';
+            row1.appendChild(dayInp);
+            row1.appendChild(monthInp);
+            row1.appendChild(tagInp);
+
+            const titleInp = document.createElement('input');
+            titleInp.type = 'text';
+            titleInp.className = 'ev-title';
+            titleInp.placeholder = 'Event-Titel';
+            titleInp.value = ev.title || '';
+
+            const metaTA = document.createElement('textarea');
+            metaTA.className = 'ev-meta';
+            metaTA.placeholder = 'Meta-Infos (eine pro Zeile, z.B. 🕐 20:00 Uhr)';
+            metaTA.rows = 3;
+            metaTA.value = (ev.meta || []).join('\n');
+
+            inputs.appendChild(row1);
+            inputs.appendChild(titleInp);
+            inputs.appendChild(metaTA);
+
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.className = 'btn-remove-item';
+            rmBtn.title = 'Entfernen';
+            rmBtn.textContent = '✕';
+            rmBtn.addEventListener('click', () => wrap.remove());
+            wrap.appendChild(inputs);
+            wrap.appendChild(rmBtn);
+            return wrap;
+        }
+
+        function addUpcomingEvent(ev) {
+            document.getElementById('ev-upcoming-events').appendChild(buildEventCardEl(ev || {}));
+        }
+        function addPastEvent(ev) {
+            document.getElementById('ev-past-events').appendChild(buildEventCardEl(ev || {}));
+        }
+
+        document.getElementById('ev-add-upcoming').addEventListener('click', () => addUpcomingEvent());
+        document.getElementById('ev-add-past').addEventListener('click', () => addPastEvent());
+
+        // ==============================
+        // EVENT – Game item builder
+        // ==============================
+        function buildGameItemEl(g) {
+            const wrap = document.createElement('div');
+            wrap.className = 'admin-list-item';
+            const inputs = document.createElement('div');
+            inputs.className = 'admin-item-inputs';
+
+            const row1 = document.createElement('div');
+            row1.style.cssText = 'display:flex;gap:8px;';
+            const iconInp = document.createElement('input');
+            iconInp.type = 'text';
+            iconInp.className = 'gi-icon';
+            iconInp.placeholder = 'Icon (Emoji)';
+            iconInp.value = g.icon || '';
+            iconInp.style.width = '80px';
+            const titleInp = document.createElement('input');
+            titleInp.type = 'text';
+            titleInp.className = 'gi-title';
+            titleInp.placeholder = 'Spielname';
+            titleInp.value = g.title || '';
+            row1.appendChild(iconInp);
+            row1.appendChild(titleInp);
+
+            const textTA = document.createElement('textarea');
+            textTA.className = 'gi-text';
+            textTA.placeholder = 'Beschreibung';
+            textTA.rows = 2;
+            textTA.value = g.text || '';
+
+            const row2 = document.createElement('div');
+            row2.style.cssText = 'display:flex;gap:8px;';
+            const badgeInp = document.createElement('input');
+            badgeInp.type = 'text';
+            badgeInp.className = 'gi-badge';
+            badgeInp.placeholder = 'Badge-Text';
+            badgeInp.value = g.badge || '';
+            const badgeClassInp = document.createElement('input');
+            badgeClassInp.type = 'text';
+            badgeClassInp.className = 'gi-badgeClass';
+            badgeClassInp.placeholder = 'CSS-Klasse (badge-red / badge-pink)';
+            badgeClassInp.value = g.badgeClass || 'badge-red';
+            row2.appendChild(badgeInp);
+            row2.appendChild(badgeClassInp);
+
+            inputs.appendChild(row1);
+            inputs.appendChild(textTA);
+            inputs.appendChild(row2);
+
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.className = 'btn-remove-item';
+            rmBtn.title = 'Entfernen';
+            rmBtn.textContent = '✕';
+            rmBtn.addEventListener('click', () => wrap.remove());
+            wrap.appendChild(inputs);
+            wrap.appendChild(rmBtn);
+            return wrap;
+        }
+
+        function addGameItem(g) {
+            document.getElementById('ev-games-items').appendChild(buildGameItemEl(g || {}));
+        }
+
+        document.getElementById('ev-add-game').addEventListener('click', () => addGameItem());
+
+        // ==============================
+        // READ FORM DATA
+        // ==============================
+        function readUeberUnsData() {
+            const listItems = Array.from(
+                document.querySelectorAll('#uu-list-items .uu-list-input')
+            ).map(i => i.value.trim()).filter(Boolean);
+
+            const missionCards = Array.from(
+                document.querySelectorAll('#uu-mission-cards .admin-list-item')
+            ).map(el => ({
+                icon: el.querySelector('.mc-icon').value.trim(),
+                title: el.querySelector('.mc-title').value.trim(),
+                text: el.querySelector('.mc-text').value.trim()
+            }));
+
+            const historyEntries = Array.from(
+                document.querySelectorAll('#uu-history-entries .admin-list-item')
+            ).map(el => ({
+                year: el.querySelector('.he-year').value.trim(),
+                text: el.querySelector('.he-text').value.trim()
+            }));
+
+            return {
+                pageTitle: "Über uns",
+                pageSubtitle: "Erfahre mehr über das MPSQ-Projekt und unsere Mission.",
+                about: {
+                    title: val('uu-about-title'),
+                    paragraphs: [val('uu-about-p1'), val('uu-about-p2')].filter(Boolean),
+                    listItems
+                },
+                mission: {
+                    title: val('uu-mission-title'),
+                    subtitle: val('uu-mission-subtitle'),
+                    cards: missionCards
+                },
+                history: {
+                    title: val('uu-history-title'),
+                    entries: historyEntries
+                }
+            };
+        }
+
+        function readEventCardEls(containerId) {
+            return Array.from(
+                document.querySelectorAll('#' + containerId + ' .admin-list-item')
+            ).map(el => ({
+                day: el.querySelector('.ev-day').value.trim(),
+                month: el.querySelector('.ev-month').value.trim(),
+                tag: el.querySelector('.ev-tag').value.trim(),
+                title: el.querySelector('.ev-title').value.trim(),
+                meta: el.querySelector('.ev-meta').value.split('\n').map(s => s.trim()).filter(Boolean)
+            }));
+        }
+
+        function readEventData() {
+            const games = Array.from(
+                document.querySelectorAll('#ev-games-items .admin-list-item')
+            ).map(el => ({
+                icon: el.querySelector('.gi-icon').value.trim(),
+                title: el.querySelector('.gi-title').value.trim(),
+                text: el.querySelector('.gi-text').value.trim(),
+                badge: el.querySelector('.gi-badge').value.trim(),
+                badgeClass: el.querySelector('.gi-badgeClass').value.trim()
+            }));
+
+            return {
+                pageTitle: val('ev-upcoming-title') ? "Kommende Events" : "Kommende Events",
+                pageSubtitle: "Verpasse kein MPSQ-Event – bleib auf dem Laufenden.",
+                upcomingEvents: {
+                    title: val('ev-upcoming-title'),
+                    events: readEventCardEls('ev-upcoming-events')
+                },
+                games: {
+                    title: val('ev-games-title'),
+                    subtitle: val('ev-games-subtitle'),
+                    items: games
+                },
+                pastEvents: {
+                    title: val('ev-past-title'),
+                    events: readEventCardEls('ev-past-events')
+                }
+            };
+        }
+
+        // ==============================
+        // DOWNLOAD BUTTONS
+        // ==============================
+        document.getElementById('btn-download-uu').addEventListener('click', () => {
+            downloadJson(readUeberUnsData(), 'ueber-uns.json');
+        });
+
+        document.getElementById('btn-download-ev').addEventListener('click', () => {
+            downloadJson(readEventData(), 'event.json');
+        });
+
+        // ==============================
+        // POPULATE FORM FROM JSON
+        // ==============================
+        function populateUeberUns(data) {
+            if (!data) return;
+
+            const ab = data.about || {};
+            setVal('uu-about-title', ab.title);
+            setVal('uu-about-p1', (ab.paragraphs || [])[0] || '');
+            setVal('uu-about-p2', (ab.paragraphs || [])[1] || '');
+            document.getElementById('uu-list-items').innerHTML = '';
+            (ab.listItems || []).forEach(item => addListItem(item));
+
+            const m = data.mission || {};
+            setVal('uu-mission-title', m.title);
+            setVal('uu-mission-subtitle', m.subtitle);
+            document.getElementById('uu-mission-cards').innerHTML = '';
+            (m.cards || []).forEach(c => addMissionCard(c));
+
+            const h = data.history || {};
+            setVal('uu-history-title', h.title);
+            document.getElementById('uu-history-entries').innerHTML = '';
+            (h.entries || []).forEach(e => addHistoryEntry(e));
+        }
+
+        function populateEvent(data) {
+            if (!data) return;
+
+            const ue = data.upcomingEvents || {};
+            setVal('ev-upcoming-title', ue.title);
+            document.getElementById('ev-upcoming-events').innerHTML = '';
+            (ue.events || []).forEach(ev => addUpcomingEvent(ev));
+
+            const g = data.games || {};
+            setVal('ev-games-title', g.title);
+            setVal('ev-games-subtitle', g.subtitle);
+            document.getElementById('ev-games-items').innerHTML = '';
+            (g.items || []).forEach(gi => addGameItem(gi));
+
+            const pe = data.pastEvents || {};
+            setVal('ev-past-title', pe.title);
+            document.getElementById('ev-past-events').innerHTML = '';
+            (pe.events || []).forEach(ev => addPastEvent(ev));
+        }
+
+        // ==============================
+        // INITIAL LOAD
+        // ==============================
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('data/ueber-uns.json')
+                .then(r => r.ok ? r.json() : null)
+                .then(data => populateUeberUns(data))
+                .catch(() => {});
+
+            fetch('data/event.json')
+                .then(r => r.ok ? r.json() : null)
+                .then(data => populateEvent(data))
+                .catch(() => {});
+        });
+    </script>
+</body>
+</html>
