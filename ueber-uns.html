@@ -161,6 +161,7 @@
         }
 
         // Render about section from JSON data
+        // Note: paragraphs intentionally support <strong> HTML for bold formatting (trusted JSON source)
         function renderAbout(data) {
             const container = document.getElementById('about-text');
             if (!container || !data.about) return;
@@ -224,8 +225,9 @@
                     renderMission(data);
                     renderHistory(data);
                 })
-                .catch(() => {
+                .catch(err => {
                     // Graceful fallback: static content already rendered in HTML remains visible
+                    console.error('Failed to load ueber-uns.json:', err);
                 });
         });
     </script>

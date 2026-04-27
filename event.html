@@ -291,8 +291,9 @@
                 .then(data => {
                     renderEvents(data);
                 })
-                .catch(() => {
+                .catch(err => {
                     // Graceful fallback: static content already rendered in HTML remains visible
+                    console.error('Failed to load event.json:', err);
                 });
         });
     </script>

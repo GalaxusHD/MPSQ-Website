@@ -691,7 +691,7 @@
             }));
 
             return {
-                pageTitle: val('ev-upcoming-title') ? "Kommende Events" : "Kommende Events",
+                pageTitle: "Kommende Events",
                 pageSubtitle: "Verpasse kein MPSQ-Event – bleib auf dem Laufenden.",
                 upcomingEvents: {
                     title: val('ev-upcoming-title'),
@@ -772,12 +772,12 @@
             fetch('data/ueber-uns.json')
                 .then(r => r.ok ? r.json() : null)
                 .then(data => populateUeberUns(data))
-                .catch(() => {});
+                .catch(err => { console.error('Failed to load ueber-uns.json:', err); });
 
             fetch('data/event.json')
                 .then(r => r.ok ? r.json() : null)
                 .then(data => populateEvent(data))
-                .catch(() => {});
+                .catch(err => { console.error('Failed to load event.json:', err); });
         });
     </script>
 </body>
