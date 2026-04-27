@@ -51,6 +51,11 @@ CREATE POLICY "allow_public_select_content_blocks"
 -- ==============================
 -- 5. INDEXES
 -- ==============================
+-- Ensure sort_order column exists (safe to run even if already present).
+-- This handles databases created before sort_order was added to the schema.
+ALTER TABLE public.team_members
+    ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
+
 CREATE INDEX IF NOT EXISTS idx_team_members_rank_order
   ON public.team_members (rank, sort_order);
 

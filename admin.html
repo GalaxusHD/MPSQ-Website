@@ -496,11 +496,21 @@
                 }
             };
             if (body !== undefined) opts.body = JSON.stringify(body);
-            const res = await fetch(`${EDGE_FN_BASE}${path}`, opts);
+            let res;
+            try {
+                res = await fetch(`${EDGE_FN_BASE}${path}`, opts);
+            } catch (networkErr) {
+                throw new Error(`Netzwerkfehler (CORS oder Verbindung): ${networkErr.message}`);
+            }
             if (!res.ok) {
-                let err;
-                try { err = await res.json(); } catch { err = { error: res.statusText }; }
-                throw new Error(err.error || res.statusText);
+                let detail = res.statusText;
+                try {
+                    const errData = await res.json();
+                    detail = errData.error || errData.message || detail;
+                } catch {
+                    try { detail = await res.text() || detail; } catch { /* ignore */ }
+                }
+                throw new Error(`HTTP ${res.status}: ${detail}`);
             }
             return res.json();
         }
@@ -511,15 +521,25 @@
             if (!pw) throw new Error('No password');
             const formData = new FormData();
             formData.append('file', file);
-            const res = await fetch(`${EDGE_FN_BASE}/upload-image`, {
-                method: 'POST',
-                headers: { 'x-admin-password': pw },
-                body: formData
-            });
+            let res;
+            try {
+                res = await fetch(`${EDGE_FN_BASE}/upload-image`, {
+                    method: 'POST',
+                    headers: { 'x-admin-password': pw },
+                    body: formData
+                });
+            } catch (networkErr) {
+                throw new Error(`Netzwerkfehler (CORS oder Verbindung): ${networkErr.message}`);
+            }
             if (!res.ok) {
-                let err;
-                try { err = await res.json(); } catch { err = { error: res.statusText }; }
-                throw new Error(err.error || res.statusText);
+                let detail = res.statusText;
+                try {
+                    const errData = await res.json();
+                    detail = errData.error || errData.message || detail;
+                } catch {
+                    try { detail = await res.text() || detail; } catch { /* ignore */ }
+                }
+                throw new Error(`HTTP ${res.status}: ${detail}`);
             }
             return res.json(); // { publicUrl, path }
         }
