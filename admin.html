@@ -166,6 +166,87 @@
             flex-wrap: wrap;
             margin-top: 8px;
         }
+        /* ── Auth box ───────────────────────────────────────────── */
+        .auth-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .auth-box label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .auth-box input[type="password"] {
+            flex: 1;
+            min-width: 160px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            font-size: 0.875rem;
+        }
+        .auth-box input[type="password"]:focus {
+            outline: none;
+            border-color: var(--accent-red);
+        }
+        /* ── Save button ─────────────────────────────────────────── */
+        .btn-save {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #1a7f37;
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background var(--transition-fast), opacity var(--transition-fast);
+        }
+        .btn-save:hover { background: #218a3e; }
+        .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+        /* ── Toast notifications ─────────────────────────────────── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            max-width: 360px;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast-success { background: #1a7f37; }
+        .toast-error   { background: #b91c1c; }
+        /* Image preview in team panel */
+        .tm-img-preview {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-default);
+        }
     </style>
 </head>
 <body>
@@ -192,7 +273,7 @@
     <div class="page-hero">
         <div class="container">
             <h1>Admin – <span style="color:var(--accent-red)">Inhalte</span></h1>
-            <p>Bearbeite die Inhalte von „Über uns" und „Event" direkt im Browser.</p>
+            <p>Bearbeite und veröffentliche Inhalte direkt in Supabase.</p>
         </div>
     </div>
 
@@ -203,13 +284,19 @@
             <div class="instructions-box">
                 <strong>📋 So funktioniert der Editor:</strong>
                 <ol>
-                    <li>Wähle oben einen Tab (<em>Über uns</em> oder <em>Event</em>).</li>
+                    <li>Gib oben das <strong>Admin-Passwort</strong> ein.</li>
+                    <li>Wähle einen Tab (<em>Über uns</em>, <em>Event</em> oder <em>Team</em>).</li>
                     <li>Bearbeite die Felder nach Wunsch.</li>
-                    <li>Klicke auf <strong>JSON herunterladen</strong> – die Datei wird auf deinen Computer gespeichert.</li>
-                    <li>Öffne auf GitHub die Datei <code>data/ueber-uns.json</code>, <code>data/event.json</code> bzw. <code>data/team.json</code>.</li>
-                    <li>Klicke auf den Stift-Button (✏️ „Edit this file"), füge den Inhalt der heruntergeladenen Datei ein und bestätige mit <strong>Commit changes</strong>.</li>
-                    <li>GitHub Pages aktualisiert sich automatisch innerhalb weniger Minuten.</li>
+                    <li>Klicke auf <strong>Speichern</strong> – Änderungen werden sofort in Supabase veröffentlicht.</li>
+                    <li>Die Seiten zeigen Änderungen nach einem Reload.</li>
                 </ol>
+                <p style="margin-top:8px;">Optional: Mit <em>JSON herunterladen</em> kannst du eine lokale Kopie erstellen.</p>
+            </div>
+
+            <!-- ADMIN PASSWORD -->
+            <div class="auth-box">
+                <label for="admin-password">🔐 Admin-Passwort:</label>
+                <input type="password" id="admin-password" placeholder="Passwort eingeben…" autocomplete="current-password">
             </div>
 
             <!-- TABS -->
@@ -270,7 +357,8 @@
                 </div>
 
                 <div class="download-actions">
-                    <button type="button" class="btn btn-primary" id="btn-download-uu">⬇ Über uns JSON herunterladen</button>
+                    <button type="button" class="btn-save" id="btn-save-uu">💾 Über uns speichern</button>
+                    <button type="button" class="btn btn-primary" id="btn-download-uu">⬇ JSON herunterladen</button>
                 </div>
 
             </div><!-- /panel-ueber-uns -->
@@ -316,7 +404,8 @@
                 </div>
 
                 <div class="download-actions">
-                    <button type="button" class="btn btn-primary" id="btn-download-ev">⬇ Event JSON herunterladen</button>
+                    <button type="button" class="btn-save" id="btn-save-ev">💾 Event speichern</button>
+                    <button type="button" class="btn btn-primary" id="btn-download-ev">⬇ JSON herunterladen</button>
                 </div>
 
             </div><!-- /panel-event -->
@@ -327,14 +416,15 @@
                 <div class="admin-section-box">
                     <h3>Teammitglieder</h3>
                     <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
-                        Bilder werden direkt in die JSON-Datei eingebettet (Base64). Bitte nur kleine Dateien verwenden (max. empfohlen: 200 KB).
+                        Bilder werden in den Supabase Storage hochgeladen. Klicke nach dem Hochladen auf <strong>Team speichern</strong>.
                     </p>
                     <div id="team-members-list"></div>
                     <button type="button" class="btn-add-item" id="team-add-member">＋ Mitglied hinzufügen</button>
                 </div>
 
                 <div class="download-actions">
-                    <button type="button" class="btn btn-primary" id="btn-download-team">⬇ Team JSON herunterladen</button>
+                    <button type="button" class="btn-save" id="btn-save-team">💾 Team speichern</button>
+                    <button type="button" class="btn btn-primary" id="btn-download-team">⬇ JSON herunterladen</button>
                 </div>
 
             </div><!-- /panel-team -->
@@ -363,8 +453,129 @@
         </div>
     </footer>
 
+    <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script>
+        // ==============================
+        // SUPABASE / EDGE FUNCTION
+        // ==============================
+        const EDGE_FN_BASE = `${SUPABASE_URL}/functions/v1/admin-write`;
+
+        function getAdminPassword() {
+            return document.getElementById('admin-password').value.trim();
+        }
+
+        // Show a brief toast notification
+        function showToast(msg, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            // Trigger animation
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => toast.classList.add('show'));
+            });
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Call the admin-write Edge Function
+        async function callEdge(path, method, body) {
+            const pw = getAdminPassword();
+            if (!pw) {
+                showToast('Bitte Admin-Passwort eingeben!', 'error');
+                throw new Error('No password');
+            }
+            const opts = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-password': pw
+                }
+            };
+            if (body !== undefined) opts.body = JSON.stringify(body);
+            const res = await fetch(`${EDGE_FN_BASE}${path}`, opts);
+            if (!res.ok) {
+                let err;
+                try { err = await res.json(); } catch { err = { error: res.statusText }; }
+                throw new Error(err.error || res.statusText);
+            }
+            return res.json();
+        }
+
+        // Upload image via Edge Function multipart POST
+        async function uploadImageViaEdge(file) {
+            const pw = getAdminPassword();
+            if (!pw) throw new Error('No password');
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch(`${EDGE_FN_BASE}/upload-image`, {
+                method: 'POST',
+                headers: { 'x-admin-password': pw },
+                body: formData
+            });
+            if (!res.ok) {
+                let err;
+                try { err = await res.json(); } catch { err = { error: res.statusText }; }
+                throw new Error(err.error || res.statusText);
+            }
+            return res.json(); // { publicUrl, path }
+        }
+
+        // ── Save functions ───────────────────────────────────────────
+        async function saveUeberUns() {
+            const btn = document.getElementById('btn-save-uu');
+            btn.disabled = true;
+            try {
+                await callEdge('/content-blocks', 'POST', [
+                    { key: 'ueber-uns', value: readUeberUnsData() }
+                ]);
+                showToast('✅ Über uns gespeichert!');
+            } catch (err) {
+                showToast(`❌ Fehler: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function saveEvent() {
+            const btn = document.getElementById('btn-save-ev');
+            btn.disabled = true;
+            try {
+                await callEdge('/content-blocks', 'POST', [
+                    { key: 'event', value: readEventData() }
+                ]);
+                showToast('✅ Event gespeichert!');
+            } catch (err) {
+                showToast(`❌ Fehler: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function saveTeam() {
+            const btn = document.getElementById('btn-save-team');
+            btn.disabled = true;
+            try {
+                const members = readTeamData().members.map((m, i) => ({
+                    id: m.id || crypto.randomUUID(),
+                    rank: m.rank,
+                    name: m.name,
+                    subrank: m.subrank,
+                    image_url: m.imageUrl || '',
+                    sort_order: i
+                }));
+                await callEdge('/team-members', 'POST', members);
+                showToast('✅ Team gespeichert!');
+            } catch (err) {
+                showToast(`❌ Fehler: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
         // ==============================
         // TAB SWITCHING
         // ==============================
@@ -740,6 +951,12 @@
         });
 
         // ==============================
+        // SAVE BUTTONS
+        // ==============================
+        document.getElementById('btn-save-uu').addEventListener('click', saveUeberUns);
+        document.getElementById('btn-save-ev').addEventListener('click', saveEvent);
+
+        // ==============================
         // POPULATE FORM FROM JSON
         // ==============================
         function populateUeberUns(data) {
@@ -793,6 +1010,9 @@
             const wrap = document.createElement('div');
             wrap.className = 'admin-list-item';
             wrap.style.flexDirection = 'column';
+            // Store member id (for upserts) and current image URL
+            wrap.dataset.memberId = member.id || member.memberId || '';
+            wrap.dataset.imageUrl = member.imageUrl || member.image_url || '';
 
             const inputs = document.createElement('div');
             inputs.className = 'admin-item-inputs';
@@ -822,26 +1042,12 @@
             row1.appendChild(rankSel);
             row1.appendChild(nameInp);
 
-            // Row 2: subrank + description
-            const row2 = document.createElement('div');
-            row2.style.cssText = 'display:flex;gap:8px;';
-
+            // Row 2: subrank only (description removed)
             const subrankInp = document.createElement('input');
             subrankInp.type = 'text';
             subrankInp.className = 'tm-subrank';
             subrankInp.placeholder = 'Subrank / Titel (z.B. Leiter)';
             subrankInp.value = member.subrank || '';
-            subrankInp.style.flex = '1';
-
-            const descInp = document.createElement('input');
-            descInp.type = 'text';
-            descInp.className = 'tm-description';
-            descInp.placeholder = 'Kurzbeschreibung (optional)';
-            descInp.value = member.description || '';
-            descInp.style.flex = '1';
-
-            row2.appendChild(subrankInp);
-            row2.appendChild(descInp);
 
             // Row 3: image upload + preview
             const row3 = document.createElement('div');
@@ -858,50 +1064,49 @@
             fileInp.className = 'tm-file';
             fileLabel.appendChild(fileInp);
 
+            const uploadStatus = document.createElement('span');
+            uploadStatus.style.cssText = 'font-size:0.75rem;color:var(--text-muted);';
+
             const preview = document.createElement('img');
-            preview.className = 'tm-preview';
-            preview.style.cssText = 'width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--border-default);display:' + (member.imagePath ? 'block' : 'none') + ';';
-            if (member.imagePath) preview.src = member.imagePath;
+            preview.className = 'tm-img-preview';
+            const existingUrl = member.image_url || member.imageUrl || '';
+            preview.style.display = existingUrl ? 'block' : 'none';
+            if (existingUrl) {
+                preview.src = existingUrl;
+                wrap.dataset.imageUrl = existingUrl;
+            }
 
-            // Store imagePath as data attribute on wrap
-            wrap.dataset.imagePath = member.imagePath || '';
-
-            fileInp.addEventListener('change', () => {
+            fileInp.addEventListener('change', async () => {
                 const file = fileInp.files[0];
                 if (!file) return;
-                const reader = new FileReader();
-                reader.onload = e => {
-                    wrap.dataset.imagePath = e.target.result;
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
+                // Show local preview immediately
+                const localUrl = URL.createObjectURL(file);
+                preview.src = localUrl;
+                preview.style.display = 'block';
+                uploadStatus.textContent = 'Hochladen…';
+                uploadStatus.style.color = 'var(--accent-pink)';
+                try {
+                    const result = await uploadImageViaEdge(file);
+                    wrap.dataset.imageUrl = result.publicUrl;
+                    preview.src = result.publicUrl;
+                    URL.revokeObjectURL(localUrl);
+                    uploadStatus.textContent = '✅ Hochgeladen';
+                    uploadStatus.style.color = '#1a7f37';
+                } catch (err) {
+                    uploadStatus.textContent = `❌ ${err.message}`;
+                    uploadStatus.style.color = '#b91c1c';
+                    // Keep local preview but reset stored URL
+                    wrap.dataset.imageUrl = '';
+                }
             });
 
             row3.appendChild(fileLabel);
             row3.appendChild(preview);
-
-            // Profile URL (auto-derived but also editable)
-            const profileInp = document.createElement('input');
-            profileInp.type = 'text';
-            profileInp.className = 'tm-profileUrl';
-            profileInp.placeholder = 'Profil-URL (wird automatisch gesetzt)';
-            profileInp.value = member.profileUrl || '';
-            profileInp.style.cssText = 'font-size:0.8rem;';
-
-            // Auto-fill profileUrl when name changes
-            nameInp.addEventListener('input', () => {
-                if (!profileInp.value || profileInp.value.startsWith('https://mixelpixel.net/profil/')) {
-                    profileInp.value = nameInp.value.trim()
-                        ? 'https://mixelpixel.net/profil/' + nameInp.value.trim()
-                        : '';
-                }
-            });
+            row3.appendChild(uploadStatus);
 
             inputs.appendChild(row1);
-            inputs.appendChild(row2);
+            inputs.appendChild(subrankInp);
             inputs.appendChild(row3);
-            inputs.appendChild(profileInp);
 
             const rmBtn = document.createElement('button');
             rmBtn.type = 'button';
@@ -929,44 +1134,75 @@
             const members = Array.from(
                 document.querySelectorAll('#team-members-list .admin-list-item')
             ).map(el => ({
+                id: el.dataset.memberId || '',
                 rank: el.querySelector('.tm-rank').value,
                 name: el.querySelector('.tm-name').value.trim(),
                 subrank: el.querySelector('.tm-subrank').value.trim(),
-                description: el.querySelector('.tm-description').value.trim(),
-                imagePath: el.dataset.imagePath || '',
-                profileUrl: el.querySelector('.tm-profileUrl').value.trim()
+                imageUrl: el.dataset.imageUrl || ''
             }));
             return { members };
         }
+
+        document.getElementById('btn-save-team').addEventListener('click', saveTeam);
 
         document.getElementById('btn-download-team').addEventListener('click', () => {
             downloadJson(readTeamData(), 'team.json');
         });
 
-        function populateTeam(data) {
-            if (!data) return;
+        function populateTeam(members) {
+            // Accepts either a raw Supabase rows array or the legacy { members: [...] } format
+            const list = Array.isArray(members) ? members : (members?.members || []);
             document.getElementById('team-members-list').innerHTML = '';
-            (data.members || []).forEach(m => addTeamMember(m));
+            list.forEach(m => addTeamMember(m));
         }
 
         // ==============================
-        // INITIAL LOAD
+        // INITIAL LOAD (from Supabase)
         // ==============================
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('data/ueber-uns.json')
-                .then(r => r.ok ? r.json() : null)
-                .then(data => populateUeberUns(data))
-                .catch(err => { console.error('Failed to load ueber-uns.json:', err); });
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load Über uns content block
+            try {
+                const res = await fetch(
+                    `${SUPABASE_URL}/rest/v1/content_blocks?key=eq.ueber-uns&select=value&limit=1`,
+                    { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+                );
+                const rows = res.ok ? await res.json() : [];
+                if (rows[0]?.value) populateUeberUns(rows[0].value);
+            } catch (err) {
+                console.warn('Über uns load failed, falling back to JSON:', err);
+                fetch('data/ueber-uns.json')
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => populateUeberUns(data))
+                    .catch(() => {});
+            }
 
-            fetch('data/event.json')
-                .then(r => r.ok ? r.json() : null)
-                .then(data => populateEvent(data))
-                .catch(err => { console.error('Failed to load event.json:', err); });
+            // Load Event content block
+            try {
+                const res = await fetch(
+                    `${SUPABASE_URL}/rest/v1/content_blocks?key=eq.event&select=value&limit=1`,
+                    { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+                );
+                const rows = res.ok ? await res.json() : [];
+                if (rows[0]?.value) populateEvent(rows[0].value);
+            } catch (err) {
+                console.warn('Event load failed, falling back to JSON:', err);
+                fetch('data/event.json')
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => populateEvent(data))
+                    .catch(() => {});
+            }
 
-            fetch('data/team.json')
-                .then(r => r.ok ? r.json() : null)
-                .then(data => populateTeam(data))
-                .catch(err => { console.error('Failed to load team.json:', err); });
+            // Load Team members from Supabase
+            try {
+                const res = await fetch(
+                    `${SUPABASE_URL}/rest/v1/team_members?select=*&order=rank.asc,sort_order.asc,name.asc`,
+                    { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+                );
+                const members = res.ok ? await res.json() : [];
+                populateTeam(members);
+            } catch (err) {
+                console.warn('Team load failed:', err);
+            }
         });
     </script>
 </body>
