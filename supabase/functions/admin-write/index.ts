@@ -131,10 +131,31 @@ serve(async (req: Request) => {
         return jsonResponse({ error: "No file provided" }, 400);
       }
 
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const fileName =
-        (formData.get("fileName") as string | null) ??
-        `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      // Validate that the file is an allowed image type
+      const ALLOWED_TYPES = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "image/avif",
+      ];
+      const contentType = file.type || "";
+      if (!ALLOWED_TYPES.includes(contentType)) {
+        return jsonResponse(
+          { error: `File type '${contentType}' is not allowed. Allowed: jpg, png, gif, webp, avif` },
+          400,
+        );
+      }
+
+      const extMap: Record<string, string> = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/gif": "gif",
+        "image/webp": "webp",
+        "image/avif": "avif",
+      };
+      const ext = extMap[contentType] ?? "jpg";
+      const fileName = `${crypto.randomUUID()}.${ext}`;
 
       const fileBuffer = await file.arrayBuffer();
 

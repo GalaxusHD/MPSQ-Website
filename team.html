@@ -258,7 +258,9 @@
                         const imgSrc = m.image_url
                             ? escapeHtml(m.image_url)
                             : 'assets/images/mpsq-logo.png';
-                        const profileUrl = `https://mixelpixel.net/profil/${encodeURIComponent(m.name || '')}`;
+                        const profileUrl = m.name
+                            ? `https://mixelpixel.net/profil/${encodeURIComponent(m.name)}`
+                            : 'https://mixelpixel.net';
 
                         // Vertical divider before every card except the first
                         if (idx > 0) {

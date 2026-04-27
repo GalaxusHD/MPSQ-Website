@@ -560,7 +560,7 @@
             btn.disabled = true;
             try {
                 const members = readTeamData().members.map((m, i) => ({
-                    id: m.id || crypto.randomUUID(),
+                    id: m.id,
                     rank: m.rank,
                     name: m.name,
                     subrank: m.subrank,
@@ -1011,8 +1011,9 @@
             wrap.className = 'admin-list-item';
             wrap.style.flexDirection = 'column';
             // Store member id (for upserts) and current image URL
-            wrap.dataset.memberId = member.id || member.memberId || '';
-            wrap.dataset.imageUrl = member.imageUrl || member.image_url || '';
+            // New members get a UUID immediately so the same ID is used on every save.
+            wrap.dataset.memberId = member.id || crypto.randomUUID();
+            wrap.dataset.imageUrl = member.image_url || member.imageUrl || '';
 
             const inputs = document.createElement('div');
             inputs.className = 'admin-item-inputs';
@@ -1079,16 +1080,24 @@
             fileInp.addEventListener('change', async () => {
                 const file = fileInp.files[0];
                 if (!file) return;
-                // Show local preview immediately
+                // Show local preview immediately (blob: URLs from createObjectURL are safe)
                 const localUrl = URL.createObjectURL(file);
-                preview.src = localUrl;
-                preview.style.display = 'block';
+                if (localUrl.startsWith('blob:')) {
+                    preview.src = localUrl;
+                    preview.style.display = 'block';
+                }
                 uploadStatus.textContent = 'Hochladen…';
                 uploadStatus.style.color = 'var(--accent-pink)';
                 try {
                     const result = await uploadImageViaEdge(file);
-                    wrap.dataset.imageUrl = result.publicUrl;
-                    preview.src = result.publicUrl;
+                    // Validate the returned URL belongs to the expected Supabase storage
+                    const expectedPrefix = `${SUPABASE_URL}/storage/v1/object/public/team/`;
+                    const safeUrl = (typeof result.publicUrl === 'string' && result.publicUrl.startsWith(expectedPrefix))
+                        ? result.publicUrl
+                        : '';
+                    if (!safeUrl) throw new Error('Ungültige URL vom Server');
+                    wrap.dataset.imageUrl = safeUrl;
+                    preview.src = safeUrl;
                     URL.revokeObjectURL(localUrl);
                     uploadStatus.textContent = '✅ Hochgeladen';
                     uploadStatus.style.color = '#1a7f37';

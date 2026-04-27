@@ -32,7 +32,7 @@ Edge Function below.
 ```bash
 # Replace <values> with real credentials
 supabase secrets set \
-  ADMIN_PASSWORD="Jl2007jl!" \
+  ADMIN_PASSWORD="<your-admin-password>" \
   SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>"
 ```
 
@@ -78,7 +78,7 @@ After deployment, test with:
 ```bash
 curl -X POST \
   "https://hbikjzzkxsvjoqnedbmm.supabase.co/functions/v1/admin-write/team-members" \
-  -H "x-admin-password: Jl2007jl!" \
+  -H "x-admin-password: <your-admin-password>" \
   -H "Content-Type: application/json" \
   -d '[{"rank":"Kreis","name":"TestUser","subrank":"Tester","image_url":"","sort_order":0}]'
 ```
