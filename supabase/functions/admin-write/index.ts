@@ -66,6 +66,9 @@ serve(async (req: Request) => {
   try {
     // ── POST /team-members ────────────────────────────────────────────────────
     // Batch upsert (create or update) team members by id.
+    // Clients MUST provide a UUID `id` for each record – new records should
+    // generate the UUID client-side (e.g. crypto.randomUUID()) so that
+    // subsequent saves are stable updates rather than duplicate inserts.
     if (req.method === "POST" && subPath === "/team-members") {
       const body = await req.json();
       const members = Array.isArray(body) ? body : [body];

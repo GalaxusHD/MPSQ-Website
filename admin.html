@@ -565,7 +565,7 @@
                     name: m.name,
                     subrank: m.subrank,
                     image_url: m.imageUrl || '',
-                    sort_order: i
+                    sort_order: i  // index-based order; reflects current list position
                 }));
                 await callEdge('/team-members', 'POST', members);
                 showToast('✅ Team gespeichert!');
@@ -1080,7 +1080,9 @@
             fileInp.addEventListener('change', async () => {
                 const file = fileInp.files[0];
                 if (!file) return;
-                // Show local preview immediately (blob: URLs from createObjectURL are safe)
+                // Show local preview immediately.
+                // URL.createObjectURL() always returns a blob: URL; this check guards against
+                // unexpected future runtimes and documents the intent explicitly.
                 const localUrl = URL.createObjectURL(file);
                 if (localUrl.startsWith('blob:')) {
                     preview.src = localUrl;
@@ -1090,15 +1092,25 @@
                 uploadStatus.style.color = 'var(--accent-pink)';
                 try {
                     const result = await uploadImageViaEdge(file);
-                    // Validate the returned URL belongs to the expected Supabase storage
-                    const expectedPrefix = `${SUPABASE_URL}/storage/v1/object/public/team/`;
-                    const safeUrl = (typeof result.publicUrl === 'string' && result.publicUrl.startsWith(expectedPrefix))
-                        ? result.publicUrl
-                        : '';
+                    // Validate the returned URL belongs to the expected Supabase storage domain
+                    // and contains no path traversal segments.
+                    let safeUrl = '';
+                    try {
+                        const parsed = new URL(result.publicUrl ?? '');
+                        const expectedOrigin = new URL(SUPABASE_URL).origin;
+                        if (
+                            parsed.origin === expectedOrigin &&
+                            parsed.pathname.startsWith('/storage/v1/object/public/team/') &&
+                            !parsed.pathname.includes('..')
+                        ) {
+                            safeUrl = parsed.href;
+                        }
+                    } catch { /* invalid URL */ }
                     if (!safeUrl) throw new Error('Ungültige URL vom Server');
                     wrap.dataset.imageUrl = safeUrl;
+                    // Revoke blob URL only after new image has finished loading
+                    preview.onload = () => URL.revokeObjectURL(localUrl);
                     preview.src = safeUrl;
-                    URL.revokeObjectURL(localUrl);
                     uploadStatus.textContent = '✅ Hochgeladen';
                     uploadStatus.style.color = '#1a7f37';
                 } catch (err) {
