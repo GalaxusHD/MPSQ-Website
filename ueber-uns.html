@@ -151,6 +151,7 @@
         </div>
     </footer>
 
+    <script src="js/api-config.js"></script>
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script>
@@ -214,17 +215,33 @@
             return d.innerHTML;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        function renderAll(data) {
+            renderAbout(data);
+            renderMission(data);
+            renderHistory(data);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Try Worker API first, fall back to local JSON
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=ueber-uns`);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const out = await res.json();
+                if (out?.data) {
+                    renderAll(out.data);
+                    return;
+                }
+                throw new Error('No data');
+            } catch (err) {
+                console.warn('Worker API failed, falling back to JSON:', err);
+            }
+
             fetch('data/ueber-uns.json')
                 .then(r => {
                     if (!r.ok) throw new Error('HTTP ' + r.status);
                     return r.json();
                 })
-                .then(data => {
-                    renderAbout(data);
-                    renderMission(data);
-                    renderHistory(data);
-                })
+                .then(data => renderAll(data))
                 .catch(err => {
                     // Graceful fallback: static content already rendered in HTML remains visible
                     console.error('Failed to load ueber-uns.json:', err);
