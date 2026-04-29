@@ -273,7 +273,7 @@
     <div class="page-hero">
         <div class="container">
             <h1>Admin – <span style="color:var(--accent-red)">Inhalte</span></h1>
-            <p>Bearbeite und veröffentliche Inhalte direkt in Supabase.</p>
+            <p>Bearbeite und veröffentliche Inhalte über die Worker API.</p>
         </div>
     </div>
 
@@ -287,7 +287,7 @@
                     <li>Gib oben das <strong>Admin-Passwort</strong> ein.</li>
                     <li>Wähle einen Tab (<em>Über uns</em>, <em>Event</em> oder <em>Team</em>).</li>
                     <li>Bearbeite die Felder nach Wunsch.</li>
-                    <li>Klicke auf <strong>Speichern</strong> – Änderungen werden sofort in Supabase veröffentlicht.</li>
+                    <li>Klicke auf <strong>Speichern</strong> – Änderungen werden sofort über die Worker API veröffentlicht.</li>
                     <li>Die Seiten zeigen Änderungen nach einem Reload.</li>
                 </ol>
                 <p style="margin-top:8px;">Optional: Mit <em>JSON herunterladen</em> kannst du eine lokale Kopie erstellen.</p>
@@ -416,7 +416,7 @@
                 <div class="admin-section-box">
                     <h3>Teammitglieder</h3>
                     <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
-                        Bilder werden in den Supabase Storage hochgeladen. Klicke nach dem Hochladen auf <strong>Team speichern</strong>.
+                        Bildupload wird aktuell nicht unterstützt. Klicke nach dem Bearbeiten auf <strong>Team speichern</strong>.
                     </p>
                     <div id="team-members-list"></div>
                     <button type="button" class="btn-add-item" id="team-add-member">＋ Mitglied hinzufügen</button>
@@ -458,9 +458,9 @@
     <script src="js/main.js"></script>
     <script>
         // ==============================
-        // SUPABASE / EDGE FUNCTION
+        // WORKER API
         // ==============================
-        const EDGE_FN_BASE = `${SUPABASE_URL}/functions/v1/admin-write`;
+        const EDGE_FN_BASE = window.API_BASE_URL;
 
         function getAdminPassword() {
             return document.getElementById('admin-password').value.trim();
@@ -516,43 +516,19 @@
             return res.json();
         }
 
-        // Upload image via Edge Function multipart POST
+        // Image upload is not supported via the Worker API yet.
         async function uploadImageViaEdge(file) {
-            const pw = getAdminPassword();
-            if (!pw) throw new Error('No password');
-            const formData = new FormData();
-            formData.append('file', file);
-            let res;
-            try {
-                res = await fetch(`${EDGE_FN_BASE}/upload-image`, {
-                    method: 'POST',
-                    headers: { 'x-admin-password': pw },
-                    body: formData
-                });
-            } catch (networkErr) {
-                throw new Error(`Netzwerkfehler (CORS oder Verbindung): ${networkErr.message}`);
-            }
-            if (!res.ok) {
-                let detail = res.statusText;
-                try {
-                    const errData = await res.json();
-                    detail = errData.error || errData.message || detail;
-                } catch {
-                    try { detail = await res.text() || detail; } catch { /* ignore */ }
-                }
-                throw new Error(`HTTP ${res.status}: ${detail}`);
-            }
-            return res.json(); // { publicUrl, path }
+            showToast('❌ Bildupload wird noch nicht unterstützt', 'error');
+            throw new Error('Image upload not supported yet');
         }
 
-        // ── Save functions ───────────────────────────────────────────
         async function saveUeberUns() {
             const btn = document.getElementById('btn-save-uu');
             btn.disabled = true;
             try {
-                await callEdge('/content-blocks', 'POST', [
+                await callEdge('/api/content-blocks', 'POST',
                     { key: 'ueber-uns', value: readUeberUnsData() }
-                ]);
+                );
                 showToast('✅ Über uns gespeichert!');
             } catch (err) {
                 showToast(`❌ Fehler: ${err.message}`, 'error');
@@ -565,9 +541,9 @@
             const btn = document.getElementById('btn-save-ev');
             btn.disabled = true;
             try {
-                await callEdge('/content-blocks', 'POST', [
+                await callEdge('/api/content-blocks', 'POST',
                     { key: 'event', value: readEventData() }
-                ]);
+                );
                 showToast('✅ Event gespeichert!');
             } catch (err) {
                 showToast(`❌ Fehler: ${err.message}`, 'error');
@@ -588,7 +564,7 @@
                     image_url: m.imageUrl || '',
                     sort_order: i  // index-based order; reflects current list position
                 }));
-                await callEdge('/team-members', 'POST', members);
+                await callEdge('/api/team-members', 'POST', members);
                 showToast('✅ Team gespeichert!');
             } catch (err) {
                 showToast(`❌ Fehler: ${err.message}`, 'error');
@@ -1199,17 +1175,15 @@
         }
 
         // ==============================
-        // INITIAL LOAD (from Supabase)
+        // INITIAL LOAD (from Worker API)
         // ==============================
         document.addEventListener('DOMContentLoaded', async () => {
             // Load Über uns content block
             try {
-                const res = await fetch(
-                    `${SUPABASE_URL}/rest/v1/content_blocks?key=eq.ueber-uns&select=value&limit=1`,
-                    { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
-                );
-                const rows = res.ok ? await res.json() : [];
-                if (rows[0]?.value) populateUeberUns(rows[0].value);
+                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=ueber-uns`);
+                const out = res.ok ? await res.json() : null;
+                if (out?.data) populateUeberUns(out.data);
+                else throw new Error('No data');
             } catch (err) {
                 console.warn('Über uns load failed, falling back to JSON:', err);
                 fetch('data/ueber-uns.json')
@@ -1220,12 +1194,10 @@
 
             // Load Event content block
             try {
-                const res = await fetch(
-                    `${SUPABASE_URL}/rest/v1/content_blocks?key=eq.event&select=value&limit=1`,
-                    { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
-                );
-                const rows = res.ok ? await res.json() : [];
-                if (rows[0]?.value) populateEvent(rows[0].value);
+                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=event`);
+                const out = res.ok ? await res.json() : null;
+                if (out?.data) populateEvent(out.data);
+                else throw new Error('No data');
             } catch (err) {
                 console.warn('Event load failed, falling back to JSON:', err);
                 fetch('data/event.json')
@@ -1234,14 +1206,11 @@
                     .catch(() => {});
             }
 
-            // Load Team members from Supabase
+            // Load Team members from Worker API
             try {
-                const res = await fetch(
-                    `${SUPABASE_URL}/rest/v1/team_members?select=*&order=rank.asc,sort_order.asc,name.asc`,
-                    { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
-                );
-                const members = res.ok ? await res.json() : [];
-                populateTeam(members);
+                const res = await fetch(`${window.API_BASE_URL}/api/team-members`);
+                const out = res.ok ? await res.json() : null;
+                populateTeam(out?.data || []);
             } catch (err) {
                 console.warn('Team load failed:', err);
             }

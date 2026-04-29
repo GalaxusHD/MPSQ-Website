@@ -196,6 +196,7 @@
         </div>
     </footer>
 
+    <script src="js/api-config.js"></script>
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script>
@@ -215,17 +216,13 @@
             const content = document.getElementById('team-content');
 
             try {
-                // Load from Supabase REST API (public anon read)
-                const url = `${SUPABASE_URL}/rest/v1/team_members?select=*&order=rank.asc,sort_order.asc,name.asc`;
-                const res = await fetch(url, {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
+                // Load from Worker API (public read)
+                const res = await fetch(`${window.API_BASE_URL}/api/team-members`);
 
-                if (!res.ok) throw new Error(`Supabase error: ${res.status}`);
-                const members = await res.json();
+                if (!res.ok) throw new Error(`Worker error: ${res.status}`);
+                const out = await res.json();
+                // Worker returns { data: [...] }; accept both shapes for backwards compatibility
+                const members = Array.isArray(out) ? out : (out.data || []);
 
                 if (!members || members.length === 0) {
                     loading.innerHTML = '<p style="color:var(--text-secondary);">Noch keine Teammitglieder vorhanden.</p>';
