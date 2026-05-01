@@ -197,11 +197,16 @@
         function renderHistory(data) {
             if (!data.history) return;
             const h = data.history;
-            setText('history-title', h.title);
+            const title = String(h.title ?? '').trim().toLowerCase() === 'test' ? '' : h.title;
+            setText('history-title', title);
             const container = document.getElementById('history-entries');
             if (!container || !h.entries) return;
-            container.innerHTML = h.entries.map((e, i) => `
-                <div class="info-box" ${i < h.entries.length - 1 ? 'style="margin-bottom:20px;"' : ''}>
+            const entries = (h.entries || []).filter(e =>
+                String(e?.year ?? '').trim().toLowerCase() !== 'test' &&
+                String(e?.text ?? '').trim().toLowerCase() !== 'test'
+            );
+            container.innerHTML = entries.map((e, i) => `
+                <div class="info-box" ${i < entries.length - 1 ? 'style="margin-bottom:20px;"' : ''}>
                     <p>
                         <strong style="color:var(--text-primary);">${escapeHtml(e.year)}</strong><br>
                         ${escapeHtml(e.text)}

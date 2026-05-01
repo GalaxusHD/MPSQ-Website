@@ -305,6 +305,7 @@
                 <button class="admin-tab" data-target="panel-event">Event</button>
                 <button class="admin-tab" data-target="panel-team">Team</button>
                 <button class="admin-tab" data-target="panel-sozial-media">Sozial Media</button>
+                <button class="admin-tab" data-target="panel-homepage">Homepage</button>
             </div>
 
             <!-- ==================== ÜBER UNS PANEL ==================== -->
@@ -449,6 +450,25 @@
 
             </div><!-- /panel-sozial-media -->
 
+            <!-- ==================== HOMEPAGE PANEL ==================== -->
+            <div id="panel-homepage" class="admin-panel">
+
+                <div class="admin-section-box">
+                    <h3>Das Event in Zahlen</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
+                        Bearbeite die Statistik-Karten für die Startseite. Du kannst Kategorien hinzufügen oder entfernen.
+                    </p>
+                    <div id="hp-stats-list"></div>
+                    <button type="button" class="btn-add-item" id="hp-add-stat">＋ Kategorie hinzufügen</button>
+                </div>
+
+                <div class="download-actions">
+                    <button type="button" class="btn-save" id="btn-save-hp">💾 Homepage speichern</button>
+                    <button type="button" class="btn btn-primary" id="btn-download-hp">⬇ JSON herunterladen</button>
+                </div>
+
+            </div><!-- /panel-homepage -->
+
         </div>
     </section>
 
@@ -547,7 +567,7 @@
             btn.disabled = true;
             try {
                 await callEdge('/api/content-blocks', 'POST',
-                    { key: 'ueber-uns', value: readUeberUnsData() }
+                    { key: 'ueber-uns', value: sanitizeUeberUnsPayload(readUeberUnsData()) }
                 );
                 showToast('✅ Über uns gespeichert!');
             } catch (err) {
@@ -555,6 +575,23 @@
             } finally {
                 btn.disabled = false;
             }
+        }
+
+        function isTestValue(v) {
+            return String(v ?? '').trim().toLowerCase() === 'test';
+        }
+
+        function sanitizeUeberUnsPayload(payload) {
+            if (!payload || typeof payload !== 'object') return payload;
+            if (payload.history) {
+                if (isTestValue(payload.history.title)) payload.history.title = '';
+                if (Array.isArray(payload.history.entries)) {
+                    payload.history.entries = payload.history.entries.filter(
+                        e => !(isTestValue(e?.year) || isTestValue(e?.text))
+                    );
+                }
+            }
+            return payload;
         }
 
         async function saveEvent() {
@@ -1323,6 +1360,99 @@
             (data.links || []).forEach(l => addSocialLink(l));
         }
 
+        // ==============================
+        // HOMEPAGE – Event stats editor
+        // ==============================
+        function buildHpStatEl(stat) {
+            const wrap = document.createElement('div');
+            wrap.className = 'admin-list-item';
+
+            const inputs = document.createElement('div');
+            inputs.className = 'admin-item-inputs';
+
+            const row1 = document.createElement('div');
+            row1.style.cssText = 'display:flex;gap:8px;';
+
+            const valueInp = document.createElement('input');
+            valueInp.type = 'text';
+            valueInp.className = 'hp-value';
+            valueInp.placeholder = 'Zahl/Wert (z.B. 128)';
+            valueInp.value = stat.value || '';
+
+            const suffixInp = document.createElement('input');
+            suffixInp.type = 'text';
+            suffixInp.className = 'hp-suffix';
+            suffixInp.placeholder = 'Suffix (optional, z.B. +)';
+            suffixInp.value = stat.suffix || '';
+            suffixInp.style.width = '160px';
+
+            row1.appendChild(valueInp);
+            row1.appendChild(suffixInp);
+
+            const labelInp = document.createElement('input');
+            labelInp.type = 'text';
+            labelInp.className = 'hp-label';
+            labelInp.placeholder = 'Kategorie/Label (z.B. Teilnehmer)';
+            labelInp.value = stat.label || '';
+
+            inputs.appendChild(row1);
+            inputs.appendChild(labelInp);
+
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.className = 'btn-remove-item';
+            rmBtn.title = 'Entfernen';
+            rmBtn.textContent = '✕';
+            rmBtn.addEventListener('click', () => wrap.remove());
+
+            wrap.appendChild(inputs);
+            wrap.appendChild(rmBtn);
+            return wrap;
+        }
+
+        function addHpStat(stat) {
+            document.getElementById('hp-stats-list').appendChild(buildHpStatEl(stat || {}));
+        }
+
+        document.getElementById('hp-add-stat').addEventListener('click', () => addHpStat());
+
+        function readEventStatsValue() {
+            const stats = Array.from(
+                document.querySelectorAll('#hp-stats-list .admin-list-item')
+            ).map(el => ({
+                value: el.querySelector('.hp-value')?.value.trim() ?? '',
+                suffix: el.querySelector('.hp-suffix')?.value.trim() ?? '',
+                label: el.querySelector('.hp-label')?.value.trim() ?? ''
+            }));
+            return { stats };
+        }
+
+        function populateEventStats(data) {
+            document.getElementById('hp-stats-list').innerHTML = '';
+            (data?.stats || []).forEach(s => addHpStat(s));
+        }
+
+        async function saveHomepage() {
+            const btn = document.getElementById('btn-save-hp');
+            btn.disabled = true;
+            try {
+                await callEdge('/api/content-blocks', 'POST',
+                    { key: 'event-stats', value: readEventStatsValue() }
+                );
+                showToast('✅ Homepage gespeichert!');
+            } catch (err) {
+                showToast(`❌ Fehler: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('btn-save-hp').addEventListener('click', saveHomepage);
+
+        document.getElementById('btn-download-hp').addEventListener('click', () => {
+            downloadJson(readEventStatsValue(), 'event-stats.json');
+        });
+
         document.addEventListener('DOMContentLoaded', async () => {
             // Load Über uns content block
             try {
@@ -1373,6 +1503,15 @@
                     .then(r => r.ok ? r.json() : null)
                     .then(data => populateSocialMedia(data))
                     .catch(() => {});
+            }
+
+            // Load Homepage / Event stats content block
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=event-stats`);
+                const out = res.ok ? await res.json() : null;
+                if (out?.data) populateEventStats(out.data);
+            } catch (err) {
+                console.warn('Event stats load failed:', err);
             }
         });
     </script>
