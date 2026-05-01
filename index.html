@@ -191,6 +191,8 @@
             return d.innerHTML;
         }
 
+        // Render each available section independently: sections with API data are replaced,
+        // while sections with no API data keep the static fallback HTML visible.
         function renderHomepage(data) {
             if (!data) return;
 
@@ -226,7 +228,15 @@
                 // Show hero image placeholder only if no real imageUrl set
                 const heroPlaceholder = document.getElementById('hp-hero-img-placeholder');
                 if (heroPlaceholder && hero.imageUrl) {
-                    heroPlaceholder.outerHTML = `<img src="${escapeHtml(hero.imageUrl)}" alt="Hero-Bild" style="max-width:560px;width:100%;margin:32px auto 0;display:block;border-radius:var(--radius-lg);">`;
+                    // Only replace placeholder with real image if URL is a valid https:// address
+                    let safeUrl = '';
+                    try {
+                        const parsed = new URL(hero.imageUrl);
+                        if (parsed.protocol === 'https:') safeUrl = parsed.href;
+                    } catch { /* ignore invalid URL */ }
+                    if (safeUrl) {
+                        heroPlaceholder.outerHTML = `<img src="${escapeHtml(safeUrl)}" alt="Hero-Bild" style="max-width:560px;width:100%;margin:32px auto 0;display:block;border-radius:var(--radius-lg);">`;
+                    }
                 }
             }
 

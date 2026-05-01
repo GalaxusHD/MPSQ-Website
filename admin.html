@@ -1591,8 +1591,8 @@
             (data.features?.items || []).forEach(f => addHpFeature(f));
 
             document.getElementById('hp-stats-list').innerHTML = '';
-            // Support both homepage.stats (array) and legacy event-stats ({ stats: [...] })
-            const statsArr = Array.isArray(data.stats) ? data.stats : (data.stats?.stats || []);
+            // homepage.stats is stored as an array directly; fall back to empty if absent
+            const statsArr = Array.isArray(data.stats) ? data.stats : [];
             statsArr.forEach(s => addHpStat(s));
 
             const c = data.cta || {};
