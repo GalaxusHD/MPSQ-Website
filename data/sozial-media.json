@@ -1,0 +1,52 @@
+{
+  "links": [
+    {
+      "platform": "discord",
+      "url": "https://discord.gg/4qKwaD5NV",
+      "label": "MPSQ Discord",
+      "enabled": true
+    },
+    {
+      "platform": "youtube",
+      "url": "https://www.youtube.com/@mixelpixelsquidgame5684",
+      "label": "MPSQ YouTube",
+      "enabled": true
+    },
+    {
+      "platform": "discord",
+      "url": "https://discord.com/invite/sU5m5Hhe?utm_source=Discord%20Widget&utm_medium=Connect",
+      "label": "MixelPixel Discord",
+      "enabled": true
+    },
+    {
+      "platform": "youtube",
+      "url": "https://www.youtube.com/@MixelPixelOfficial",
+      "label": "MixelPixel YouTube",
+      "enabled": true
+    },
+    {
+      "platform": "x",
+      "url": "https://x.com/MixelPixelNET",
+      "label": "MixelPixel X",
+      "enabled": true
+    },
+    {
+      "platform": "instagram",
+      "url": "https://www.instagram.com/mixelpixelofficial/",
+      "label": "MixelPixel Instagram",
+      "enabled": true
+    },
+    {
+      "platform": "tiktok",
+      "url": "https://www.tiktok.com/@mixelpixelofficial",
+      "label": "MixelPixel TikTok",
+      "enabled": true
+    },
+    {
+      "platform": "twitch",
+      "url": "https://www.twitch.tv/mixelpixelofficial",
+      "label": "MixelPixel Twitch",
+      "enabled": true
+    }
+  ]
+}
