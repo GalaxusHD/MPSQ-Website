@@ -1547,22 +1547,22 @@
             const features = Array.from(
                 document.querySelectorAll('#hp-features-list .admin-list-item')
             ).map(el => ({
-                icon:  el.querySelector('.hf-icon')?.value.trim() ?? '',
+                icon: el.querySelector('.hf-icon')?.value.trim() ?? '',
                 title: el.querySelector('.hf-title')?.value.trim() ?? '',
-                text:  el.querySelector('.hf-text')?.value.trim() ?? ''
+                text: el.querySelector('.hf-text')?.value.trim() ?? ''
             }));
 
             const stats = Array.from(
                 document.querySelectorAll('#hp-stats-list .admin-list-item')
             ).map(el => ({
-                value:  el.querySelector('.hp-value')?.value.trim() ?? '',
+                value: el.querySelector('.hp-value')?.value.trim() ?? '',
                 suffix: el.querySelector('.hp-suffix')?.value.trim() ?? '',
-                label:  el.querySelector('.hp-label')?.value.trim() ?? ''
+                label: el.querySelector('.hp-label')?.value.trim() ?? ''
             }));
 
             return {
                 hero: {
-                    title:     val('hp-hero-title'),
+                    title: val('hp-hero-title'),
                     paragraph: val('hp-hero-p'),
                     buttons: [
                         { label: val('hp-btn1-label'), href: val('hp-btn1-href') },
@@ -1570,20 +1570,20 @@
                     ]
                 },
                 features: {
-                    title:    val('hp-features-title'),
+                    title: val('hp-features-title'),
                     subtitle: val('hp-features-subtitle'),
-                    items:    features
+                    items: features
                 },
                 stats: {
                     title: val('hp-stats-section-title'),
                     items: stats
                 },
                 cta: {
-                    title:     val('hp-cta-title'),
+                    title: val('hp-cta-title'),
                     paragraph: val('hp-cta-p'),
                     button: {
                         label: val('hp-cta-btn-label'),
-                        href:  val('hp-cta-btn-href')
+                        href: val('hp-cta-btn-href')
                     }
                 }
             };
@@ -1599,12 +1599,12 @@
             setVal('hp-hero-p', hero.paragraph);
             const btns = hero.buttons || [];
             setVal('hp-btn1-label', (btns[0] || {}).label);
-            setVal('hp-btn1-href',  (btns[0] || {}).href);
+            setVal('hp-btn1-href', (btns[0] || {}).href);
             setVal('hp-btn2-label', (btns[1] || {}).label);
-            setVal('hp-btn2-href',  (btns[1] || {}).href);
+            setVal('hp-btn2-href', (btns[1] || {}).href);
 
             const feat = d.features || {};
-            setVal('hp-features-title',    feat.title);
+            setVal('hp-features-title', feat.title);
             setVal('hp-features-subtitle', feat.subtitle);
             document.getElementById('hp-features-list').innerHTML = '';
             (feat.items || []).forEach(f => addHpFeature(f));
@@ -1616,9 +1616,9 @@
 
             const cta = d.cta || {};
             setVal('hp-cta-title', cta.title);
-            setVal('hp-cta-p',     cta.paragraph);
+            setVal('hp-cta-p', cta.paragraph);
             setVal('hp-cta-btn-label', (cta.button || {}).label);
-            setVal('hp-cta-btn-href',  (cta.button || {}).href);
+            setVal('hp-cta-btn-href', (cta.button || {}).href);
         }
 
         // Backward-compat: populate only the stats list from the old event-stats block
