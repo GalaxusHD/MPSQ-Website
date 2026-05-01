@@ -285,7 +285,7 @@
                 <strong>📋 So funktioniert der Editor:</strong>
                 <ol>
                     <li>Gib oben das <strong>Admin-Passwort</strong> ein.</li>
-                    <li>Wähle einen Tab (<em>Über uns</em>, <em>Event</em>, <em>Team</em> oder <em>Sozial Media</em>).</li>
+                    <li>Wähle einen Tab (<em>Homepage</em>, <em>Über uns</em>, <em>Event</em>, <em>Team</em> oder <em>Sozial Media</em>).</li>
                     <li>Bearbeite die Felder nach Wunsch.</li>
                     <li>Klicke auf <strong>Speichern</strong> – Änderungen werden sofort über die Worker API veröffentlicht.</li>
                     <li>Die Seiten zeigen Änderungen nach einem Reload.</li>
@@ -453,52 +453,58 @@
             <!-- ==================== HOMEPAGE PANEL ==================== -->
             <div id="panel-homepage" class="admin-panel active">
 
-                <!-- Hero -->
+                <!-- HERO SECTION -->
                 <div class="admin-section-box">
-                    <h3>Hero-Bereich</h3>
+                    <h3>Hero – Hauptbereich</h3>
                     <div class="admin-field-group">
-                        <label>Haupt-Titel</label>
-                        <input type="text" id="hp-hero-title" placeholder="MixelPixel Squid Game">
+                        <label>Titel</label>
+                        <input type="text" id="hp-hero-title" value="">
                     </div>
                     <div class="admin-field-group">
-                        <label>Untertitel / Beschreibung</label>
-                        <textarea id="hp-hero-subtitle" rows="3" placeholder="Das ultimative Minecraft Squid Game Erlebnis…"></textarea>
+                        <label>Beschreibung</label>
+                        <textarea id="hp-hero-p" rows="3"></textarea>
                     </div>
                     <div class="admin-field-group">
                         <label>Button 1 – Label</label>
-                        <input type="text" id="hp-hero-btn1-label" placeholder="Jetzt bewerben">
+                        <input type="text" id="hp-btn1-label" value="">
                     </div>
                     <div class="admin-field-group">
                         <label>Button 1 – Link (href)</label>
-                        <input type="text" id="hp-hero-btn1-href" placeholder="bewerben.html">
+                        <input type="text" id="hp-btn1-href" value="">
                     </div>
                     <div class="admin-field-group">
                         <label>Button 2 – Label</label>
-                        <input type="text" id="hp-hero-btn2-label" placeholder="Mehr erfahren">
+                        <input type="text" id="hp-btn2-label" value="">
                     </div>
                     <div class="admin-field-group">
                         <label>Button 2 – Link (href)</label>
-                        <input type="text" id="hp-hero-btn2-href" placeholder="ueber-uns.html">
-                    </div>
-                    <div class="admin-field-group">
-                        <label>Hero-Bild URL (optional, Platzhalter für zukünftiges Bild)</label>
-                        <input type="text" id="hp-hero-image" placeholder="https://… (optional)">
+                        <input type="text" id="hp-btn2-href" value="">
                     </div>
                 </div>
 
-                <!-- Features -->
+                <!-- FEATURES SECTION -->
                 <div class="admin-section-box">
-                    <h3>Was ist MPSQ? – Feature-Kacheln</h3>
-                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
-                        Bearbeite die Feature-Kacheln auf der Startseite. Jede Kachel hat ein Icon (Emoji), einen Titel und einen Text.
-                    </p>
+                    <h3>„Was ist MPSQ?" – Abschnitt</h3>
+                    <div class="admin-field-group">
+                        <label>Abschnitts-Titel</label>
+                        <input type="text" id="hp-features-title" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Untertitel</label>
+                        <input type="text" id="hp-features-subtitle" value="">
+                    </div>
+                    <label style="display:block;font-weight:600;font-size:0.875rem;color:var(--text-secondary);margin-bottom:10px;">Feature-Elemente</label>
                     <div id="hp-features-list"></div>
                     <button type="button" class="btn-add-item" id="hp-add-feature">＋ Feature hinzufügen</button>
                 </div>
 
-                <!-- Stats -->
+                <!-- STATS SECTION -->
                 <div class="admin-section-box">
                     <h3>Das Event in Zahlen</h3>
+                    <div class="admin-field-group">
+                        <label>Abschnitts-Titel</label>
+                        <input type="text" id="hp-stats-section-title" value="">
+                    </div>
                     <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
                         Bearbeite die Statistik-Karten für die Startseite. Du kannst Kategorien hinzufügen oder entfernen.
                     </p>
@@ -506,24 +512,24 @@
                     <button type="button" class="btn-add-item" id="hp-add-stat">＋ Kategorie hinzufügen</button>
                 </div>
 
-                <!-- CTA -->
+                <!-- CTA SECTION -->
                 <div class="admin-section-box">
-                    <h3>Call-to-Action-Bereich</h3>
+                    <h3>CTA – Abschluss-Bereich</h3>
                     <div class="admin-field-group">
                         <label>Titel</label>
-                        <input type="text" id="hp-cta-title" placeholder="Bereit mitzumachen?">
+                        <input type="text" id="hp-cta-title" value="">
                     </div>
                     <div class="admin-field-group">
-                        <label>Text</label>
-                        <textarea id="hp-cta-text" rows="2" placeholder="Bewirb dich jetzt und sichere dir einen Platz…"></textarea>
+                        <label>Beschreibung</label>
+                        <textarea id="hp-cta-p" rows="3"></textarea>
                     </div>
                     <div class="admin-field-group">
                         <label>Button – Label</label>
-                        <input type="text" id="hp-cta-btn-label" placeholder="Jetzt bewerben →">
+                        <input type="text" id="hp-cta-btn-label" value="">
                     </div>
                     <div class="admin-field-group">
                         <label>Button – Link (href)</label>
-                        <input type="text" id="hp-cta-btn-href" placeholder="bewerben.html">
+                        <input type="text" id="hp-cta-btn-href" value="">
                     </div>
                 </div>
 
@@ -1426,9 +1432,11 @@
         }
 
         // ==============================
-        // HOMEPAGE – Feature item builder
+        // HOMEPAGE – Full editor
         // ==============================
-        function buildHpFeatureEl(feature) {
+
+        // Feature item builder
+        function buildHpFeatureEl(feat) {
             const wrap = document.createElement('div');
             wrap.className = 'admin-list-item';
 
@@ -1441,15 +1449,15 @@
             const iconInp = document.createElement('input');
             iconInp.type = 'text';
             iconInp.className = 'hf-icon';
-            iconInp.placeholder = 'Icon (Emoji, z.B. 🎮)';
-            iconInp.value = feature.icon || '';
-            iconInp.style.width = '90px';
+            iconInp.placeholder = 'Icon (Emoji)';
+            iconInp.value = feat.icon || '';
+            iconInp.style.width = '80px';
 
             const titleInp = document.createElement('input');
             titleInp.type = 'text';
             titleInp.className = 'hf-title';
             titleInp.placeholder = 'Titel';
-            titleInp.value = feature.title || '';
+            titleInp.value = feat.title || '';
 
             row1.appendChild(iconInp);
             row1.appendChild(titleInp);
@@ -1458,7 +1466,7 @@
             textTA.className = 'hf-text';
             textTA.placeholder = 'Beschreibung';
             textTA.rows = 2;
-            textTA.value = feature.text || '';
+            textTA.value = feat.text || '';
 
             inputs.appendChild(row1);
             inputs.appendChild(textTA);
@@ -1475,15 +1483,13 @@
             return wrap;
         }
 
-        function addHpFeature(feature) {
-            document.getElementById('hp-features-list').appendChild(buildHpFeatureEl(feature || {}));
+        function addHpFeature(feat) {
+            document.getElementById('hp-features-list').appendChild(buildHpFeatureEl(feat || {}));
         }
 
         document.getElementById('hp-add-feature').addEventListener('click', () => addHpFeature());
 
-        // ==============================
-        // HOMEPAGE – Event stats editor
-        // ==============================
+        // Stat item builder
         function buildHpStatEl(stat) {
             const wrap = document.createElement('div');
             wrap.className = 'admin-list-item';
@@ -1541,9 +1547,9 @@
             const features = Array.from(
                 document.querySelectorAll('#hp-features-list .admin-list-item')
             ).map(el => ({
-                icon: el.querySelector('.hf-icon').value.trim(),
-                title: el.querySelector('.hf-title').value.trim(),
-                text: el.querySelector('.hf-text').value.trim()
+                icon: el.querySelector('.hf-icon')?.value.trim() ?? '',
+                title: el.querySelector('.hf-title')?.value.trim() ?? '',
+                text: el.querySelector('.hf-text')?.value.trim() ?? ''
             }));
 
             const stats = Array.from(
@@ -1557,49 +1563,71 @@
             return {
                 hero: {
                     title: val('hp-hero-title'),
-                    subtitle: val('hp-hero-subtitle'),
-                    button1Label: val('hp-hero-btn1-label'),
-                    button1Href: val('hp-hero-btn1-href'),
-                    button2Label: val('hp-hero-btn2-label'),
-                    button2Href: val('hp-hero-btn2-href'),
-                    imageUrl: val('hp-hero-image')
+                    paragraph: val('hp-hero-p'),
+                    buttons: [
+                        { label: val('hp-btn1-label'), href: val('hp-btn1-href') },
+                        { label: val('hp-btn2-label'), href: val('hp-btn2-href') }
+                    ]
                 },
-                features: { items: features },
-                stats,
+                features: {
+                    title: val('hp-features-title'),
+                    subtitle: val('hp-features-subtitle'),
+                    items: features
+                },
+                stats: {
+                    title: val('hp-stats-section-title'),
+                    items: stats
+                },
                 cta: {
                     title: val('hp-cta-title'),
-                    text: val('hp-cta-text'),
-                    buttonLabel: val('hp-cta-btn-label'),
-                    buttonHref: val('hp-cta-btn-href')
+                    paragraph: val('hp-cta-p'),
+                    button: {
+                        label: val('hp-cta-btn-label'),
+                        href: val('hp-cta-btn-href')
+                    }
                 }
             };
         }
 
         function populateHomepage(data) {
             if (!data) return;
+            // Support both { value: {...} } wrapper and direct value objects
+            const d = (data.hero !== undefined) ? data : (data.value || data);
 
-            const h = data.hero || {};
-            setVal('hp-hero-title', h.title);
-            setVal('hp-hero-subtitle', h.subtitle);
-            setVal('hp-hero-btn1-label', h.button1Label);
-            setVal('hp-hero-btn1-href', h.button1Href);
-            setVal('hp-hero-btn2-label', h.button2Label);
-            setVal('hp-hero-btn2-href', h.button2Href);
-            setVal('hp-hero-image', h.imageUrl);
+            const hero = d.hero || {};
+            setVal('hp-hero-title', hero.title);
+            setVal('hp-hero-p', hero.paragraph);
+            const btns = hero.buttons || [];
+            setVal('hp-btn1-label', (btns[0] || {}).label);
+            setVal('hp-btn1-href', (btns[0] || {}).href);
+            setVal('hp-btn2-label', (btns[1] || {}).label);
+            setVal('hp-btn2-href', (btns[1] || {}).href);
 
+            const feat = d.features || {};
+            setVal('hp-features-title', feat.title);
+            setVal('hp-features-subtitle', feat.subtitle);
             document.getElementById('hp-features-list').innerHTML = '';
-            (data.features?.items || []).forEach(f => addHpFeature(f));
+            (feat.items || []).forEach(f => addHpFeature(f));
 
+            const stats = d.stats || {};
+            setVal('hp-stats-section-title', stats.title);
             document.getElementById('hp-stats-list').innerHTML = '';
-            // homepage.stats is stored as an array directly; fall back to empty if absent
-            const statsArr = Array.isArray(data.stats) ? data.stats : [];
-            statsArr.forEach(s => addHpStat(s));
+            (stats.items || []).forEach(s => addHpStat(s));
 
-            const c = data.cta || {};
-            setVal('hp-cta-title', c.title);
-            setVal('hp-cta-text', c.text);
-            setVal('hp-cta-btn-label', c.buttonLabel);
-            setVal('hp-cta-btn-href', c.buttonHref);
+            const cta = d.cta || {};
+            setVal('hp-cta-title', cta.title);
+            setVal('hp-cta-p', cta.paragraph);
+            setVal('hp-cta-btn-label', (cta.button || {}).label);
+            setVal('hp-cta-btn-href', (cta.button || {}).href);
+        }
+
+        // Backward-compat: populate only the stats list from the old event-stats block
+        function populateEventStats(data) {
+            if (!data) return;
+            const d = (data.stats !== undefined) ? data : (data.value || data);
+            setVal('hp-stats-section-title', '');
+            document.getElementById('hp-stats-list').innerHTML = '';
+            (d?.stats || []).forEach(s => addHpStat(s));
         }
 
         async function saveHomepage() {
@@ -1675,22 +1703,24 @@
                     .catch(() => {});
             }
 
-            // Load Homepage content block (with backward-compat fallback to event-stats)
+            // Load Homepage content block (new key), fallback to event-stats for backward compat
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=homepage`);
                 const out = res.ok ? await res.json() : null;
-                const data = out?.data?.value ?? out?.data;
-                if (data?.hero || data?.features || Array.isArray(data?.stats) || data?.cta) {
-                    populateHomepage(data);
+                if (out?.data) {
+                    populateHomepage(out.data);
                 } else {
-                    // Fall back to legacy event-stats key for stats-only backwards compatibility
-                    const res2 = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=event-stats`);
-                    const out2 = res2.ok ? await res2.json() : null;
-                    const data2 = out2?.data?.value ?? out2?.data;
-                    if (data2) populateHomepage(data2);
+                    throw new Error('No homepage data');
                 }
-            } catch (err) {
-                console.warn('Homepage load failed:', err);
+            } catch {
+                // Fallback to old event-stats key
+                try {
+                    const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=event-stats`);
+                    const out = res.ok ? await res.json() : null;
+                    if (out?.data) populateEventStats(out.data);
+                } catch (err) {
+                    console.warn('Homepage/event-stats load failed:', err);
+                }
             }
         });
     </script>

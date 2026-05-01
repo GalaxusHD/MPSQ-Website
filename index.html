@@ -33,16 +33,19 @@
             <div class="hero-logo-wrapper">
                 <img src="assets/images/mpsq-logo.png" alt="MPSQ Logo" class="hero-logo-img">
             </div>
-            <h1 id="hp-hero-title">
-                <span class="gradient-text">MixelPixel Squid Game</span>
+            <h1>
+                <span id="hp-hero-title" class="gradient-text">MixelPixel Squid Game</span>
             </h1>
-            <p id="hp-hero-subtitle">
+            <p id="hp-hero-p">
                 Das ultimative Minecraft Squid Game Erlebnis – kompetitiv, spannend und unvergesslich.
                 Trete gegen andere an und zeige, wer wirklich überleben kann.
             </p>
-            <div class="hero-buttons" id="hp-hero-buttons">
-                <a href="bewerben.html" class="btn btn-primary">Jetzt bewerben</a>
-                <a href="ueber-uns.html" class="btn btn-secondary">Mehr erfahren</a>
+            <div class="hero-buttons">
+                <a id="hp-btn1" href="bewerben.html" class="btn btn-primary">Jetzt bewerben</a>
+                <a id="hp-btn2" href="ueber-uns.html" class="btn btn-secondary">Mehr erfahren</a>
+            </div>
+            <div style="margin-top:36px;background:var(--bg-secondary);border:2px dashed var(--border-default);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;min-height:180px;color:var(--text-secondary);font-size:0.9rem;gap:8px;">
+                <span style="font-size:1.5rem;">🖼</span> <span>Hero-Bild folgt</span>
             </div>
         </div>
         <!-- Placeholder for a future hero image -->
@@ -56,14 +59,9 @@
     <section class="section highlight-section">
         <div class="container">
             <div class="section-header">
-                <h2>Was ist MPSQ?</h2>
-                <p>Ein einzigartiges Event-Erlebnis auf dem MixelPixel Minecraft-Server</p>
+                <h2 id="hp-features-title">Was ist MPSQ?</h2>
+                <p id="hp-features-subtitle">Ein einzigartiges Event-Erlebnis auf dem MixelPixel Minecraft-Server</p>
                 <span class="section-divider"></span>
-            </div>
-            <!-- Placeholder for a future section image -->
-            <div class="img-placeholder" style="max-width:720px;margin:0 auto 32px;" aria-hidden="true">
-                <span class="img-placeholder-icon">🖼</span>
-                <span>Abschnittsbild folgt</span>
             </div>
             <div class="card-grid card-grid-3" id="hp-features-grid">
                 <div class="feature-item">
@@ -116,7 +114,7 @@
     <section class="section">
         <div class="container">
             <div class="section-header">
-                <h2>Das Event in Zahlen</h2>
+                <h2 id="hp-stats-title">Das Event in Zahlen</h2>
                 <span class="section-divider"></span>
             </div>
             <div class="stats-grid" id="hp-stats-grid">
@@ -143,13 +141,8 @@
     <!-- CTA -->
     <section class="section highlight-section">
         <div class="container" style="text-align:center;">
-            <!-- Placeholder for a future CTA image -->
-            <div class="img-placeholder" style="max-width:480px;margin:0 auto 28px;" aria-hidden="true">
-                <span class="img-placeholder-icon">🖼</span>
-                <span>CTA-Bild folgt</span>
-            </div>
             <h2 id="hp-cta-title" style="font-size:2rem;font-weight:700;margin-bottom:12px;">Bereit mitzumachen?</h2>
-            <p id="hp-cta-text" style="color:var(--text-secondary);margin-bottom:28px;max-width:480px;margin-left:auto;margin-right:auto;">
+            <p id="hp-cta-p" style="color:var(--text-secondary);margin-bottom:28px;max-width:480px;margin-left:auto;margin-right:auto;">
                 Bewirb dich jetzt und sichere dir einen Platz beim nächsten MPSQ-Event.
             </p>
             <a id="hp-cta-btn" href="bewerben.html" class="btn btn-primary" style="font-size:1.05rem;padding:14px 32px;">Jetzt bewerben →</a>
@@ -181,142 +174,128 @@
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script>
-        // ==============================
-        // HOMEPAGE – Worker-driven rendering
-        // Falls back to static HTML if API is unavailable or returns no data.
-        // ==============================
         function escapeHtml(str) {
             const d = document.createElement('div');
             d.appendChild(document.createTextNode(String(str ?? '')));
             return d.innerHTML;
         }
 
-        // Render each available section independently: sections with API data are replaced,
-        // while sections with no API data keep the static fallback HTML visible.
         function renderHomepage(data) {
-            if (!data) return;
+            if (!data || typeof data !== 'object') return;
 
-            // Hero section
+            // Hero
             const hero = data.hero;
             if (hero) {
-                if (hero.title) {
-                    const titleEl = document.getElementById('hp-hero-title');
-                    if (titleEl) titleEl.innerHTML = `<span class="gradient-text">${escapeHtml(hero.title)}</span>`;
-                }
-                if (hero.subtitle) {
-                    const subEl = document.getElementById('hp-hero-subtitle');
-                    if (subEl) subEl.textContent = hero.subtitle;
-                }
-                const btnsEl = document.getElementById('hp-hero-buttons');
-                if (btnsEl && (hero.button1Label || hero.button2Label)) {
-                    btnsEl.innerHTML = '';
-                    if (hero.button1Label) {
-                        const a1 = document.createElement('a');
-                        a1.href = hero.button1Href || 'bewerben.html';
-                        a1.className = 'btn btn-primary';
-                        a1.textContent = hero.button1Label;
-                        btnsEl.appendChild(a1);
-                    }
-                    if (hero.button2Label) {
-                        const a2 = document.createElement('a');
-                        a2.href = hero.button2Href || 'ueber-uns.html';
-                        a2.className = 'btn btn-secondary';
-                        a2.textContent = hero.button2Label;
-                        btnsEl.appendChild(a2);
+                const titleEl = document.getElementById('hp-hero-title');
+                if (titleEl && hero.title) titleEl.textContent = hero.title;
+                const pEl = document.getElementById('hp-hero-p');
+                if (pEl && hero.paragraph) pEl.textContent = hero.paragraph;
+                const btns = hero.buttons || [];
+                if (btns[0]) {
+                    const btn1 = document.getElementById('hp-btn1');
+                    if (btn1) {
+                        if (btns[0].label) btn1.textContent = btns[0].label;
+                        if (btns[0].href) btn1.href = btns[0].href;
                     }
                 }
-                // Show hero image placeholder only if no real imageUrl set
-                const heroPlaceholder = document.getElementById('hp-hero-img-placeholder');
-                if (heroPlaceholder && hero.imageUrl) {
-                    // Only replace placeholder with real image if URL is a valid https:// address
-                    let safeUrl = '';
-                    try {
-                        const parsed = new URL(hero.imageUrl);
-                        if (parsed.protocol === 'https:') safeUrl = parsed.href;
-                    } catch { /* ignore invalid URL */ }
-                    if (safeUrl) {
-                        heroPlaceholder.outerHTML = `<img src="${escapeHtml(safeUrl)}" alt="Hero-Bild" style="max-width:560px;width:100%;margin:32px auto 0;display:block;border-radius:var(--radius-lg);">`;
+                if (btns[1]) {
+                    const btn2 = document.getElementById('hp-btn2');
+                    if (btn2) {
+                        if (btns[1].label) btn2.textContent = btns[1].label;
+                        if (btns[1].href) btn2.href = btns[1].href;
                     }
                 }
             }
 
-            // Features grid
-            const features = data.features?.items;
-            if (Array.isArray(features) && features.length) {
+            // Features
+            const features = data.features;
+            if (features) {
+                const titleEl = document.getElementById('hp-features-title');
+                if (titleEl && features.title) titleEl.textContent = features.title;
+                const subEl = document.getElementById('hp-features-subtitle');
+                if (subEl && features.subtitle) subEl.textContent = features.subtitle;
                 const grid = document.getElementById('hp-features-grid');
-                if (grid) {
-                    grid.innerHTML = features.map(f => `
+                if (grid && Array.isArray(features.items) && features.items.length) {
+                    grid.innerHTML = features.items.map(item => `
                         <div class="feature-item">
-                            <div class="feature-icon">${escapeHtml(f.icon)}</div>
+                            <div class="feature-icon">${escapeHtml(item.icon)}</div>
                             <div class="feature-text">
-                                <h3>${escapeHtml(f.title)}</h3>
-                                <p>${escapeHtml(f.text)}</p>
+                                <h3>${escapeHtml(item.title)}</h3>
+                                <p>${escapeHtml(item.text)}</p>
                             </div>
                         </div>`).join('');
                 }
             }
 
-            // Stats grid
-            const stats = Array.isArray(data.stats) ? data.stats : null;
-            if (stats && stats.length) {
+            // Stats
+            const stats = data.stats;
+            if (stats) {
+                const titleEl = document.getElementById('hp-stats-title');
+                if (titleEl && stats.title) titleEl.textContent = stats.title;
                 const grid = document.getElementById('hp-stats-grid');
-                if (grid) {
-                    grid.innerHTML = stats.map(s => {
-                        const num = escapeHtml(s.value) + (s.suffix ? escapeHtml(s.suffix) : '');
-                        return `<div class="stat-item">
-                            <div class="stat-number">${num}</div>
+                if (grid && Array.isArray(stats.items) && stats.items.length) {
+                    grid.innerHTML = stats.items.map(s => `
+                        <div class="stat-item">
+                            <div class="stat-number">${escapeHtml(s.value)}${escapeHtml(s.suffix)}</div>
                             <div class="stat-label">${escapeHtml(s.label)}</div>
-                        </div>`;
-                    }).join('');
+                        </div>`).join('');
                 }
             }
 
-            // CTA section
+            // CTA
             const cta = data.cta;
             if (cta) {
-                if (cta.title) {
-                    const el = document.getElementById('hp-cta-title');
-                    if (el) el.textContent = cta.title;
-                }
-                if (cta.text) {
-                    const el = document.getElementById('hp-cta-text');
-                    if (el) el.textContent = cta.text;
-                }
+                const titleEl = document.getElementById('hp-cta-title');
+                if (titleEl && cta.title) titleEl.textContent = cta.title;
+                const pEl = document.getElementById('hp-cta-p');
+                if (pEl && cta.paragraph) pEl.textContent = cta.paragraph;
                 const btn = document.getElementById('hp-cta-btn');
-                if (btn) {
-                    if (cta.buttonLabel) btn.textContent = cta.buttonLabel;
-                    if (cta.buttonHref) btn.href = cta.buttonHref;
+                if (btn && cta.button) {
+                    if (cta.button.label) btn.textContent = cta.button.label;
+                    if (cta.button.href) btn.href = cta.button.href;
                 }
             }
         }
 
+        function renderStatsLegacy(data) {
+            if (!data || !Array.isArray(data.stats) || !data.stats.length) return;
+            const grid = document.getElementById('hp-stats-grid');
+            if (!grid) return;
+            grid.innerHTML = data.stats.map(s => `
+                <div class="stat-item">
+                    <div class="stat-number">${escapeHtml(s.value)}${escapeHtml(s.suffix)}</div>
+                    <div class="stat-label">${escapeHtml(s.label)}</div>
+                </div>`).join('');
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
-            // Try homepage content block; fall back to event-stats for stats-only compat
+            // Try new homepage content block first
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=homepage`);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const out = await res.json();
-                // Support both wrapped ({ data: { value: {...} } }) and direct ({ data: {...} }) formats
-                const data = out?.data?.value ?? out?.data;
-                if (data && (data.hero || data.features || Array.isArray(data.stats) || data.cta)) {
-                    renderHomepage(data);
+                // Support both { data: { value: {...} } } and { data: {...} } API formats
+                const d = out?.data?.value ?? out?.data;
+                if (d && typeof d === 'object' && d.hero) {
+                    renderHomepage(d);
                     return;
                 }
+                throw new Error('No valid homepage data');
             } catch (err) {
-                console.warn('Homepage API failed, keeping static fallback:', err);
+                console.warn('Homepage content-block unavailable, trying event-stats fallback:', err);
             }
 
-            // Backward-compat: try legacy event-stats key for stats
+            // Backward-compat: load only stats from event-stats key
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=event-stats`);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const out = await res.json();
-                const data = out?.data?.value ?? out?.data;
-                if (data) renderHomepage({ stats: data.stats || [] });
-            } catch (err) {
-                // Silently keep static fallback
-                console.warn('event-stats fallback also failed, keeping static content:', err);
+                const d = out?.data?.value ?? out?.data;
+                if (d?.stats) renderStatsLegacy(d);
+            } catch {
+                // Static HTML fallback remains visible – no action needed
             }
         });
     </script>
+</body>
 </html>
