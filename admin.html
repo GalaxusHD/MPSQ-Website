@@ -435,12 +435,21 @@
             <div id="panel-sozial-media" class="admin-panel">
 
                 <div class="admin-section-box">
-                    <h3>Social Links</h3>
+                    <h3>Unsere Kanäle (Gruppe 1)</h3>
                     <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
-                        Füge Social-Links hinzu oder entferne sie. Jeder Link kann mit einer Plattform, einer URL, einem optionalen Label und einem Aktiv-Status konfiguriert werden.
+                        Social-Links für MPSQ (z.B. MPSQ Discord, MPSQ YouTube).
                     </p>
-                    <div id="sm-links-list"></div>
-                    <button type="button" class="btn-add-item" id="sm-add-link">＋ Link hinzufügen</button>
+                    <div id="sm-links-list-0"></div>
+                    <button type="button" class="btn-add-item" id="sm-add-link-0">＋ Link hinzufügen</button>
+                </div>
+
+                <div class="admin-section-box">
+                    <h3>MixelPixel (Gruppe 2)</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
+                        Social-Links für MixelPixel (z.B. MixelPixel Discord, YouTube, Instagram …).
+                    </p>
+                    <div id="sm-links-list-1"></div>
+                    <button type="button" class="btn-add-item" id="sm-add-link-1">＋ Link hinzufügen</button>
                 </div>
 
                 <div class="download-actions">
@@ -1386,22 +1395,33 @@
             return wrap;
         }
 
-        function addSocialLink(link) {
-            document.getElementById('sm-links-list').appendChild(buildSocialLinkEl(link || {}));
+        function addSocialLink(link, groupIndex) {
+            const listId = `sm-links-list-${groupIndex ?? 0}`;
+            const container = document.getElementById(listId);
+            if (container) container.appendChild(buildSocialLinkEl(link || {}));
         }
 
-        document.getElementById('sm-add-link').addEventListener('click', () => addSocialLink());
+        document.getElementById('sm-add-link-0').addEventListener('click', () => addSocialLink({}, 0));
+        document.getElementById('sm-add-link-1').addEventListener('click', () => addSocialLink({}, 1));
 
-        function readSocialData() {
-            const links = Array.from(
-                document.querySelectorAll('#sm-links-list .admin-list-item')
+        function readGroupLinks(groupIndex) {
+            return Array.from(
+                document.querySelectorAll(`#sm-links-list-${groupIndex} .admin-list-item`)
             ).map(el => ({
                 platform: el.querySelector('.sm-platform').value,
                 url:      el.querySelector('.sm-url').value.trim(),
                 label:    el.querySelector('.sm-label').value.trim(),
                 enabled:  el.querySelector('.sm-enabled').checked
             }));
-            return { links };
+        }
+
+        function readSocialData() {
+            return {
+                groups: [
+                    { title: 'Unsere Kanäle', links: readGroupLinks(0) },
+                    { title: 'MixelPixel',    links: readGroupLinks(1) }
+                ]
+            };
         }
 
         async function saveSocialMedia() {
@@ -1427,8 +1447,16 @@
 
         function populateSocialMedia(data) {
             if (!data) return;
-            document.getElementById('sm-links-list').innerHTML = '';
-            (data.links || []).forEach(l => addSocialLink(l));
+            document.getElementById('sm-links-list-0').innerHTML = '';
+            document.getElementById('sm-links-list-1').innerHTML = '';
+            if (Array.isArray(data.groups)) {
+                data.groups.forEach((group, i) => {
+                    (group.links || []).forEach(l => addSocialLink(l, i));
+                });
+            } else if (Array.isArray(data.links)) {
+                // Backward compat: flat list from PR #26 → show under first group
+                data.links.forEach(l => addSocialLink(l, 0));
+            }
         }
 
         // ==============================

@@ -38,11 +38,22 @@
     <!-- SOCIAL LINKS (dynamically rendered) -->
     <section class="section" id="social-section">
         <div class="container">
-            <div class="section-header">
-                <h2>Unsere Kanäle</h2>
-                <span class="section-divider"></span>
+            <!-- Group 1: MPSQ -->
+            <div id="social-group-0">
+                <div class="section-header">
+                    <h2 id="social-group-0-title">Unsere Kanäle</h2>
+                    <span class="section-divider"></span>
+                </div>
+                <div class="card-grid card-grid-3" id="social-cards-0"></div>
             </div>
-            <div class="card-grid card-grid-3" id="social-cards-container"></div>
+            <!-- Group 2: MixelPixel -->
+            <div id="social-group-1" style="margin-top:48px;">
+                <div class="section-header">
+                    <h2 id="social-group-1-title">MixelPixel</h2>
+                    <span class="section-divider"></span>
+                </div>
+                <div class="card-grid card-grid-3" id="social-cards-1"></div>
+            </div>
         </div>
     </section>
 
@@ -209,12 +220,35 @@
             return a;
         }
 
-        function renderSocialLinks(links) {
-            const container = document.getElementById('social-cards-container');
-            container.innerHTML = '';
+        function renderGroup(links, containerEl, titleEl, title) {
+            if (titleEl && title) titleEl.textContent = title;
+            containerEl.innerHTML = '';
             const enabled = links.filter(l => l.enabled !== false);
-            if (enabled.length === 0) return;
-            enabled.forEach(link => container.appendChild(buildSocialCard(link)));
+            enabled.forEach(link => containerEl.appendChild(buildSocialCard(link)));
+        }
+
+        function renderSocialData(data) {
+            // New grouped format: { groups: [{ title, links }, ...] }
+            if (Array.isArray(data.groups)) {
+                data.groups.forEach((group, i) => {
+                    const container = document.getElementById(`social-cards-${i}`);
+                    const titleEl = document.getElementById(`social-group-${i}-title`);
+                    const groupEl = document.getElementById(`social-group-${i}`);
+                    if (!container) return;
+                    renderGroup(group.links || [], container, titleEl, group.title);
+                    if (groupEl) groupEl.style.display = '';
+                });
+                return;
+            }
+            // Backward compat: old flat { links: [...] } → show under first group
+            if (Array.isArray(data.links)) {
+                const container = document.getElementById('social-cards-0');
+                const titleEl = document.getElementById('social-group-0-title');
+                if (container) renderGroup(data.links, container, titleEl, null);
+                // Hide the empty second group
+                const group1 = document.getElementById('social-group-1');
+                if (group1) group1.style.display = 'none';
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -225,7 +259,7 @@
                     const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=sozial-media`);
                     if (res.ok) {
                         const out = await res.json();
-                        if (out?.data?.links) data = out.data;
+                        if (out?.data) data = out.data;
                     }
                 } catch { /* fall through */ }
             }
@@ -236,7 +270,7 @@
                     if (res.ok) data = await res.json();
                 } catch { /* fall through */ }
             }
-            if (data?.links) renderSocialLinks(data.links);
+            if (data) renderSocialData(data);
         });
     </script>
 </body>
