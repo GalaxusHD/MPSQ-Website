@@ -33,17 +33,22 @@
             <div class="hero-logo-wrapper">
                 <img src="assets/images/mpsq-logo.png" alt="MPSQ Logo" class="hero-logo-img">
             </div>
-            <h1>
+            <h1 id="hp-hero-title">
                 <span class="gradient-text">MixelPixel Squid Game</span>
             </h1>
-            <p>
+            <p id="hp-hero-subtitle">
                 Das ultimative Minecraft Squid Game Erlebnis – kompetitiv, spannend und unvergesslich.
                 Trete gegen andere an und zeige, wer wirklich überleben kann.
             </p>
-            <div class="hero-buttons">
+            <div class="hero-buttons" id="hp-hero-buttons">
                 <a href="bewerben.html" class="btn btn-primary">Jetzt bewerben</a>
                 <a href="ueber-uns.html" class="btn btn-secondary">Mehr erfahren</a>
             </div>
+        </div>
+        <!-- Placeholder for a future hero image -->
+        <div class="img-placeholder" id="hp-hero-img-placeholder" style="max-width:560px;margin:32px auto 0;" aria-hidden="true">
+            <span class="img-placeholder-icon">🖼</span>
+            <span>Hero-Bild folgt</span>
         </div>
     </section>
 
@@ -55,7 +60,12 @@
                 <p>Ein einzigartiges Event-Erlebnis auf dem MixelPixel Minecraft-Server</p>
                 <span class="section-divider"></span>
             </div>
-            <div class="card-grid card-grid-3">
+            <!-- Placeholder for a future section image -->
+            <div class="img-placeholder" style="max-width:720px;margin:0 auto 32px;" aria-hidden="true">
+                <span class="img-placeholder-icon">🖼</span>
+                <span>Abschnittsbild folgt</span>
+            </div>
+            <div class="card-grid card-grid-3" id="hp-features-grid">
                 <div class="feature-item">
                     <div class="feature-icon">🎮</div>
                     <div class="feature-text">
@@ -109,7 +119,7 @@
                 <h2>Das Event in Zahlen</h2>
                 <span class="section-divider"></span>
             </div>
-            <div class="stats-grid">
+            <div class="stats-grid" id="hp-stats-grid">
                 <div class="stat-item">
                     <div class="stat-number">100+</div>
                     <div class="stat-label">Teilnehmer</div>
@@ -133,11 +143,16 @@
     <!-- CTA -->
     <section class="section highlight-section">
         <div class="container" style="text-align:center;">
-            <h2 style="font-size:2rem;font-weight:700;margin-bottom:12px;">Bereit mitzumachen?</h2>
-            <p style="color:var(--text-secondary);margin-bottom:28px;max-width:480px;margin-left:auto;margin-right:auto;">
+            <!-- Placeholder for a future CTA image -->
+            <div class="img-placeholder" style="max-width:480px;margin:0 auto 28px;" aria-hidden="true">
+                <span class="img-placeholder-icon">🖼</span>
+                <span>CTA-Bild folgt</span>
+            </div>
+            <h2 id="hp-cta-title" style="font-size:2rem;font-weight:700;margin-bottom:12px;">Bereit mitzumachen?</h2>
+            <p id="hp-cta-text" style="color:var(--text-secondary);margin-bottom:28px;max-width:480px;margin-left:auto;margin-right:auto;">
                 Bewirb dich jetzt und sichere dir einen Platz beim nächsten MPSQ-Event.
             </p>
-            <a href="bewerben.html" class="btn btn-primary" style="font-size:1.05rem;padding:14px 32px;">Jetzt bewerben →</a>
+            <a id="hp-cta-btn" href="bewerben.html" class="btn btn-primary" style="font-size:1.05rem;padding:14px 32px;">Jetzt bewerben →</a>
         </div>
     </section>
 
@@ -162,7 +177,146 @@
         </div>
     </footer>
 
+    <script src="js/api-config.js"></script>
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
-</body>
+    <script>
+        // ==============================
+        // HOMEPAGE – Worker-driven rendering
+        // Falls back to static HTML if API is unavailable or returns no data.
+        // ==============================
+        function escapeHtml(str) {
+            const d = document.createElement('div');
+            d.appendChild(document.createTextNode(String(str ?? '')));
+            return d.innerHTML;
+        }
+
+        // Render each available section independently: sections with API data are replaced,
+        // while sections with no API data keep the static fallback HTML visible.
+        function renderHomepage(data) {
+            if (!data) return;
+
+            // Hero section
+            const hero = data.hero;
+            if (hero) {
+                if (hero.title) {
+                    const titleEl = document.getElementById('hp-hero-title');
+                    if (titleEl) titleEl.innerHTML = `<span class="gradient-text">${escapeHtml(hero.title)}</span>`;
+                }
+                if (hero.subtitle) {
+                    const subEl = document.getElementById('hp-hero-subtitle');
+                    if (subEl) subEl.textContent = hero.subtitle;
+                }
+                const btnsEl = document.getElementById('hp-hero-buttons');
+                if (btnsEl && (hero.button1Label || hero.button2Label)) {
+                    btnsEl.innerHTML = '';
+                    if (hero.button1Label) {
+                        const a1 = document.createElement('a');
+                        a1.href = hero.button1Href || 'bewerben.html';
+                        a1.className = 'btn btn-primary';
+                        a1.textContent = hero.button1Label;
+                        btnsEl.appendChild(a1);
+                    }
+                    if (hero.button2Label) {
+                        const a2 = document.createElement('a');
+                        a2.href = hero.button2Href || 'ueber-uns.html';
+                        a2.className = 'btn btn-secondary';
+                        a2.textContent = hero.button2Label;
+                        btnsEl.appendChild(a2);
+                    }
+                }
+                // Show hero image placeholder only if no real imageUrl set
+                const heroPlaceholder = document.getElementById('hp-hero-img-placeholder');
+                if (heroPlaceholder && hero.imageUrl) {
+                    // Only replace placeholder with real image if URL is a valid https:// address
+                    let safeUrl = '';
+                    try {
+                        const parsed = new URL(hero.imageUrl);
+                        if (parsed.protocol === 'https:') safeUrl = parsed.href;
+                    } catch { /* ignore invalid URL */ }
+                    if (safeUrl) {
+                        heroPlaceholder.outerHTML = `<img src="${escapeHtml(safeUrl)}" alt="Hero-Bild" style="max-width:560px;width:100%;margin:32px auto 0;display:block;border-radius:var(--radius-lg);">`;
+                    }
+                }
+            }
+
+            // Features grid
+            const features = data.features?.items;
+            if (Array.isArray(features) && features.length) {
+                const grid = document.getElementById('hp-features-grid');
+                if (grid) {
+                    grid.innerHTML = features.map(f => `
+                        <div class="feature-item">
+                            <div class="feature-icon">${escapeHtml(f.icon)}</div>
+                            <div class="feature-text">
+                                <h3>${escapeHtml(f.title)}</h3>
+                                <p>${escapeHtml(f.text)}</p>
+                            </div>
+                        </div>`).join('');
+                }
+            }
+
+            // Stats grid
+            const stats = Array.isArray(data.stats) ? data.stats : null;
+            if (stats && stats.length) {
+                const grid = document.getElementById('hp-stats-grid');
+                if (grid) {
+                    grid.innerHTML = stats.map(s => {
+                        const num = escapeHtml(s.value) + (s.suffix ? escapeHtml(s.suffix) : '');
+                        return `<div class="stat-item">
+                            <div class="stat-number">${num}</div>
+                            <div class="stat-label">${escapeHtml(s.label)}</div>
+                        </div>`;
+                    }).join('');
+                }
+            }
+
+            // CTA section
+            const cta = data.cta;
+            if (cta) {
+                if (cta.title) {
+                    const el = document.getElementById('hp-cta-title');
+                    if (el) el.textContent = cta.title;
+                }
+                if (cta.text) {
+                    const el = document.getElementById('hp-cta-text');
+                    if (el) el.textContent = cta.text;
+                }
+                const btn = document.getElementById('hp-cta-btn');
+                if (btn) {
+                    if (cta.buttonLabel) btn.textContent = cta.buttonLabel;
+                    if (cta.buttonHref) btn.href = cta.buttonHref;
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Try homepage content block; fall back to event-stats for stats-only compat
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=homepage`);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const out = await res.json();
+                // Support both wrapped ({ data: { value: {...} } }) and direct ({ data: {...} }) formats
+                const data = out?.data?.value ?? out?.data;
+                if (data && (data.hero || data.features || Array.isArray(data.stats) || data.cta)) {
+                    renderHomepage(data);
+                    return;
+                }
+            } catch (err) {
+                console.warn('Homepage API failed, keeping static fallback:', err);
+            }
+
+            // Backward-compat: try legacy event-stats key for stats
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=event-stats`);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const out = await res.json();
+                const data = out?.data?.value ?? out?.data;
+                if (data) renderHomepage({ stats: data.stats || [] });
+            } catch (err) {
+                // Silently keep static fallback
+                console.warn('event-stats fallback also failed, keeping static content:', err);
+            }
+        });
+    </script>
 </html>

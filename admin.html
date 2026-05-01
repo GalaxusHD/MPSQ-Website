@@ -301,15 +301,15 @@
 
             <!-- TABS -->
             <div class="admin-tabs">
-                <button class="admin-tab active" data-target="panel-ueber-uns">Über uns</button>
+                <button class="admin-tab active" data-target="panel-homepage">Homepage</button>
+                <button class="admin-tab" data-target="panel-ueber-uns">Über uns</button>
                 <button class="admin-tab" data-target="panel-event">Event</button>
                 <button class="admin-tab" data-target="panel-team">Team</button>
                 <button class="admin-tab" data-target="panel-sozial-media">Sozial Media</button>
-                <button class="admin-tab" data-target="panel-homepage">Homepage</button>
             </div>
 
             <!-- ==================== ÜBER UNS PANEL ==================== -->
-            <div id="panel-ueber-uns" class="admin-panel active">
+            <div id="panel-ueber-uns" class="admin-panel">
 
                 <div class="admin-section-box">
                     <h3>Was ist MPSQ? – Abschnitt</h3>
@@ -451,8 +451,52 @@
             </div><!-- /panel-sozial-media -->
 
             <!-- ==================== HOMEPAGE PANEL ==================== -->
-            <div id="panel-homepage" class="admin-panel">
+            <div id="panel-homepage" class="admin-panel active">
 
+                <!-- Hero -->
+                <div class="admin-section-box">
+                    <h3>Hero-Bereich</h3>
+                    <div class="admin-field-group">
+                        <label>Haupt-Titel</label>
+                        <input type="text" id="hp-hero-title" placeholder="MixelPixel Squid Game">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Untertitel / Beschreibung</label>
+                        <textarea id="hp-hero-subtitle" rows="3" placeholder="Das ultimative Minecraft Squid Game Erlebnis…"></textarea>
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Button 1 – Label</label>
+                        <input type="text" id="hp-hero-btn1-label" placeholder="Jetzt bewerben">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Button 1 – Link (href)</label>
+                        <input type="text" id="hp-hero-btn1-href" placeholder="bewerben.html">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Button 2 – Label</label>
+                        <input type="text" id="hp-hero-btn2-label" placeholder="Mehr erfahren">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Button 2 – Link (href)</label>
+                        <input type="text" id="hp-hero-btn2-href" placeholder="ueber-uns.html">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Hero-Bild URL (optional, Platzhalter für zukünftiges Bild)</label>
+                        <input type="text" id="hp-hero-image" placeholder="https://… (optional)">
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="admin-section-box">
+                    <h3>Was ist MPSQ? – Feature-Kacheln</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
+                        Bearbeite die Feature-Kacheln auf der Startseite. Jede Kachel hat ein Icon (Emoji), einen Titel und einen Text.
+                    </p>
+                    <div id="hp-features-list"></div>
+                    <button type="button" class="btn-add-item" id="hp-add-feature">＋ Feature hinzufügen</button>
+                </div>
+
+                <!-- Stats -->
                 <div class="admin-section-box">
                     <h3>Das Event in Zahlen</h3>
                     <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
@@ -460,6 +504,27 @@
                     </p>
                     <div id="hp-stats-list"></div>
                     <button type="button" class="btn-add-item" id="hp-add-stat">＋ Kategorie hinzufügen</button>
+                </div>
+
+                <!-- CTA -->
+                <div class="admin-section-box">
+                    <h3>Call-to-Action-Bereich</h3>
+                    <div class="admin-field-group">
+                        <label>Titel</label>
+                        <input type="text" id="hp-cta-title" placeholder="Bereit mitzumachen?">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Text</label>
+                        <textarea id="hp-cta-text" rows="2" placeholder="Bewirb dich jetzt und sichere dir einen Platz…"></textarea>
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Button – Label</label>
+                        <input type="text" id="hp-cta-btn-label" placeholder="Jetzt bewerben →">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Button – Link (href)</label>
+                        <input type="text" id="hp-cta-btn-href" placeholder="bewerben.html">
+                    </div>
                 </div>
 
                 <div class="download-actions">
@@ -1361,6 +1426,62 @@
         }
 
         // ==============================
+        // HOMEPAGE – Feature item builder
+        // ==============================
+        function buildHpFeatureEl(feature) {
+            const wrap = document.createElement('div');
+            wrap.className = 'admin-list-item';
+
+            const inputs = document.createElement('div');
+            inputs.className = 'admin-item-inputs';
+
+            const row1 = document.createElement('div');
+            row1.style.cssText = 'display:flex;gap:8px;';
+
+            const iconInp = document.createElement('input');
+            iconInp.type = 'text';
+            iconInp.className = 'hf-icon';
+            iconInp.placeholder = 'Icon (Emoji, z.B. 🎮)';
+            iconInp.value = feature.icon || '';
+            iconInp.style.width = '90px';
+
+            const titleInp = document.createElement('input');
+            titleInp.type = 'text';
+            titleInp.className = 'hf-title';
+            titleInp.placeholder = 'Titel';
+            titleInp.value = feature.title || '';
+
+            row1.appendChild(iconInp);
+            row1.appendChild(titleInp);
+
+            const textTA = document.createElement('textarea');
+            textTA.className = 'hf-text';
+            textTA.placeholder = 'Beschreibung';
+            textTA.rows = 2;
+            textTA.value = feature.text || '';
+
+            inputs.appendChild(row1);
+            inputs.appendChild(textTA);
+
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.className = 'btn-remove-item';
+            rmBtn.title = 'Entfernen';
+            rmBtn.textContent = '✕';
+            rmBtn.addEventListener('click', () => wrap.remove());
+
+            wrap.appendChild(inputs);
+            wrap.appendChild(rmBtn);
+            return wrap;
+        }
+
+        function addHpFeature(feature) {
+            document.getElementById('hp-features-list').appendChild(buildHpFeatureEl(feature || {}));
+        }
+
+        document.getElementById('hp-add-feature').addEventListener('click', () => addHpFeature());
+
+        // ==============================
         // HOMEPAGE – Event stats editor
         // ==============================
         function buildHpStatEl(stat) {
@@ -1416,7 +1537,15 @@
 
         document.getElementById('hp-add-stat').addEventListener('click', () => addHpStat());
 
-        function readEventStatsValue() {
+        function readHomepageData() {
+            const features = Array.from(
+                document.querySelectorAll('#hp-features-list .admin-list-item')
+            ).map(el => ({
+                icon: el.querySelector('.hf-icon').value.trim(),
+                title: el.querySelector('.hf-title').value.trim(),
+                text: el.querySelector('.hf-text').value.trim()
+            }));
+
             const stats = Array.from(
                 document.querySelectorAll('#hp-stats-list .admin-list-item')
             ).map(el => ({
@@ -1424,12 +1553,53 @@
                 suffix: el.querySelector('.hp-suffix')?.value.trim() ?? '',
                 label: el.querySelector('.hp-label')?.value.trim() ?? ''
             }));
-            return { stats };
+
+            return {
+                hero: {
+                    title: val('hp-hero-title'),
+                    subtitle: val('hp-hero-subtitle'),
+                    button1Label: val('hp-hero-btn1-label'),
+                    button1Href: val('hp-hero-btn1-href'),
+                    button2Label: val('hp-hero-btn2-label'),
+                    button2Href: val('hp-hero-btn2-href'),
+                    imageUrl: val('hp-hero-image')
+                },
+                features: { items: features },
+                stats,
+                cta: {
+                    title: val('hp-cta-title'),
+                    text: val('hp-cta-text'),
+                    buttonLabel: val('hp-cta-btn-label'),
+                    buttonHref: val('hp-cta-btn-href')
+                }
+            };
         }
 
-        function populateEventStats(data) {
+        function populateHomepage(data) {
+            if (!data) return;
+
+            const h = data.hero || {};
+            setVal('hp-hero-title', h.title);
+            setVal('hp-hero-subtitle', h.subtitle);
+            setVal('hp-hero-btn1-label', h.button1Label);
+            setVal('hp-hero-btn1-href', h.button1Href);
+            setVal('hp-hero-btn2-label', h.button2Label);
+            setVal('hp-hero-btn2-href', h.button2Href);
+            setVal('hp-hero-image', h.imageUrl);
+
+            document.getElementById('hp-features-list').innerHTML = '';
+            (data.features?.items || []).forEach(f => addHpFeature(f));
+
             document.getElementById('hp-stats-list').innerHTML = '';
-            (data?.stats || []).forEach(s => addHpStat(s));
+            // homepage.stats is stored as an array directly; fall back to empty if absent
+            const statsArr = Array.isArray(data.stats) ? data.stats : [];
+            statsArr.forEach(s => addHpStat(s));
+
+            const c = data.cta || {};
+            setVal('hp-cta-title', c.title);
+            setVal('hp-cta-text', c.text);
+            setVal('hp-cta-btn-label', c.buttonLabel);
+            setVal('hp-cta-btn-href', c.buttonHref);
         }
 
         async function saveHomepage() {
@@ -1437,7 +1607,7 @@
             btn.disabled = true;
             try {
                 await callEdge('/api/content-blocks', 'POST',
-                    { key: 'event-stats', value: readEventStatsValue() }
+                    { key: 'homepage', value: readHomepageData() }
                 );
                 showToast('✅ Homepage gespeichert!');
             } catch (err) {
@@ -1450,7 +1620,7 @@
         document.getElementById('btn-save-hp').addEventListener('click', saveHomepage);
 
         document.getElementById('btn-download-hp').addEventListener('click', () => {
-            downloadJson(readEventStatsValue(), 'event-stats.json');
+            downloadJson(readHomepageData(), 'homepage.json');
         });
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1505,13 +1675,22 @@
                     .catch(() => {});
             }
 
-            // Load Homepage / Event stats content block
+            // Load Homepage content block (with backward-compat fallback to event-stats)
             try {
-                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=event-stats`);
+                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=homepage`);
                 const out = res.ok ? await res.json() : null;
-                if (out?.data) populateEventStats(out.data);
+                const data = out?.data?.value ?? out?.data;
+                if (data?.hero || data?.features || Array.isArray(data?.stats) || data?.cta) {
+                    populateHomepage(data);
+                } else {
+                    // Fall back to legacy event-stats key for stats-only backwards compatibility
+                    const res2 = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=event-stats`);
+                    const out2 = res2.ok ? await res2.json() : null;
+                    const data2 = out2?.data?.value ?? out2?.data;
+                    if (data2) populateHomepage(data2);
+                }
             } catch (err) {
-                console.warn('Event stats load failed:', err);
+                console.warn('Homepage load failed:', err);
             }
         });
     </script>
