@@ -285,7 +285,7 @@
                 <strong>📋 So funktioniert der Editor:</strong>
                 <ol>
                     <li>Gib oben das <strong>Admin-Passwort</strong> ein.</li>
-                    <li>Wähle einen Tab (<em>Über uns</em>, <em>Event</em> oder <em>Team</em>).</li>
+                    <li>Wähle einen Tab (<em>Über uns</em>, <em>Event</em>, <em>Team</em> oder <em>Sozial Media</em>).</li>
                     <li>Bearbeite die Felder nach Wunsch.</li>
                     <li>Klicke auf <strong>Speichern</strong> – Änderungen werden sofort über die Worker API veröffentlicht.</li>
                     <li>Die Seiten zeigen Änderungen nach einem Reload.</li>
@@ -304,6 +304,7 @@
                 <button class="admin-tab active" data-target="panel-ueber-uns">Über uns</button>
                 <button class="admin-tab" data-target="panel-event">Event</button>
                 <button class="admin-tab" data-target="panel-team">Team</button>
+                <button class="admin-tab" data-target="panel-sozial-media">Sozial Media</button>
             </div>
 
             <!-- ==================== ÜBER UNS PANEL ==================== -->
@@ -428,6 +429,25 @@
                 </div>
 
             </div><!-- /panel-team -->
+
+            <!-- ==================== SOZIAL MEDIA PANEL ==================== -->
+            <div id="panel-sozial-media" class="admin-panel">
+
+                <div class="admin-section-box">
+                    <h3>Social Links</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
+                        Füge Social-Links hinzu oder entferne sie. Jeder Link kann mit einer Plattform, einer URL, einem optionalen Label und einem Aktiv-Status konfiguriert werden.
+                    </p>
+                    <div id="sm-links-list"></div>
+                    <button type="button" class="btn-add-item" id="sm-add-link">＋ Link hinzufügen</button>
+                </div>
+
+                <div class="download-actions">
+                    <button type="button" class="btn-save" id="btn-save-sm">💾 Sozial Media speichern</button>
+                    <button type="button" class="btn btn-primary" id="btn-download-sm">⬇ JSON herunterladen</button>
+                </div>
+
+            </div><!-- /panel-sozial-media -->
 
         </div>
     </section>
@@ -1175,8 +1195,135 @@
         }
 
         // ==============================
-        // INITIAL LOAD (from Worker API)
+        // SOZIAL MEDIA – platform meta
         // ==============================
+        const SOCIAL_PLATFORMS_ADMIN = {
+            discord:   { name: 'Discord'    },
+            youtube:   { name: 'YouTube'    },
+            x:         { name: 'X (Twitter)'},
+            instagram: { name: 'Instagram'  },
+            tiktok:    { name: 'TikTok'     },
+            twitch:    { name: 'Twitch'     },
+            website:   { name: 'Website'    }
+        };
+
+        function buildSocialLinkEl(link) {
+            const wrap = document.createElement('div');
+            wrap.className = 'admin-list-item';
+            wrap.style.alignItems = 'center';
+
+            const inputs = document.createElement('div');
+            inputs.className = 'admin-item-inputs';
+
+            // Row 1: platform picker + URL
+            const row1 = document.createElement('div');
+            row1.style.cssText = 'display:flex;gap:8px;';
+
+            const platformSel = document.createElement('select');
+            platformSel.className = 'sm-platform';
+            platformSel.style.cssText = 'background:var(--bg-primary);border:1px solid var(--border-default);border-radius:var(--radius-sm);color:var(--text-primary);padding:8px 10px;font-size:0.875rem;flex:0 0 140px;';
+            Object.entries(SOCIAL_PLATFORMS_ADMIN).forEach(([key, p]) => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = p.name;
+                if (key === (link.platform || 'discord')) opt.selected = true;
+                platformSel.appendChild(opt);
+            });
+
+            const urlInp = document.createElement('input');
+            urlInp.type = 'url';
+            urlInp.className = 'sm-url';
+            urlInp.placeholder = 'URL (https://…)';
+            urlInp.value = link.url || '';
+            urlInp.style.flex = '1';
+
+            row1.appendChild(platformSel);
+            row1.appendChild(urlInp);
+
+            // Row 2: label + enabled toggle
+            const row2 = document.createElement('div');
+            row2.style.cssText = 'display:flex;gap:8px;align-items:center;';
+
+            const labelInp = document.createElement('input');
+            labelInp.type = 'text';
+            labelInp.className = 'sm-label';
+            labelInp.placeholder = 'Label (optional)';
+            labelInp.value = link.label || '';
+            labelInp.style.flex = '1';
+
+            const enabledWrap = document.createElement('label');
+            enabledWrap.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:0.875rem;color:var(--text-secondary);white-space:nowrap;flex-shrink:0;cursor:pointer;';
+            const enabledCb = document.createElement('input');
+            enabledCb.type = 'checkbox';
+            enabledCb.className = 'sm-enabled';
+            enabledCb.checked = link.enabled !== false;
+            enabledWrap.appendChild(enabledCb);
+            enabledWrap.appendChild(document.createTextNode(' Aktiv'));
+
+            row2.appendChild(labelInp);
+            row2.appendChild(enabledWrap);
+
+            inputs.appendChild(row1);
+            inputs.appendChild(row2);
+
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.className = 'btn-remove-item';
+            rmBtn.title = 'Entfernen';
+            rmBtn.textContent = '✕';
+            rmBtn.addEventListener('click', () => wrap.remove());
+
+            wrap.appendChild(inputs);
+            wrap.appendChild(rmBtn);
+            return wrap;
+        }
+
+        function addSocialLink(link) {
+            document.getElementById('sm-links-list').appendChild(buildSocialLinkEl(link || {}));
+        }
+
+        document.getElementById('sm-add-link').addEventListener('click', () => addSocialLink());
+
+        function readSocialData() {
+            const links = Array.from(
+                document.querySelectorAll('#sm-links-list .admin-list-item')
+            ).map(el => ({
+                platform: el.querySelector('.sm-platform').value,
+                url:      el.querySelector('.sm-url').value.trim(),
+                label:    el.querySelector('.sm-label').value.trim(),
+                enabled:  el.querySelector('.sm-enabled').checked
+            }));
+            return { links };
+        }
+
+        async function saveSocialMedia() {
+            const btn = document.getElementById('btn-save-sm');
+            btn.disabled = true;
+            try {
+                await callEdge('/api/content-blocks', 'POST',
+                    { key: 'sozial-media', value: readSocialData() }
+                );
+                showToast('✅ Sozial Media gespeichert!');
+            } catch (err) {
+                showToast(`❌ Fehler: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('btn-save-sm').addEventListener('click', saveSocialMedia);
+
+        document.getElementById('btn-download-sm').addEventListener('click', () => {
+            downloadJson(readSocialData(), 'sozial-media.json');
+        });
+
+        function populateSocialMedia(data) {
+            if (!data) return;
+            document.getElementById('sm-links-list').innerHTML = '';
+            (data.links || []).forEach(l => addSocialLink(l));
+        }
+
+        
         document.addEventListener('DOMContentLoaded', async () => {
             // Load Über uns content block
             try {
@@ -1213,6 +1360,20 @@
                 populateTeam(out?.data || []);
             } catch (err) {
                 console.warn('Team load failed:', err);
+            }
+
+            // Load Sozial Media content block
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=sozial-media`);
+                const out = res.ok ? await res.json() : null;
+                if (out?.data) populateSocialMedia(out.data);
+                else throw new Error('No data');
+            } catch (err) {
+                console.warn('Sozial Media load failed, falling back to JSON:', err);
+                fetch('data/sozial-media.json')
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => populateSocialMedia(data))
+                    .catch(() => {});
             }
         });
     </script>
