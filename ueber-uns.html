@@ -227,8 +227,8 @@
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=ueber-uns`);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const out = await res.json();
-                if (out?.data) {
-                    renderAll(out.data);
+                if (out?.data?.value) {
+                    renderAll(out.data.value);
                     return;
                 }
                 throw new Error('No data');
