@@ -1721,7 +1721,9 @@
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=sozial-media`);
                 const out = res.ok ? await res.json() : null;
-                if (out?.data) populateSocialMedia(out.data);
+                // Support both { data: { value: {...} } } and { data: {...} } API shapes
+                const apiVal = out?.data?.value ?? out?.data;
+                if (apiVal) populateSocialMedia(apiVal);
                 else throw new Error('No data');
             } catch (err) {
                 console.warn('Sozial Media load failed, falling back to JSON:', err);
