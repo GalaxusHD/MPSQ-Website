@@ -418,7 +418,7 @@
                 <div class="admin-section-box">
                     <h3>Teammitglieder</h3>
                     <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
-                        Bildupload wird aktuell nicht unterstützt. Klicke nach dem Bearbeiten auf <strong>Team speichern</strong>.
+                        Wähle eine <strong>PNG</strong>- oder <strong>WebP</strong>-Datei aus, um ein Bild hochzuladen. Klicke nach dem Bearbeiten auf <strong>Team speichern</strong>.
                     </p>
                     <div id="team-members-list"></div>
                     <button type="button" class="btn-add-item" id="team-add-member">＋ Mitglied hinzufügen</button>
@@ -636,10 +636,31 @@
             return res.json();
         }
 
-        // Image upload is not supported via the Worker API yet.
+        // Upload an image file to the Worker R2 endpoint
         async function uploadImageViaEdge(file) {
-            showToast('❌ Bildupload wird noch nicht unterstützt', 'error');
-            throw new Error('Image upload not supported yet');
+            const pw = getAdminPassword();
+            if (!pw) throw new Error('Kein Admin-Passwort eingegeben');
+            const form = new FormData();
+            form.append('file', file);
+            let res;
+            try {
+                res = await fetch(`${EDGE_FN_BASE}/api/upload-image`, {
+                    method: 'POST',
+                    headers: { 'x-admin-password': pw },
+                    body: form
+                });
+            } catch (networkErr) {
+                throw new Error(`Netzwerkfehler: ${networkErr.message}`);
+            }
+            if (!res.ok) {
+                let detail = res.statusText;
+                try {
+                    const errData = await res.json();
+                    detail = errData.error || errData.message || detail;
+                } catch { /* ignore */ }
+                throw new Error(`HTTP ${res.status}: ${detail}`);
+            }
+            return res.json();
         }
 
         async function saveUeberUns() {
@@ -1194,7 +1215,7 @@
 
             const fileInp = document.createElement('input');
             fileInp.type = 'file';
-            fileInp.accept = 'image/*';
+            fileInp.accept = 'image/png,image/webp';
             fileInp.style.display = 'none';
             fileInp.className = 'tm-file';
             fileLabel.appendChild(fileInp);
@@ -1226,15 +1247,12 @@
                 uploadStatus.style.color = 'var(--accent-pink)';
                 try {
                     const result = await uploadImageViaEdge(file);
-                    // Validate the returned URL belongs to the expected Supabase storage domain
-                    // and contains no path traversal segments.
+                    // Validate the returned URL is a proper HTTPS URL with no path traversal.
                     let safeUrl = '';
                     try {
-                        const parsed = new URL(result.publicUrl ?? '');
-                        const expectedOrigin = new URL(SUPABASE_URL).origin;
+                        const parsed = new URL(result.url ?? '');
                         if (
-                            parsed.origin === expectedOrigin &&
-                            parsed.pathname.startsWith('/storage/v1/object/public/team/') &&
+                            parsed.protocol === 'https:' &&
                             !parsed.pathname.includes('..')
                         ) {
                             safeUrl = parsed.href;
@@ -1723,7 +1741,8 @@
                 const out = res.ok ? await res.json() : null;
                 // Support both { data: { value: {...} } } and { data: {...} } API shapes
                 const apiVal = out?.data?.value ?? out?.data;
-                if (apiVal) populateSocialMedia(apiVal);
+                const hasGroups = apiVal && (Array.isArray(apiVal.groups) || Array.isArray(apiVal.links));
+                if (hasGroups) populateSocialMedia(apiVal);
                 else throw new Error('No data');
             } catch (err) {
                 console.warn('Sozial Media load failed, falling back to JSON:', err);
