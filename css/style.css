@@ -387,6 +387,13 @@ ul {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
+/* Social-media card grids: cap column width so 1–2 cards centre instead of stretching */
+#social-cards-0,
+#social-cards-1 {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 360px));
+    justify-content: center;
+}
+
 .card-grid-4 {
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
