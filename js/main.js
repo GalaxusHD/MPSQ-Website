@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         why: formData.get('why').trim(),
                         skills: formData.get('skills').trim(),
                         submitted_at: new Date().toISOString(),
-                        user_agent: navigator.userAgent || undefined
+                        user_agent: navigator.userAgent
                     })
                 });
 
@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     result = await response.json();
                 } catch (error) {
+                    console.warn('Could not parse application response JSON.', error);
                     result = null;
                 }
 
