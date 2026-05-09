@@ -54,6 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Application form handling
     const applyForm = document.getElementById('apply-form');
     if (applyForm) {
+        const getTrimmedFormValue = (formData, fieldName) => {
+            const value = formData.get(fieldName);
+            return typeof value === 'string' ? value.trim() : '';
+        };
+
         const showApplyMessage = (message, isError = false) => {
             const existingMessage = applyForm.querySelector('[data-apply-message]');
             if (existingMessage) {
@@ -103,13 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        minecraft_name: formData.get('minecraft-name').trim(),
-                        discord_name: formData.get('discord-name').trim(),
+                        minecraft_name: getTrimmedFormValue(formData, 'minecraft-name'),
+                        discord_name: getTrimmedFormValue(formData, 'discord-name'),
                         age: Number(formData.get('age')),
                         role: formData.get('role'),
                         experience: formData.get('experience'),
-                        why: formData.get('why').trim(),
-                        skills: formData.get('skills').trim(),
+                        why: getTrimmedFormValue(formData, 'why'),
+                        skills: getTrimmedFormValue(formData, 'skills'),
                         submitted_at: new Date().toISOString(),
                         user_agent: navigator.userAgent
                     })
@@ -119,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     result = await response.json();
                 } catch (error) {
-                    console.warn('Could not parse application response JSON.', error);
+                    console.warn('Could not parse Application response JSON.', error);
                     result = null;
                 }
 
