@@ -93,6 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const submitBtn = this.querySelector('[type="submit"]');
             const originalText = submitBtn.textContent;
             const formData = new FormData(this);
+            const age = Number(formData.get('age'));
+
+            if (Number.isNaN(age)) {
+                showApplyMessage('❌ Bitte gib ein gültiges Alter ein.', true);
+                return;
+            }
 
             submitBtn.textContent = 'Wird gesendet...';
             submitBtn.disabled = true;
@@ -110,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({
                         minecraft_name: getTrimmedFormValue(formData, 'minecraft-name'),
                         discord_name: getTrimmedFormValue(formData, 'discord-name'),
-                        age: Number(formData.get('age')),
+                        age,
                         role: formData.get('role'),
                         experience: formData.get('experience'),
                         why: getTrimmedFormValue(formData, 'why'),
@@ -124,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     result = await response.json();
                 } catch (error) {
-                    console.warn('Could not parse Application response JSON.', error);
+                    console.warn('Could not parse application response JSON.', error);
                     result = null;
                 }
 
