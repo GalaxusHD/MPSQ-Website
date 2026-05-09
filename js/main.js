@@ -54,28 +54,98 @@ document.addEventListener('DOMContentLoaded', () => {
     // Application form handling
     const applyForm = document.getElementById('apply-form');
     if (applyForm) {
-        applyForm.addEventListener('submit', function (e) {
+        const getTrimmedFormValue = (formData, fieldName) => {
+            const value = formData.get(fieldName);
+            return typeof value === 'string' ? value.trim() : '';
+        };
+
+        const showApplyMessage = (message, isError = false) => {
+            const existingMessage = applyForm.querySelector('[data-apply-message]');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+
+            const infoBox = document.createElement('div');
+            const color = isError ? '#ff4d4f' : '#00b341';
+
+            infoBox.className = 'info-box';
+            infoBox.dataset.applyMessage = 'true';
+            infoBox.style.borderColor = color;
+            infoBox.style.marginTop = '20px';
+
+            const text = document.createElement('p');
+            text.style.color = color;
+            text.style.fontWeight = '600';
+            text.textContent = message;
+
+            infoBox.appendChild(text);
+
+            applyForm.appendChild(infoBox);
+        };
+
+        applyForm.addEventListener('submit', async function (e) {
             e.preventDefault();
+
+            if (!this.reportValidity()) {
+                return;
+            }
 
             const submitBtn = this.querySelector('[type="submit"]');
             const originalText = submitBtn.textContent;
+            const formData = new FormData(this);
+            const age = Number(formData.get('age'));
+
+            if (Number.isNaN(age)) {
+                showApplyMessage('❌ Bitte gib ein gültiges Alter ein.', true);
+                return;
+            }
 
             submitBtn.textContent = 'Wird gesendet...';
             submitBtn.disabled = true;
 
-            setTimeout(() => {
-                // Show success message
-                const successMsg = document.createElement('div');
-                successMsg.className = 'info-box';
-                successMsg.style.borderColor = '#00b341';
-                successMsg.style.marginTop = '20px';
-                successMsg.innerHTML = '<p style="color:#00b341;font-weight:600;">✅ Bewerbung erfolgreich abgeschickt! Wir melden uns bald bei dir.</p>';
-                applyForm.appendChild(successMsg);
+            try {
+                if (!window.API_BASE_URL) {
+                    throw new Error('Die API-Konfiguration fehlt. Bitte versuche es später erneut.');
+                }
 
+                const response = await fetch(`${window.API_BASE_URL}/api/applications`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        minecraft_name: getTrimmedFormValue(formData, 'minecraft-name'),
+                        discord_name: getTrimmedFormValue(formData, 'discord-name'),
+                        age,
+                        role: formData.get('role'),
+                        experience: formData.get('experience'),
+                        why: getTrimmedFormValue(formData, 'why'),
+                        skills: getTrimmedFormValue(formData, 'skills'),
+                        submitted_at: new Date().toISOString(),
+                        user_agent: navigator.userAgent
+                    })
+                });
+
+                let result = null;
+                try {
+                    result = await response.json();
+                } catch (error) {
+                    console.warn('Could not parse application response JSON.', error);
+                    result = null;
+                }
+
+                if (!response.ok || !result?.ok) {
+                    throw new Error(result?.message || 'Deine Bewerbung konnte nicht gesendet werden. Bitte versuche es in ein paar Minuten erneut.');
+                }
+
+                showApplyMessage('✅ Bewerbung erfolgreich abgeschickt! Wir melden uns bald bei dir.');
+                applyForm.reset();
+            } catch (error) {
+                showApplyMessage(`❌ ${error.message || 'Beim Senden ist ein Fehler aufgetreten. Bitte versuche es erneut.'}`, true);
+            } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
-                applyForm.reset();
-            }, 1200);
+            }
         });
     }
 
