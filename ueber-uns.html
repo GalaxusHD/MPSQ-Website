@@ -210,6 +210,8 @@
             try {
                 const parsed = new URL(value, window.location.origin);
                 if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '';
+                const decodedPath = decodeURIComponent(parsed.pathname || '');
+                if (decodedPath.split('/').some(segment => segment === '..')) return '';
                 return parsed.href;
             } catch {
                 return '';
