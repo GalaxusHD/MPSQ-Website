@@ -40,7 +40,8 @@
         <div class="container">
             <div class="about-grid">
                 <div class="about-visual">
-                    <div style="text-align:center;">
+                    <img id="about-image" alt="Über uns Bild" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-xl);display:none;">
+                    <div id="about-image-placeholder" style="text-align:center;">
                         <div style="font-size:3rem;margin-bottom:8px;">🖼</div>
                         <div style="font-size:0.875rem;color:var(--text-secondary);">Bild folgt</div>
                     </div>
@@ -203,6 +204,37 @@
                 </div>`).join('');
         }
 
+        function normalizeImageUrl(raw) {
+            const value = String(raw || '').trim();
+            if (!value) return '';
+            try {
+                const parsed = new URL(value, window.location.origin);
+                if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '';
+                const decodedPath = decodeURIComponent(parsed.pathname || '');
+                if (decodedPath.split('/').some(segment => segment === '..')) return '';
+                return parsed.href;
+            } catch {
+                return '';
+            }
+        }
+
+        function renderAboutImage(data) {
+            const img = document.getElementById('about-image');
+            const placeholder = document.getElementById('about-image-placeholder');
+            if (!img || !placeholder) return;
+            const about = data?.about || {};
+            const imageUrl = normalizeImageUrl(about.image_url || about.imageUrl);
+            if (imageUrl) {
+                img.src = imageUrl;
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+                placeholder.style.display = 'block';
+            }
+        }
+
         // Render history entries from JSON data
         function renderHistory(data) {
             if (!data.history) return;
@@ -234,6 +266,7 @@
             renderAbout(data);
             renderMission(data);
             renderHistory(data);
+            renderAboutImage(data);
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -242,8 +275,9 @@
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=ueber-uns`);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const out = await res.json();
-                if (out?.data?.value) {
-                    renderAll(out.data.value);
+                const apiVal = out?.data?.value ?? out?.data;
+                if (apiVal) {
+                    renderAll(apiVal);
                     return;
                 }
                 throw new Error('No data');

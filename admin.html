@@ -247,6 +247,45 @@
             border-radius: var(--radius-sm);
             border: 1px solid var(--border-default);
         }
+        .image-upload-row {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+        .image-upload-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .image-upload-preview {
+            width: 100%;
+            max-width: 220px;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-default);
+            background: var(--bg-primary);
+            display: none;
+        }
+        .image-upload-url {
+            width: 100%;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            padding: 8px 10px;
+            font-size: 0.875rem;
+        }
+        .image-upload-status {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
@@ -303,6 +342,7 @@
             <div class="admin-tabs">
                 <button class="admin-tab active" data-target="panel-homepage">Homepage</button>
                 <button class="admin-tab" data-target="panel-ueber-uns">Über uns</button>
+                <button class="admin-tab" data-target="panel-mixelpixel">MixelPixel</button>
                 <button class="admin-tab" data-target="panel-event">Event</button>
                 <button class="admin-tab" data-target="panel-team">Team</button>
                 <button class="admin-tab" data-target="panel-sozial-media">Sozial Media</button>
@@ -358,12 +398,83 @@
                     <button type="button" class="btn-add-item" id="uu-add-history-entry">＋ Eintrag hinzufügen</button>
                 </div>
 
+                <div class="admin-section-box">
+                    <h3>Bilder</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
+                        Lade ein Bild hoch und speichere anschließend den Über-uns-Block.
+                    </p>
+                    <div class="image-upload-row" data-image-key="uu-about-image-url">
+                        <label style="font-weight:600;font-size:0.875rem;color:var(--text-secondary);">Über uns – Bild</label>
+                        <div class="image-upload-controls">
+                            <input type="file" accept="image/*" class="image-upload-file">
+                            <button type="button" class="btn btn-primary image-upload-btn">Upload</button>
+                        </div>
+                        <img class="image-upload-preview" alt="Über uns Bild Vorschau">
+                        <input type="url" id="uu-about-image-url" class="image-upload-url" placeholder="https://...">
+                        <div class="image-upload-status">Noch kein Bild hochgeladen.</div>
+                    </div>
+                </div>
+
                 <div class="download-actions">
                     <button type="button" class="btn-save" id="btn-save-uu">💾 Über uns speichern</button>
                     <button type="button" class="btn btn-primary" id="btn-download-uu">⬇ JSON herunterladen</button>
                 </div>
 
             </div><!-- /panel-ueber-uns -->
+
+            <!-- ==================== MIXELPIXEL PANEL ==================== -->
+            <div id="panel-mixelpixel" class="admin-panel">
+                <div class="admin-section-box">
+                    <h3>Bilder</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
+                        Lade Bilder für die „Bild folgt“-Platzhalter hoch und speichere den MixelPixel-Block.
+                    </p>
+                    <div class="image-upload-row" data-image-key="mx-about-image-url">
+                        <label style="font-weight:600;font-size:0.875rem;color:var(--text-secondary);">Was ist MixelPixel? – Bild</label>
+                        <div class="image-upload-controls">
+                            <input type="file" accept="image/*" class="image-upload-file">
+                            <button type="button" class="btn btn-primary image-upload-btn">Upload</button>
+                        </div>
+                        <img class="image-upload-preview" alt="MixelPixel Abschnitt Bild Vorschau">
+                        <input type="url" id="mx-about-image-url" class="image-upload-url" placeholder="https://...">
+                        <div class="image-upload-status">Noch kein Bild hochgeladen.</div>
+                    </div>
+                    <div class="image-upload-row" data-image-key="mx-project-1-image-url">
+                        <label style="font-weight:600;font-size:0.875rem;color:var(--text-secondary);">Projektkarte 1 – Bild</label>
+                        <div class="image-upload-controls">
+                            <input type="file" accept="image/*" class="image-upload-file">
+                            <button type="button" class="btn btn-primary image-upload-btn">Upload</button>
+                        </div>
+                        <img class="image-upload-preview" alt="Projektkarte 1 Bild Vorschau">
+                        <input type="url" id="mx-project-1-image-url" class="image-upload-url" placeholder="https://...">
+                        <div class="image-upload-status">Noch kein Bild hochgeladen.</div>
+                    </div>
+                    <div class="image-upload-row" data-image-key="mx-project-2-image-url">
+                        <label style="font-weight:600;font-size:0.875rem;color:var(--text-secondary);">Projektkarte 2 – Bild</label>
+                        <div class="image-upload-controls">
+                            <input type="file" accept="image/*" class="image-upload-file">
+                            <button type="button" class="btn btn-primary image-upload-btn">Upload</button>
+                        </div>
+                        <img class="image-upload-preview" alt="Projektkarte 2 Bild Vorschau">
+                        <input type="url" id="mx-project-2-image-url" class="image-upload-url" placeholder="https://...">
+                        <div class="image-upload-status">Noch kein Bild hochgeladen.</div>
+                    </div>
+                    <div class="image-upload-row" data-image-key="mx-project-3-image-url">
+                        <label style="font-weight:600;font-size:0.875rem;color:var(--text-secondary);">Projektkarte 3 – Bild</label>
+                        <div class="image-upload-controls">
+                            <input type="file" accept="image/*" class="image-upload-file">
+                            <button type="button" class="btn btn-primary image-upload-btn">Upload</button>
+                        </div>
+                        <img class="image-upload-preview" alt="Projektkarte 3 Bild Vorschau">
+                        <input type="url" id="mx-project-3-image-url" class="image-upload-url" placeholder="https://...">
+                        <div class="image-upload-status">Noch kein Bild hochgeladen.</div>
+                    </div>
+                </div>
+                <div class="download-actions">
+                    <button type="button" class="btn-save" id="btn-save-mx">💾 MixelPixel speichern</button>
+                    <button type="button" class="btn btn-primary" id="btn-download-mx">⬇ JSON herunterladen</button>
+                </div>
+            </div><!-- /panel-mixelpixel -->
 
             <!-- ==================== EVENT PANEL ==================== -->
             <div id="panel-event" class="admin-panel">
@@ -663,6 +774,25 @@
             return res.json();
         }
 
+        function normalizeSafeImageUrl(raw) {
+            const value = String(raw || '').trim();
+            if (!value) return '';
+            try {
+                const parsed = new URL(value, window.location.origin);
+                if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '';
+                const decodedPath = decodeURIComponent(parsed.pathname || '');
+                if (decodedPath.split('/').some(segment => segment === '..')) return '';
+                return parsed.href;
+            } catch {
+                return '';
+            }
+        }
+
+        function extractUploadedImageUrl(result) {
+            const raw = result?.url ?? result?.publicUrl ?? result?.data?.url ?? result?.data?.publicUrl ?? '';
+            return normalizeSafeImageUrl(raw);
+        }
+
         async function saveUeberUns() {
             const btn = document.getElementById('btn-save-uu');
             btn.disabled = true;
@@ -671,6 +801,21 @@
                     { key: 'ueber-uns', value: sanitizeUeberUnsPayload(readUeberUnsData()) }
                 );
                 showToast('✅ Über uns gespeichert!');
+            } catch (err) {
+                showToast(`❌ Fehler: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function saveMixelpixel() {
+            const btn = document.getElementById('btn-save-mx');
+            btn.disabled = true;
+            try {
+                await callEdge('/api/content-blocks', 'POST',
+                    { key: 'mixelpixel', value: readMixelpixelData() }
+                );
+                showToast('✅ MixelPixel gespeichert!');
             } catch (err) {
                 showToast(`❌ Fehler: ${err.message}`, 'error');
             } finally {
@@ -742,6 +887,7 @@
                 document.getElementById(tab.dataset.target).classList.add('active');
             });
         });
+        document.querySelectorAll('.image-upload-row').forEach(bindImageUploaderRow);
 
         // ==============================
         // HELPERS
@@ -764,6 +910,68 @@
         function setVal(id, v) {
             const el = document.getElementById(id);
             if (el) el.value = v || '';
+        }
+
+        function setImagePreviewFromInput(inputEl, previewEl, statusEl) {
+            const safeUrl = normalizeSafeImageUrl(inputEl?.value || '');
+            if (safeUrl) {
+                previewEl.src = safeUrl;
+                previewEl.style.display = 'block';
+                if (statusEl && statusEl.textContent === 'Noch kein Bild hochgeladen.') {
+                    statusEl.textContent = 'Bild-URL gesetzt.';
+                }
+            } else {
+                previewEl.removeAttribute('src');
+                previewEl.style.display = 'none';
+            }
+        }
+
+        function bindImageUploaderRow(row) {
+            const fileInp = row.querySelector('.image-upload-file');
+            const uploadBtn = row.querySelector('.image-upload-btn');
+            const urlInp = row.querySelector('.image-upload-url');
+            const preview = row.querySelector('.image-upload-preview');
+            const status = row.querySelector('.image-upload-status');
+            if (!fileInp || !uploadBtn || !urlInp || !preview || !status) return;
+
+            urlInp.addEventListener('input', () => setImagePreviewFromInput(urlInp, preview, status));
+            setImagePreviewFromInput(urlInp, preview, status);
+
+            uploadBtn.addEventListener('click', async () => {
+                const file = fileInp.files?.[0];
+                if (!file) {
+                    showToast('Bitte zuerst eine Datei auswählen.', 'error');
+                    return;
+                }
+                uploadBtn.disabled = true;
+                status.textContent = 'Hochladen…';
+                status.style.color = 'var(--accent-pink)';
+                try {
+                    const result = await uploadImageViaEdge(file);
+                    const safeUrl = extractUploadedImageUrl(result);
+                    if (!safeUrl) throw new Error('Ungültige URL vom Server');
+                    urlInp.value = safeUrl;
+                    setImagePreviewFromInput(urlInp, preview, status);
+                    status.textContent = '✅ Hochgeladen';
+                    status.style.color = '#1a7f37';
+                    showToast('✅ Bild hochgeladen');
+                } catch (err) {
+                    status.textContent = `❌ ${err.message}`;
+                    status.style.color = '#b91c1c';
+                    showToast(`❌ ${err.message}`, 'error');
+                } finally {
+                    uploadBtn.disabled = false;
+                }
+            });
+        }
+
+        function refreshImageUploadRows() {
+            document.querySelectorAll('.image-upload-row').forEach((row) => {
+                const urlInp = row.querySelector('.image-upload-url');
+                const preview = row.querySelector('.image-upload-preview');
+                const status = row.querySelector('.image-upload-status');
+                if (urlInp && preview && status) setImagePreviewFromInput(urlInp, preview, status);
+            });
         }
 
         // ==============================
@@ -1038,7 +1246,8 @@
                 about: {
                     title: val('uu-about-title'),
                     paragraphs: [val('uu-about-p1'), val('uu-about-p2')].filter(Boolean),
-                    listItems
+                    listItems,
+                    image_url: val('uu-about-image-url')
                 },
                 mission: {
                     title: val('uu-mission-title'),
@@ -1050,6 +1259,30 @@
                     entries: historyEntries
                 }
             };
+        }
+
+        function readMixelpixelData() {
+            return {
+                about: {
+                    image_url: val('mx-about-image-url')
+                },
+                projects: [
+                    { image_url: val('mx-project-1-image-url') },
+                    { image_url: val('mx-project-2-image-url') },
+                    { image_url: val('mx-project-3-image-url') }
+                ]
+            };
+        }
+
+        function populateMixelpixel(data) {
+            if (!data) return;
+            const about = data.about || {};
+            const projects = Array.isArray(data.projects) ? data.projects : [];
+            setVal('mx-about-image-url', about.image_url || about.imageUrl || '');
+            setVal('mx-project-1-image-url', projects[0]?.image_url || projects[0]?.imageUrl || '');
+            setVal('mx-project-2-image-url', projects[1]?.image_url || projects[1]?.imageUrl || '');
+            setVal('mx-project-3-image-url', projects[2]?.image_url || projects[2]?.imageUrl || '');
+            refreshImageUploadRows();
         }
 
         function readEventCardEls(containerId) {
@@ -1105,10 +1338,15 @@
             downloadJson(readEventData(), 'event.json');
         });
 
+        document.getElementById('btn-download-mx').addEventListener('click', () => {
+            downloadJson(readMixelpixelData(), 'mixelpixel.json');
+        });
+
         // ==============================
         // SAVE BUTTONS
         // ==============================
         document.getElementById('btn-save-uu').addEventListener('click', saveUeberUns);
+        document.getElementById('btn-save-mx').addEventListener('click', saveMixelpixel);
         document.getElementById('btn-save-ev').addEventListener('click', saveEvent);
 
         // ==============================
@@ -1121,6 +1359,7 @@
             setVal('uu-about-title', ab.title);
             setVal('uu-about-p1', (ab.paragraphs || [])[0] || '');
             setVal('uu-about-p2', (ab.paragraphs || [])[1] || '');
+            setVal('uu-about-image-url', ab.image_url || ab.imageUrl || '');
             document.getElementById('uu-list-items').innerHTML = '';
             (ab.listItems || []).forEach(item => addListItem(item));
 
@@ -1134,6 +1373,7 @@
             setVal('uu-history-title', h.title);
             document.getElementById('uu-history-entries').innerHTML = '';
             (h.entries || []).forEach(e => addHistoryEntry(e));
+            refreshImageUploadRows();
         }
 
         function populateEvent(data) {
@@ -1247,17 +1487,7 @@
                 uploadStatus.style.color = 'var(--accent-pink)';
                 try {
                     const result = await uploadImageViaEdge(file);
-                    // Validate the returned URL is a proper HTTPS URL with no path traversal.
-                    let safeUrl = '';
-                    try {
-                        const parsed = new URL(result.url ?? '');
-                        if (
-                            parsed.protocol === 'https:' &&
-                            !parsed.pathname.includes('..')
-                        ) {
-                            safeUrl = parsed.href;
-                        }
-                    } catch { /* invalid URL */ }
+                    const safeUrl = extractUploadedImageUrl(result);
                     if (!safeUrl) throw new Error('Ungültige URL vom Server');
                     wrap.dataset.imageUrl = safeUrl;
                     // Revoke blob URL only after new image has finished loading
@@ -1702,7 +1932,8 @@
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=ueber-uns`);
                 const out = res.ok ? await res.json() : null;
-                if (out?.data) populateUeberUns(out.data);
+                const apiVal = out?.data?.value ?? out?.data;
+                if (apiVal) populateUeberUns(apiVal);
                 else throw new Error('No data');
             } catch (err) {
                 console.warn('Über uns load failed, falling back to JSON:', err);
@@ -1710,6 +1941,16 @@
                     .then(r => r.ok ? r.json() : null)
                     .then(data => populateUeberUns(data))
                     .catch(() => {});
+            }
+
+            // Load MixelPixel content block
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=mixelpixel`);
+                const out = res.ok ? await res.json() : null;
+                const apiVal = out?.data?.value ?? out?.data;
+                if (apiVal) populateMixelpixel(apiVal);
+            } catch (err) {
+                console.warn('MixelPixel load failed:', err);
             }
 
             // Load Event content block
@@ -1771,6 +2012,8 @@
                     console.warn('Homepage/event-stats load failed:', err);
                 }
             }
+
+            refreshImageUploadRows();
         });
     </script>
 </body>
