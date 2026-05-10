@@ -342,10 +342,10 @@
             <div class="admin-tabs">
                 <button class="admin-tab active" data-target="panel-homepage">Homepage</button>
                 <button class="admin-tab" data-target="panel-ueber-uns">Über uns</button>
-                <button class="admin-tab" data-target="panel-mixelpixel">MixelPixel</button>
                 <button class="admin-tab" data-target="panel-event">Event</button>
                 <button class="admin-tab" data-target="panel-team">Team</button>
                 <button class="admin-tab" data-target="panel-sozial-media">Sozial Media</button>
+                <button class="admin-tab" data-target="panel-mixelpixel">MixelPixel</button>
             </div>
 
             <!-- ==================== ÜBER UNS PANEL ==================== -->
@@ -413,6 +413,16 @@
                         <input type="url" id="uu-about-image-url" class="image-upload-url" placeholder="https://...">
                         <div class="image-upload-status">Noch kein Bild hochgeladen.</div>
                     </div>
+                    <div class="image-upload-row" data-image-key="uu-timeline-image-url">
+                        <label style="font-weight:600;font-size:0.875rem;color:var(--text-secondary);">Timeline – Bild</label>
+                        <div class="image-upload-controls">
+                            <input type="file" accept="image/*" class="image-upload-file">
+                            <button type="button" class="btn btn-primary image-upload-btn">Upload</button>
+                        </div>
+                        <img class="image-upload-preview" alt="Timeline Bild Vorschau">
+                        <input type="url" id="uu-timeline-image-url" class="image-upload-url" placeholder="https://...">
+                        <div class="image-upload-status">Noch kein Bild hochgeladen.</div>
+                    </div>
                 </div>
 
                 <div class="download-actions">
@@ -425,9 +435,103 @@
             <!-- ==================== MIXELPIXEL PANEL ==================== -->
             <div id="panel-mixelpixel" class="admin-panel">
                 <div class="admin-section-box">
+                    <h3>Hero – Bereich</h3>
+                    <div class="admin-field-group">
+                        <label>Hero-Titel</label>
+                        <input type="text" id="mx-hero-title" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Hero-Untertitel</label>
+                        <textarea id="mx-hero-subtitle" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="admin-section-box">
+                    <h3>Was ist MixelPixel? – Text</h3>
+                    <div class="admin-field-group">
+                        <label>Absatz 1</label>
+                        <textarea id="mx-about-p1" rows="3"></textarea>
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Absatz 2</label>
+                        <textarea id="mx-about-p2" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="admin-section-box">
+                    <h3>Projekte – Texte</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
+                        Bearbeite Titel, Beschreibung und Button pro Projektkarte.
+                    </p>
+                    <div class="admin-field-group">
+                        <label>Projekt 1 – Titel</label>
+                        <input type="text" id="mx-project-1-title" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Projekt 1 – Beschreibung</label>
+                        <textarea id="mx-project-1-text" rows="3"></textarea>
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Projekt 1 – Button Label</label>
+                        <input type="text" id="mx-project-1-button-label" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Projekt 1 – Button Link (href)</label>
+                        <input type="text" id="mx-project-1-button-href" value="">
+                    </div>
+
+                    <div class="admin-field-group">
+                        <label>Projekt 2 – Titel</label>
+                        <input type="text" id="mx-project-2-title" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Projekt 2 – Beschreibung</label>
+                        <textarea id="mx-project-2-text" rows="3"></textarea>
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Projekt 2 – Button Label</label>
+                        <input type="text" id="mx-project-2-button-label" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Projekt 2 – Button Link (href)</label>
+                        <input type="text" id="mx-project-2-button-href" value="">
+                    </div>
+
+                    <div class="admin-field-group">
+                        <label>Projekt 3 – Titel</label>
+                        <input type="text" id="mx-project-3-title" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Projekt 3 – Beschreibung</label>
+                        <textarea id="mx-project-3-text" rows="3"></textarea>
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Projekt 3 – Button Label</label>
+                        <input type="text" id="mx-project-3-button-label" value="">
+                    </div>
+                    <div class="admin-field-group">
+                        <label>Projekt 3 – Button Link (href)</label>
+                        <input type="text" id="mx-project-3-button-href" value="">
+                    </div>
+                </div>
+
+                <div class="admin-section-box">
                     <h3>Bilder</h3>
                     <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
-                        Lade Bilder für die „Bild folgt“-Platzhalter hoch und speichere den MixelPixel-Block.
+                        Lade Bilder für Hero, Abschnitt und Projektkarten hoch und speichere den MixelPixel-Block.
+                    </p>
+                    <div class="image-upload-row" data-image-key="mx-hero-image-url">
+                        <label style="font-weight:600;font-size:0.875rem;color:var(--text-secondary);">Hero-Banner – Bild</label>
+                        <div class="image-upload-controls">
+                            <input type="file" accept="image/*" class="image-upload-file">
+                            <button type="button" class="btn btn-primary image-upload-btn">Upload</button>
+                        </div>
+                        <img class="image-upload-preview" alt="MixelPixel Hero Banner Vorschau">
+                        <input type="url" id="mx-hero-image-url" class="image-upload-url" placeholder="https://...">
+                        <div class="image-upload-status">Noch kein Bild hochgeladen.</div>
+                    </div>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin:18px 0 10px;">
+                        Bildfelder für den Abschnitt und die Projektkarten:
                     </p>
                     <div class="image-upload-row" data-image-key="mx-about-image-url">
                         <label style="font-weight:600;font-size:0.875rem;color:var(--text-secondary);">Was ist MixelPixel? – Bild</label>
@@ -514,6 +618,18 @@
                     <label style="display:block;font-weight:600;font-size:0.875rem;color:var(--text-secondary);margin-bottom:10px;">Events</label>
                     <div id="ev-past-events"></div>
                     <button type="button" class="btn-add-item" id="ev-add-past">＋ Vergangenes Event hinzufügen</button>
+                </div>
+
+                <div class="admin-section-box">
+                    <h3>Nur Admin – Zusatzdaten</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
+                        Zusatztexte/-spiele (oder andere interne Event-Daten) werden hier bearbeitet und als
+                        <code>event.adminOnly</code> gespeichert. Diese Daten werden öffentlich nicht gerendert.
+                    </p>
+                    <div class="admin-field-group">
+                        <label>Admin-only JSON</label>
+                        <textarea id="ev-admin-only-json" rows="8" placeholder='{"texts":[],"games":[]}'></textarea>
+                    </div>
                 </div>
 
                 <div class="download-actions">
@@ -859,15 +975,18 @@
             const btn = document.getElementById('btn-save-team');
             btn.disabled = true;
             try {
-                const members = readTeamData().members.map((m, i) => ({
-                    id: m.id,
-                    rank: m.rank,
-                    name: m.name,
-                    subrank: m.subrank,
-                    image_url: m.imageUrl || '',
-                    sort_order: i  // index-based order; reflects current list position
-                }));
+                const members = readTeamData().members
+                    .sort(compareTeamMembers)
+                    .map((m, i) => ({
+                        id: m.id,
+                        rank: m.rank,
+                        name: m.name,
+                        subrank: m.subrank,
+                        image_url: m.imageUrl || '',
+                        sort_order: i
+                    }));
                 await callEdge('/api/team-members', 'POST', members);
+                populateTeam(members);
                 showToast('✅ Team gespeichert!');
             } catch (err) {
                 showToast(`❌ Fehler: ${err.message}`, 'error');
@@ -1150,6 +1269,22 @@
         document.getElementById('ev-add-upcoming').addEventListener('click', () => addUpcomingEvent());
         document.getElementById('ev-add-past').addEventListener('click', () => addPastEvent());
 
+        let eventExtraData = {};
+        function parseAdminObjectJson(id) {
+            const raw = val(id).trim();
+            if (!raw) return {};
+            let parsed;
+            try {
+                parsed = JSON.parse(raw);
+            } catch {
+                throw new Error('Admin-only JSON ist ungültig');
+            }
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                throw new Error('Admin-only JSON muss ein Objekt sein');
+            }
+            return parsed;
+        }
+
         // ==============================
         // EVENT – Game item builder
         // ==============================
@@ -1256,31 +1391,87 @@
                 },
                 history: {
                     title: val('uu-history-title'),
-                    entries: historyEntries
+                    entries: historyEntries,
+                    image_url: val('uu-timeline-image-url')
                 }
             };
         }
 
+        let mixelpixelExtraData = {};
         function readMixelpixelData() {
+            const project1 = {
+                title: val('mx-project-1-title'),
+                text: val('mx-project-1-text'),
+                button: {
+                    label: val('mx-project-1-button-label'),
+                    href: val('mx-project-1-button-href')
+                },
+                image_url: val('mx-project-1-image-url')
+            };
+            const project2 = {
+                title: val('mx-project-2-title'),
+                text: val('mx-project-2-text'),
+                button: {
+                    label: val('mx-project-2-button-label'),
+                    href: val('mx-project-2-button-href')
+                },
+                image_url: val('mx-project-2-image-url')
+            };
+            const project3 = {
+                title: val('mx-project-3-title'),
+                text: val('mx-project-3-text'),
+                button: {
+                    label: val('mx-project-3-button-label'),
+                    href: val('mx-project-3-button-href')
+                },
+                image_url: val('mx-project-3-image-url')
+            };
             return {
+                ...mixelpixelExtraData,
+                hero: {
+                    title: val('mx-hero-title'),
+                    subtitle: val('mx-hero-subtitle'),
+                    image_url: val('mx-hero-image-url')
+                },
                 about: {
+                    paragraphs: [val('mx-about-p1'), val('mx-about-p2')].filter(Boolean),
                     image_url: val('mx-about-image-url')
                 },
-                projects: [
-                    { image_url: val('mx-project-1-image-url') },
-                    { image_url: val('mx-project-2-image-url') },
-                    { image_url: val('mx-project-3-image-url') }
-                ]
+                projects: [project1, project2, project3]
             };
         }
 
         function populateMixelpixel(data) {
             if (!data) return;
+            const knownKeys = new Set(['hero', 'about', 'projects']);
+            mixelpixelExtraData = {};
+            Object.entries(data).forEach(([key, value]) => {
+                if (!knownKeys.has(key)) mixelpixelExtraData[key] = value;
+            });
+            const hero = data.hero || {};
             const about = data.about || {};
             const projects = Array.isArray(data.projects) ? data.projects : [];
+            setVal('mx-hero-title', hero.title);
+            setVal('mx-hero-subtitle', hero.subtitle);
+            setVal('mx-hero-image-url', hero.image_url || hero.imageUrl || '');
+            const aboutParagraphs = Array.isArray(about.paragraphs) ? about.paragraphs : [];
+            setVal('mx-about-p1', aboutParagraphs[0] || about.text || '');
+            setVal('mx-about-p2', aboutParagraphs[1] || '');
             setVal('mx-about-image-url', about.image_url || about.imageUrl || '');
+            setVal('mx-project-1-title', projects[0]?.title);
+            setVal('mx-project-1-text', projects[0]?.text);
+            setVal('mx-project-1-button-label', projects[0]?.button?.label);
+            setVal('mx-project-1-button-href', projects[0]?.button?.href);
             setVal('mx-project-1-image-url', projects[0]?.image_url || projects[0]?.imageUrl || '');
+            setVal('mx-project-2-title', projects[1]?.title);
+            setVal('mx-project-2-text', projects[1]?.text);
+            setVal('mx-project-2-button-label', projects[1]?.button?.label);
+            setVal('mx-project-2-button-href', projects[1]?.button?.href);
             setVal('mx-project-2-image-url', projects[1]?.image_url || projects[1]?.imageUrl || '');
+            setVal('mx-project-3-title', projects[2]?.title);
+            setVal('mx-project-3-text', projects[2]?.text);
+            setVal('mx-project-3-button-label', projects[2]?.button?.label);
+            setVal('mx-project-3-button-href', projects[2]?.button?.href);
             setVal('mx-project-3-image-url', projects[2]?.image_url || projects[2]?.imageUrl || '');
             refreshImageUploadRows();
         }
@@ -1308,7 +1499,9 @@
                 badgeClass: el.querySelector('.gi-badgeClass').value.trim()
             }));
 
-            return {
+            const adminOnly = parseAdminObjectJson('ev-admin-only-json');
+            const payload = {
+                ...eventExtraData,
                 pageTitle: "Kommende Events",
                 pageSubtitle: "Verpasse kein MPSQ-Event – bleib auf dem Laufenden.",
                 upcomingEvents: {
@@ -1323,8 +1516,11 @@
                 pastEvents: {
                     title: val('ev-past-title'),
                     events: readEventCardEls('ev-past-events')
-                }
+                },
+                adminOnly
             };
+            if (!Object.keys(adminOnly).length) delete payload.adminOnly;
+            return payload;
         }
 
         // ==============================
@@ -1371,6 +1567,7 @@
 
             const h = data.history || {};
             setVal('uu-history-title', h.title);
+            setVal('uu-timeline-image-url', h.image_url || h.imageUrl || '');
             document.getElementById('uu-history-entries').innerHTML = '';
             (h.entries || []).forEach(e => addHistoryEntry(e));
             refreshImageUploadRows();
@@ -1378,6 +1575,22 @@
 
         function populateEvent(data) {
             if (!data) return;
+            const knownKeys = new Set(['pageTitle', 'pageSubtitle', 'upcomingEvents', 'games', 'pastEvents', 'adminOnly']);
+            eventExtraData = {};
+            Object.entries(data).forEach(([key, value]) => {
+                if (!knownKeys.has(key)) eventExtraData[key] = value;
+            });
+            const adminOnly = (data.adminOnly && typeof data.adminOnly === 'object' && !Array.isArray(data.adminOnly))
+                ? data.adminOnly
+                : {};
+            if (Object.keys(adminOnly).length) {
+                setVal('ev-admin-only-json', JSON.stringify(adminOnly, null, 2));
+            } else if (Object.keys(eventExtraData).length) {
+                setVal('ev-admin-only-json', JSON.stringify(eventExtraData, null, 2));
+                eventExtraData = {};
+            } else {
+                setVal('ev-admin-only-json', '');
+            }
 
             const ue = data.upcomingEvents || {};
             setVal('ev-upcoming-title', ue.title);
@@ -1400,6 +1613,12 @@
         // TEAM – Member builder
         // ==============================
         const TEAM_RANKS = ['Frontman', 'Quadrat', 'Dreieck', 'Kreis'];
+        const TEAM_RANK_INDEX = Object.fromEntries(TEAM_RANKS.map((r, i) => [r, i]));
+        function compareTeamMembers(a, b) {
+            const rankDiff = (TEAM_RANK_INDEX[a?.rank] ?? TEAM_RANKS.length) - (TEAM_RANK_INDEX[b?.rank] ?? TEAM_RANKS.length);
+            if (rankDiff !== 0) return rankDiff;
+            return String(a?.name || '').localeCompare(String(b?.name || ''), 'de', { sensitivity: 'base' });
+        }
 
         function buildTeamMemberEl(member) {
             const wrap = document.createElement('div');
@@ -1556,7 +1775,7 @@
             // Accepts either a raw Supabase rows array or the legacy { members: [...] } format
             const list = Array.isArray(members) ? members : (members?.members || []);
             document.getElementById('team-members-list').innerHTML = '';
-            list.forEach(m => addTeamMember(m));
+            list.sort(compareTeamMembers).forEach(m => addTeamMember(m));
         }
 
         // ==============================
@@ -1701,10 +1920,19 @@
                 data.groups.forEach((group, i) => {
                     (group.links || []).forEach(l => addSocialLink(l, i));
                 });
-            } else if (Array.isArray(data.links)) {
-                // Backward compat: flat list from PR #26 → show under first group
+                return;
+            }
+            if (Array.isArray(data.links)) {
                 data.links.forEach(l => addSocialLink(l, 0));
             }
+            if (Array.isArray(data.mpsqLinks)) {
+                data.mpsqLinks.forEach(l => addSocialLink(l, 0));
+            }
+            const mixelpixelLegacyLinks = []
+                .concat(Array.isArray(data.mixelpixelLinks) ? data.mixelpixelLinks : [])
+                .concat(Array.isArray(data.otherLinksFromMixelPixel) ? data.otherLinksFromMixelPixel : [])
+                .concat(Array.isArray(data.otherLinks) ? data.otherLinks : []);
+            mixelpixelLegacyLinks.forEach(l => addSocialLink(l, 1));
         }
 
         // ==============================
@@ -1957,7 +2185,8 @@
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=event`);
                 const out = res.ok ? await res.json() : null;
-                if (out?.data) populateEvent(out.data);
+                const apiVal = out?.data?.value ?? out?.data;
+                if (apiVal) populateEvent(apiVal);
                 else throw new Error('No data');
             } catch (err) {
                 console.warn('Event load failed, falling back to JSON:', err);
@@ -1982,7 +2211,14 @@
                 const out = res.ok ? await res.json() : null;
                 // Support both { data: { value: {...} } } and { data: {...} } API shapes
                 const apiVal = out?.data?.value ?? out?.data;
-                const hasGroups = apiVal && (Array.isArray(apiVal.groups) || Array.isArray(apiVal.links));
+                const hasGroups = apiVal && (
+                    Array.isArray(apiVal.groups) ||
+                    Array.isArray(apiVal.links) ||
+                    Array.isArray(apiVal.mpsqLinks) ||
+                    Array.isArray(apiVal.mixelpixelLinks) ||
+                    Array.isArray(apiVal.otherLinksFromMixelPixel) ||
+                    Array.isArray(apiVal.otherLinks)
+                );
                 if (hasGroups) populateSocialMedia(apiVal);
                 else throw new Error('No data');
             } catch (err) {
@@ -1997,8 +2233,9 @@
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=homepage`);
                 const out = res.ok ? await res.json() : null;
-                if (out?.data) {
-                    populateHomepage(out.data);
+                const apiVal = out?.data?.value ?? out?.data;
+                if (apiVal) {
+                    populateHomepage(apiVal);
                 } else {
                     throw new Error('No homepage data');
                 }

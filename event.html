@@ -248,22 +248,28 @@
         }
 
         function renderEvents(data) {
+            const publicData = {
+                upcomingEvents: data?.upcomingEvents,
+                games: data?.games,
+                pastEvents: data?.pastEvents
+            };
+
             // Upcoming events
-            if (data.upcomingEvents) {
-                setText('upcoming-title', data.upcomingEvents.title);
+            if (publicData.upcomingEvents) {
+                setText('upcoming-title', publicData.upcomingEvents.title);
                 const container = document.getElementById('upcoming-events');
-                if (container && data.upcomingEvents.events) {
-                    container.innerHTML = data.upcomingEvents.events.map(ev => buildEventCard(ev, false)).join('');
+                if (container && publicData.upcomingEvents.events) {
+                    container.innerHTML = publicData.upcomingEvents.events.map(ev => buildEventCard(ev, false)).join('');
                 }
             }
 
             // Games
-            if (data.games) {
-                setText('games-title', data.games.title);
-                setText('games-subtitle', data.games.subtitle);
+            if (publicData.games) {
+                setText('games-title', publicData.games.title);
+                setText('games-subtitle', publicData.games.subtitle);
                 const grid = document.getElementById('games-grid');
-                if (grid && data.games.items) {
-                    grid.innerHTML = data.games.items.map(g => `
+                if (grid && publicData.games.items) {
+                    grid.innerHTML = publicData.games.items.map(g => `
                         <div class="card">
                             <div style="font-size:2rem;margin-bottom:12px;">${escapeHtml(g.icon)}</div>
                             <h3 style="margin-bottom:8px;font-weight:700;">${escapeHtml(g.title)}</h3>
@@ -274,11 +280,11 @@
             }
 
             // Past events
-            if (data.pastEvents) {
-                setText('past-title', data.pastEvents.title);
+            if (publicData.pastEvents) {
+                setText('past-title', publicData.pastEvents.title);
                 const container = document.getElementById('past-events');
-                if (container && data.pastEvents.events) {
-                    container.innerHTML = data.pastEvents.events.map(ev => buildEventCard(ev, true)).join('');
+                if (container && publicData.pastEvents.events) {
+                    container.innerHTML = publicData.pastEvents.events.map(ev => buildEventCard(ev, true)).join('');
                 }
             }
         }
@@ -289,8 +295,9 @@
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=event`);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const out = await res.json();
-                if (out?.data) {
-                    renderEvents(out.data);
+                const apiVal = out?.data?.value ?? out?.data;
+                if (apiVal) {
+                    renderEvents(apiVal);
                     return;
                 }
                 throw new Error('No data');

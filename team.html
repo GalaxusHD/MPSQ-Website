@@ -48,9 +48,11 @@
 
         /* Members row */
         .rank-members-row {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 18px;
         }
 
         /* Individual member card */
@@ -59,8 +61,8 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            width: 100%;
-            padding: 0 16px 24px;
+            width: 148px;
+            padding: 0;
             text-decoration: none;
             color: var(--text-primary);
             transition: opacity var(--transition-normal);
@@ -78,14 +80,15 @@
         /* Full rectangular image – no circle */
         .team-member-img {
             width: 148px;
-            height: 148px;
+            max-width: 100%;
+            height: auto;
             object-fit: cover;
             object-position: top center;
-            border-radius: var(--radius-md);
+            border-radius: 0;
             margin-bottom: 12px;
             image-rendering: pixelated;
-            border: 1px solid var(--border-default);
-            background: var(--bg-tertiary);
+            border: 0;
+            background: transparent;
         }
 
         .team-member-name {
@@ -102,18 +105,26 @@
             font-weight: 500;
         }
 
+        .team-member-separator {
+            color: #8f1b1f;
+            font-weight: 800;
+            font-size: 1.1rem;
+            line-height: 1;
+            align-self: center;
+            margin: 58px 2px 0;
+            user-select: none;
+            pointer-events: none;
+        }
+
         @media (max-width: 980px) {
-            .rank-members-row {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
+            .rank-members-row { gap: 14px; }
         }
 
         @media (max-width: 600px) {
-            .rank-members-row {
-                grid-template-columns: 1fr;
-            }
-            .team-member-card { width: 100%; }
-            .team-member-img  { width: 112px; height: 112px; }
+            .rank-members-row { justify-content: flex-start; }
+            .team-member-card { width: 112px; }
+            .team-member-img  { width: 112px; }
+            .team-member-separator { margin-top: 44px; }
         }
     </style>
 </head>
@@ -195,6 +206,13 @@
     <script src="js/main.js"></script>
     <script>
         const RANK_ORDER = ['Frontman', 'Quadrat', 'Dreieck', 'Kreis'];
+        const RANK_INDEX = Object.fromEntries(RANK_ORDER.map((rank, idx) => [rank, idx]));
+
+        function compareTeamMembers(a, b) {
+            const rankDiff = (RANK_INDEX[a?.rank] ?? RANK_ORDER.length) - (RANK_INDEX[b?.rank] ?? RANK_ORDER.length);
+            if (rankDiff !== 0) return rankDiff;
+            return String(a?.name || '').localeCompare(String(b?.name || ''), 'de', { sensitivity: 'base' });
+        }
 
         function escapeHtml(str) {
             if (!str) return '';
@@ -203,6 +221,19 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
+        }
+
+        function applyRowSeparators(rowEl) {
+            if (!rowEl) return;
+            rowEl.querySelectorAll('.team-member-separator').forEach(el => el.remove());
+            const cards = Array.from(rowEl.querySelectorAll('.team-member-card'));
+            for (let i = 1; i < cards.length; i += 1) {
+                if (cards[i].offsetTop !== cards[i - 1].offsetTop) continue;
+                const sep = document.createElement('span');
+                sep.className = 'team-member-separator';
+                sep.textContent = '|';
+                rowEl.insertBefore(sep, cards[i]);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -216,7 +247,7 @@
                 if (!res.ok) throw new Error(`Worker error: ${res.status}`);
                 const out = await res.json();
                 // Worker returns { data: [...] }; accept both shapes for backwards compatibility
-                const members = Array.isArray(out) ? out : (out.data || []);
+                const members = (Array.isArray(out) ? out : (out.data || [])).slice().sort(compareTeamMembers);
 
                 if (!members || members.length === 0) {
                     loading.innerHTML = '<p style="color:var(--text-secondary);">Noch keine Teammitglieder vorhanden.</p>';
@@ -274,6 +305,11 @@
                 });
 
                 content.innerHTML = html;
+                const applyAllSeparators = () => {
+                    content.querySelectorAll('.rank-members-row').forEach(applyRowSeparators);
+                };
+                applyAllSeparators();
+                window.addEventListener('resize', applyAllSeparators);
                 loading.style.display = 'none';
                 content.style.display = 'block';
 

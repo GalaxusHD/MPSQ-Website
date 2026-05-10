@@ -110,10 +110,12 @@
                 <h2 id="history-title">Geschichte</h2>
                 <span class="section-divider"></span>
             </div>
-            <!-- Placeholder for a future history/timeline image -->
-            <div class="img-placeholder" style="max-width:700px;margin:0 auto 28px;" aria-hidden="true">
-                <span class="img-placeholder-icon">🖼</span>
-                <span>Timeline-Bild folgt</span>
+            <div style="max-width:700px;margin:0 auto 28px;position:relative;">
+                <img id="timeline-image" alt="Timeline Bild" style="width:100%;height:auto;border-radius:var(--radius-md);display:none;">
+                <div id="timeline-image-placeholder" class="img-placeholder" aria-hidden="true">
+                    <span class="img-placeholder-icon">🖼</span>
+                    <span>Timeline-Bild folgt</span>
+                </div>
             </div>
             <div style="max-width:700px;margin:0 auto;" id="history-entries">
                 <div class="info-box" style="margin-bottom:20px;">
@@ -235,6 +237,23 @@
             }
         }
 
+        function renderTimelineImage(data) {
+            const img = document.getElementById('timeline-image');
+            const placeholder = document.getElementById('timeline-image-placeholder');
+            if (!img || !placeholder) return;
+            const history = data?.history || {};
+            const imageUrl = normalizeImageUrl(history.image_url || history.imageUrl);
+            if (imageUrl) {
+                img.src = imageUrl;
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+                placeholder.style.display = 'flex';
+            }
+        }
+
         // Render history entries from JSON data
         function renderHistory(data) {
             if (!data.history) return;
@@ -267,6 +286,7 @@
             renderMission(data);
             renderHistory(data);
             renderAboutImage(data);
+            renderTimelineImage(data);
         }
 
         document.addEventListener('DOMContentLoaded', async () => {

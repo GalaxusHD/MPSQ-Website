@@ -34,13 +34,16 @@
                 <img src="assets/images/Logo.png" alt="MixelPixel Logo" class="hero-logo-img">
             </div>
             <h1 style="font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:-0.5px;margin-bottom:12px;">
-                <span class="mixel-text">Mixel</span><span class="pixel-text">Pixel</span>
+                <span id="mx-hero-title"><span class="mixel-text">Mixel</span><span class="pixel-text">Pixel</span></span>
             </h1>
-            <p style="color:var(--text-secondary);font-size:1.05rem;max-width:520px;margin:0 auto;">Projekte und Informationen rund um den MixelPixel-Server.</p>
+            <p id="mx-hero-subtitle" style="color:var(--text-secondary);font-size:1.05rem;max-width:520px;margin:0 auto;">Projekte und Informationen rund um den MixelPixel-Server.</p>
             <!-- Placeholder for a future hero banner image -->
-            <div class="img-placeholder" style="max-width:640px;margin:28px auto 0;" aria-hidden="true">
-                <span class="img-placeholder-icon">🖼</span>
-                <span>Hero-Banner folgt</span>
+            <div style="max-width:640px;margin:28px auto 0;position:relative;">
+                <img id="mx-hero-image" alt="MixelPixel Hero Banner" style="width:100%;height:auto;display:none;border-radius:var(--radius-md);">
+                <div id="mx-hero-image-placeholder" class="img-placeholder" aria-hidden="true">
+                    <span class="img-placeholder-icon">🖼</span>
+                    <span>Hero-Banner folgt</span>
+                </div>
             </div>
         </div>
     </div>
@@ -59,10 +62,10 @@
                         <span style="font-size:1.5rem;">🖼</span> <span>Bild folgt</span>
                     </div>
                 </div>
-                <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:20px;">
+                <p id="mx-about-p1" style="color:var(--text-secondary);line-height:1.8;margin-bottom:20px;">
                     MixelPixel ist ein deutsches Minecraft-Netzwerk, welches mit der neusten Java und Bedrock Version von Minecraft betreten werden kann.
                 </p>
-                <p style="color:var(--text-secondary);line-height:1.8;">
+                <p id="mx-about-p2" style="color:var(--text-secondary);line-height:1.8;">
                     Es zeichnet sich durch seine einzigartig konfigurierten und optimierten Spielmodi aus, die ein freundliches Miteinander ermöglichen. Der Server ist am 17. Mai 2019 gegründet worden und kann sich seither an einer stetig wachsenden Community erfreuen.
                 </p>
             </div>
@@ -88,11 +91,11 @@
                     </div>
                     <div style="padding-top:16px;">
                         <div style="font-size:2rem;margin-bottom:12px;">🦑</div>
-                        <h3 style="margin-bottom:8px;font-weight:700;">MPSQ – Squid Game</h3>
-                        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
+                        <h3 id="mx-project-1-title" style="margin-bottom:8px;font-weight:700;">MPSQ – Squid Game</h3>
+                        <p id="mx-project-1-text" style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
                             Das ultimative Minecraft Squid Game Erlebnis – kompetitiv, spannend und unvergesslich.
                         </p>
-                        <a href="index.html" class="btn btn-primary" style="display:inline-block;">Mehr erfahren →</a>
+                        <a id="mx-project-1-button" href="index.html" class="btn btn-primary" style="display:inline-block;">Mehr erfahren →</a>
                     </div>
                 </div>
 
@@ -106,12 +109,12 @@
                     </div>
                     <div style="padding-top:16px;">
                         <div style="font-size:2rem;margin-bottom:12px;">🔍</div>
-                        <h3 style="margin-bottom:8px;font-weight:700;">Mord im Kekscafé – Video Projekt</h3>
-                        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
+                        <h3 id="mx-project-2-title" style="margin-bottom:8px;font-weight:700;">Mord im Kekscafé – Video Projekt</h3>
+                        <p id="mx-project-2-text" style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
                             Eine Video-Serie über einen Detektiv und einen &bdquo;Sherif&ldquo;, die versuchen, den Mörder zu finden,
                             der jemanden in einem Café getötet hat.
                         </p>
-                        <a href="https://www.youtube.com/@Harryron" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display:inline-block;">Zum Kanal →</a>
+                        <a id="mx-project-2-button" href="https://www.youtube.com/@Harryron" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display:inline-block;">Zum Kanal →</a>
                     </div>
                 </div>
 
@@ -125,12 +128,12 @@
                     </div>
                     <div style="padding-top:16px;">
                         <div style="font-size:2rem;margin-bottom:12px;">🏙️</div>
-                        <h3 style="margin-bottom:8px;font-weight:700;">Stadtbauprojekt Langweid</h3>
-                        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
+                        <h3 id="mx-project-3-title" style="margin-bottom:8px;font-weight:700;">Stadtbauprojekt Langweid</h3>
+                        <p id="mx-project-3-text" style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
                             Das Stadtbauprojekt Wohnbau Neu-/Langweid ist zusammen mit DirtyBirdy&rsquo;s Shoppingmall
                             eines der größten Stadtprojekte MixelPixels.
                         </p>
-                        <a href="https://www.youtube.com/watch?v=Vl2hfL7_nlU" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display:inline-block;">Video ansehen →</a>
+                        <a id="mx-project-3-button" href="https://www.youtube.com/watch?v=Vl2hfL7_nlU" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display:inline-block;">Video ansehen →</a>
                     </div>
                 </div>
 
@@ -231,6 +234,8 @@
 
         function renderMixelpixelImages(data) {
             const d = data || {};
+            const hero = d.hero || {};
+            applyImage('mx-hero-image', 'mx-hero-image-placeholder', hero.image_url || hero.imageUrl);
             const aboutImage = d?.about?.image_url || d?.about?.imageUrl;
             const projects = Array.isArray(d?.projects) ? d.projects : [];
             applyImage('mx-about-image', 'mx-about-image-placeholder', aboutImage);
@@ -239,13 +244,47 @@
             applyImage('mx-project-3-image', 'mx-project-3-image-placeholder', projects[2]?.image_url || projects[2]?.imageUrl);
         }
 
+        function renderMixelpixelText(data) {
+            const d = data || {};
+            const hero = d.hero || {};
+            const about = d.about || {};
+            const projects = Array.isArray(d.projects) ? d.projects : [];
+            const aboutParagraphs = Array.isArray(about.paragraphs) ? about.paragraphs : [];
+
+            const heroTitle = document.getElementById('mx-hero-title');
+            if (heroTitle && hero.title) heroTitle.textContent = hero.title;
+            const heroSubtitle = document.getElementById('mx-hero-subtitle');
+            if (heroSubtitle && hero.subtitle) heroSubtitle.textContent = hero.subtitle;
+
+            const aboutP1 = document.getElementById('mx-about-p1');
+            if (aboutP1 && (aboutParagraphs[0] || about.text)) aboutP1.textContent = aboutParagraphs[0] || about.text;
+            const aboutP2 = document.getElementById('mx-about-p2');
+            if (aboutP2 && aboutParagraphs[1]) aboutP2.textContent = aboutParagraphs[1];
+
+            projects.forEach((project, index) => {
+                const idx = index + 1;
+                const titleEl = document.getElementById(`mx-project-${idx}-title`);
+                if (titleEl && project?.title) titleEl.textContent = project.title;
+                const textEl = document.getElementById(`mx-project-${idx}-text`);
+                if (textEl && project?.text) textEl.textContent = project.text;
+                const buttonEl = document.getElementById(`mx-project-${idx}-button`);
+                if (buttonEl && project?.button) {
+                    if (project.button.label) buttonEl.textContent = project.button.label;
+                    if (project.button.href) buttonEl.href = project.button.href;
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=mixelpixel`);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const out = await res.json();
                 const apiVal = out?.data?.value ?? out?.data;
-                if (apiVal) renderMixelpixelImages(apiVal);
+                if (apiVal) {
+                    renderMixelpixelImages(apiVal);
+                    renderMixelpixelText(apiVal);
+                }
             } catch (err) {
                 console.warn('MixelPixel content load failed:', err);
             }

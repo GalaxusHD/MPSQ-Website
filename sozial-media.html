@@ -301,6 +301,21 @@
                 // Hide the empty second group
                 const group1 = document.getElementById('social-group-1');
                 if (group1) group1.style.display = 'none';
+                return;
+            }
+
+            const group0Links = Array.isArray(data.mpsqLinks) ? data.mpsqLinks : [];
+            const group1Links = []
+                .concat(Array.isArray(data.mixelpixelLinks) ? data.mixelpixelLinks : [])
+                .concat(Array.isArray(data.otherLinksFromMixelPixel) ? data.otherLinksFromMixelPixel : [])
+                .concat(Array.isArray(data.otherLinks) ? data.otherLinks : []);
+            if (group0Links.length || group1Links.length) {
+                const container0 = document.getElementById('social-cards-0');
+                const title0 = document.getElementById('social-group-0-title');
+                if (container0) renderGroup(group0Links, container0, title0, 'Unsere Kanäle');
+                const container1 = document.getElementById('social-cards-1');
+                const title1 = document.getElementById('social-group-1-title');
+                if (container1) renderGroup(group1Links, container1, title1, 'MixelPixel');
             }
         }
 
@@ -314,7 +329,14 @@
                         const out = await res.json();
                         // Support both { data: { value: {...} } } and { data: {...} } API shapes
                         const apiVal = out?.data?.value ?? out?.data;
-                        if (apiVal && (Array.isArray(apiVal.groups) || Array.isArray(apiVal.links))) data = apiVal;
+                        if (apiVal && (
+                            Array.isArray(apiVal.groups) ||
+                            Array.isArray(apiVal.links) ||
+                            Array.isArray(apiVal.mpsqLinks) ||
+                            Array.isArray(apiVal.mixelpixelLinks) ||
+                            Array.isArray(apiVal.otherLinksFromMixelPixel) ||
+                            Array.isArray(apiVal.otherLinks)
+                        )) data = apiVal;
                     }
                 } catch { /* fall through */ }
             }
