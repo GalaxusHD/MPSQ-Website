@@ -1269,15 +1269,16 @@
         document.getElementById('ev-add-upcoming').addEventListener('click', () => addUpcomingEvent());
         document.getElementById('ev-add-past').addEventListener('click', () => addPastEvent());
 
+        // Backward-compat cache for unknown top-level event fields from existing content blocks.
         let eventExtraData = {};
-        function parseAdminObjectJson(id) {
+        function parseAdminOnlyJson(id) {
             const raw = val(id).trim();
             if (!raw) return {};
             let parsed;
             try {
                 parsed = JSON.parse(raw);
-            } catch {
-                throw new Error('Admin-only JSON ist ungültig');
+            } catch (err) {
+                throw new Error(`Admin-only JSON ist ungültig: ${err?.message || 'Parse-Fehler'}`);
             }
             if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
                 throw new Error('Admin-only JSON muss ein Objekt sein');
@@ -1397,6 +1398,7 @@
             };
         }
 
+        // Backward-compat cache for unknown top-level mixelpixel fields from existing content blocks.
         let mixelpixelExtraData = {};
         function readMixelpixelData() {
             const project1 = {
@@ -1499,7 +1501,7 @@
                 badgeClass: el.querySelector('.gi-badgeClass').value.trim()
             }));
 
-            const adminOnly = parseAdminObjectJson('ev-admin-only-json');
+            const adminOnly = parseAdminOnlyJson('ev-admin-only-json');
             const payload = {
                 ...eventExtraData,
                 pageTitle: "Kommende Events",
@@ -1519,7 +1521,7 @@
                 },
                 adminOnly
             };
-            if (!Object.keys(adminOnly).length) delete payload.adminOnly;
+            if (Object.keys(adminOnly).length === 0) delete payload.adminOnly;
             return payload;
         }
 
@@ -1586,6 +1588,8 @@
             if (Object.keys(adminOnly).length) {
                 setVal('ev-admin-only-json', JSON.stringify(adminOnly, null, 2));
             } else if (Object.keys(eventExtraData).length) {
+                // Backward-compat: show unknown legacy top-level event fields once and
+                // move them into the editable admin-only JSON field on next save.
                 setVal('ev-admin-only-json', JSON.stringify(eventExtraData, null, 2));
                 eventExtraData = {};
             } else {

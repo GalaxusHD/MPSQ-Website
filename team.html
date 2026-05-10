@@ -227,14 +227,17 @@
             if (!rowEl) return;
             rowEl.querySelectorAll('.team-member-separator').forEach(el => el.remove());
             const cards = Array.from(rowEl.querySelectorAll('.team-member-card'));
+            const cardOffsets = cards.map(card => card.offsetTop);
             for (let i = 1; i < cards.length; i += 1) {
-                if (cards[i].offsetTop !== cards[i - 1].offsetTop) continue;
+                if (cardOffsets[i] !== cardOffsets[i - 1]) continue;
                 const sep = document.createElement('span');
                 sep.className = 'team-member-separator';
                 sep.textContent = '|';
                 rowEl.insertBefore(sep, cards[i]);
             }
         }
+        let applyAllSeparatorsRef = null;
+        let separatorsResizeBound = false;
 
         document.addEventListener('DOMContentLoaded', async () => {
             const loading = document.getElementById('team-loading');
@@ -308,8 +311,18 @@
                 const applyAllSeparators = () => {
                     content.querySelectorAll('.rank-members-row').forEach(applyRowSeparators);
                 };
+                applyAllSeparatorsRef = applyAllSeparators;
                 applyAllSeparators();
-                window.addEventListener('resize', applyAllSeparators);
+                if (!separatorsResizeBound) {
+                    let resizeTimer;
+                    window.addEventListener('resize', () => {
+                        clearTimeout(resizeTimer);
+                        resizeTimer = setTimeout(() => {
+                            if (applyAllSeparatorsRef) applyAllSeparatorsRef();
+                        }, 100);
+                    });
+                    separatorsResizeBound = true;
+                }
                 loading.style.display = 'none';
                 content.style.display = 'block';
 

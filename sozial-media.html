@@ -305,10 +305,11 @@
             }
 
             const group0Links = Array.isArray(data.mpsqLinks) ? data.mpsqLinks : [];
-            const group1Links = []
-                .concat(Array.isArray(data.mixelpixelLinks) ? data.mixelpixelLinks : [])
-                .concat(Array.isArray(data.otherLinksFromMixelPixel) ? data.otherLinksFromMixelPixel : [])
-                .concat(Array.isArray(data.otherLinks) ? data.otherLinks : []);
+            const group1Links = [].concat(
+                Array.isArray(data.mixelpixelLinks) ? data.mixelpixelLinks : [],
+                Array.isArray(data.otherLinksFromMixelPixel) ? data.otherLinksFromMixelPixel : [],
+                Array.isArray(data.otherLinks) ? data.otherLinks : []
+            );
             if (group0Links.length || group1Links.length) {
                 const container0 = document.getElementById('social-cards-0');
                 const title0 = document.getElementById('social-group-0-title');
