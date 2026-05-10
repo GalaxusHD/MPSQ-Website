@@ -112,12 +112,14 @@
         }
 
         .team-member-separator {
-            color: #8f1b1f;
-            font-weight: 800;
-            font-size: 1.1rem;
-            line-height: 1;
+            display: inline-block;
+            width: 2px;
+            height: 120px;
+            background-color: #8f1b1f;
             align-self: center;
-            margin: 58px 2px 0;
+            flex-shrink: 0;
+            margin: 0 2px;
+            border-radius: 1px;
             user-select: none;
             pointer-events: none;
         }
@@ -130,7 +132,7 @@
             .rank-members-row { justify-content: flex-start; }
             .team-member-card { max-width: 112px; }
             .team-member-img  { max-height: 112px; }
-            .team-member-separator { margin-top: 44px; }
+            .team-member-separator { height: 90px; }
         }
     </style>
 </head>
@@ -238,7 +240,6 @@
                 if (cardOffsets[i] !== cardOffsets[i - 1]) continue;
                 const sep = document.createElement('span');
                 sep.className = 'team-member-separator';
-                sep.textContent = '|';
                 rowEl.insertBefore(sep, cards[i]);
             }
         }
