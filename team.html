@@ -46,26 +46,11 @@
             border-radius: 2px;
         }
 
-        /* Members row with vertical dividers */
+        /* Members row */
         .rank-members-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0;
-        }
-
-        .team-member-wrap {
-            display: flex;
-            flex-direction: row;
-            flex: 0 0 auto;
-        }
-
-        /* Vertical divider between members */
-        .team-member-divider {
-            width: 1px;
-            background: var(--border-default);
-            align-self: stretch;
-            flex-shrink: 0;
-            margin: 0 4px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
         }
 
         /* Individual member card */
@@ -74,7 +59,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            width: 180px;
+            width: 100%;
             padding: 0 16px 24px;
             text-decoration: none;
             color: var(--text-primary);
@@ -117,8 +102,17 @@
             font-weight: 500;
         }
 
+        @media (max-width: 980px) {
+            .rank-members-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
         @media (max-width: 600px) {
-            .team-member-card { width: 140px; }
+            .rank-members-row {
+                grid-template-columns: 1fr;
+            }
+            .team-member-card { width: 100%; }
             .team-member-img  { width: 112px; height: 112px; }
         }
     </style>
@@ -251,21 +245,13 @@
 
                     // Members row
                     html += `<div class="rank-members-row">`;
-                    rankMembers.forEach((m, idx) => {
+                    rankMembers.forEach((m) => {
                         const imgSrc = m.image_url
                             ? escapeHtml(m.image_url)
                             : 'assets/images/mpsq-logo.png';
                         const profileUrl = m.name
                             ? `https://mixelpixel.net/profil/${encodeURIComponent(m.name)}`
                             : 'https://mixelpixel.net';
-
-                        // Vertical divider before every card except the first
-                        if (idx > 0) {
-                            html += `<div class="team-member-wrap"><div class="team-member-divider"></div>`;
-                        } else {
-                            html += `<div class="team-member-wrap">`;
-                        }
-
                         html += `
                             <a href="${escapeHtml(profileUrl)}"
                                class="team-member-card"
@@ -281,8 +267,6 @@
                                 <span class="team-member-name">${escapeHtml(m.name)}</span>
                                 ${m.subrank ? `<span class="team-member-subrank">${escapeHtml(m.subrank)}</span>` : ''}
                             </a>`;
-
-                        html += `</div>`;
                     });
                     html += `</div>`; // rank-members-row
 
@@ -301,4 +285,3 @@
     </script>
 </body>
 </html>
-
