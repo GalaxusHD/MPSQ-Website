@@ -55,6 +55,30 @@
           "url": "https://www.twitch.tv/mixelpixelofficial",
           "label": "MixelPixel Twitch",
           "enabled": true
+        },
+        {
+          "platform": "website",
+          "url": "https://mixelpixel.net",
+          "label": "MixelPixel Website",
+          "enabled": true
+        },
+        {
+          "platform": "website",
+          "url": "https://wiki.mixelpixel.net/",
+          "label": "MixelPixel Wiki",
+          "enabled": true
+        },
+        {
+          "platform": "website",
+          "url": "https://mixelpixel.net/faq",
+          "label": "MixelPixel FAQ",
+          "enabled": true
+        },
+        {
+          "platform": "website",
+          "url": "https://mixelpixel.net/regeln",
+          "label": "MixelPixel Regeln",
+          "enabled": true
         }
       ]
     }
