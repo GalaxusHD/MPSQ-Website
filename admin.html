@@ -774,15 +774,23 @@
             return res.json();
         }
 
-        function extractUploadedImageUrl(result) {
-            const raw = result?.url ?? result?.publicUrl ?? result?.data?.url ?? result?.data?.publicUrl ?? '';
+        function normalizeSafeImageUrl(raw) {
+            const value = String(raw || '').trim();
+            if (!value) return '';
             try {
-                const parsed = new URL(String(raw));
-                if (parsed.protocol !== 'https:' || parsed.pathname.includes('..')) return '';
+                const parsed = new URL(value, window.location.origin);
+                if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '';
+                const decodedPath = decodeURIComponent(parsed.pathname || '');
+                if (decodedPath.split('/').some(segment => segment === '..')) return '';
                 return parsed.href;
             } catch {
                 return '';
             }
+        }
+
+        function extractUploadedImageUrl(result) {
+            const raw = result?.url ?? result?.publicUrl ?? result?.data?.url ?? result?.data?.publicUrl ?? '';
+            return normalizeSafeImageUrl(raw);
         }
 
         async function saveUeberUns() {
@@ -905,9 +913,9 @@
         }
 
         function setImagePreviewFromInput(inputEl, previewEl, statusEl) {
-            const value = String(inputEl?.value || '').trim();
-            if (value) {
-                previewEl.src = value;
+            const safeUrl = normalizeSafeImageUrl(inputEl?.value || '');
+            if (safeUrl) {
+                previewEl.src = safeUrl;
                 previewEl.style.display = 'block';
                 if (statusEl && statusEl.textContent === 'Noch kein Bild hochgeladen.') {
                     statusEl.textContent = 'Bild-URL gesetzt.';
