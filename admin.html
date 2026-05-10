@@ -1783,6 +1783,101 @@
         }
 
         // ==============================
+        // DEFAULT DATA (fallbacks)
+        // ==============================
+        const DEFAULT_SOCIAL_DATA = {
+            groups: [
+                {
+                    title: 'Unsere Kanäle',
+                    links: [
+                        { platform: 'discord', url: 'https://discord.gg/4qKwaD5NV', label: 'MPSQ Discord', enabled: true },
+                        { platform: 'youtube', url: 'https://www.youtube.com/@mixelpixelsquidgame5684', label: 'MPSQ YouTube', enabled: true }
+                    ]
+                },
+                {
+                    title: 'MixelPixel',
+                    links: [
+                        { platform: 'discord', url: 'https://discord.com/invite/sU5m5Hhe?utm_source=Discord%20Widget&utm_medium=Connect', label: 'MixelPixel Discord', enabled: true },
+                        { platform: 'youtube', url: 'https://www.youtube.com/@MixelPixelOfficial', label: 'MixelPixel YouTube', enabled: true },
+                        { platform: 'x', url: 'https://x.com/MixelPixelNET', label: 'MixelPixel X', enabled: true },
+                        { platform: 'instagram', url: 'https://www.instagram.com/mixelpixelofficial/', label: 'MixelPixel Instagram', enabled: true },
+                        { platform: 'tiktok', url: 'https://www.tiktok.com/@mixelpixelofficial', label: 'MixelPixel TikTok', enabled: true },
+                        { platform: 'twitch', url: 'https://www.twitch.tv/mixelpixelofficial', label: 'MixelPixel Twitch', enabled: true },
+                        { platform: 'website', url: 'https://mixelpixel.net', label: 'MixelPixel Website', enabled: true },
+                        { platform: 'website', url: 'https://wiki.mixelpixel.net/', label: 'MixelPixel Wiki', enabled: true },
+                        { platform: 'website', url: 'https://mixelpixel.net/faq', label: 'MixelPixel FAQ', enabled: true },
+                        { platform: 'website', url: 'https://mixelpixel.net/regeln', label: 'MixelPixel Regeln', enabled: true }
+                    ]
+                }
+            ]
+        };
+        const DEFAULT_HOMEPAGE_DATA = {
+            hero: {
+                title: 'MixelPixel Squid Game',
+                paragraph: 'Das ultimative Minecraft Squid Game Erlebnis – kompetitiv, spannend und unvergesslich. Trete gegen andere an und zeige, wer wirklich überleben kann.',
+                buttons: [
+                    { label: 'Jetzt bewerben', href: 'bewerben.html' },
+                    { label: 'Mehr erfahren', href: 'ueber-uns.html' }
+                ]
+            },
+            features: {
+                title: 'Was ist MPSQ?',
+                subtitle: 'Ein einzigartiges Event-Erlebnis auf dem MixelPixel Minecraft-Server',
+                items: [
+                    { icon: '🎮', title: 'Kompetitiv', text: 'Tritt gegen andere Spieler in spannenden Minispielen an. Nur die Besten überleben.' },
+                    { icon: '🔴', title: 'Squid Game', text: 'Erlebe die ikonischen Spiele aus Squid Game – jetzt im Minecraft-Format.' },
+                    { icon: '🏆', title: 'Preise', text: 'Die besten Spieler werden mit exklusiven Preisen und Titeln belohnt.' },
+                    { icon: '👥', title: 'Community', text: 'Werde Teil unserer wachsenden Community und triff gleichgesinnte Minecraft-Fans.' },
+                    { icon: '📺', title: 'Content', text: 'Das Event wird aufgezeichnet und auf YouTube & anderen Plattformen veröffentlicht.' },
+                    { icon: '🌐', title: 'MixelPixel', text: 'Organisiert vom MixelPixel-Team – bekannt für hochwertige Minecraft-Events.' }
+                ]
+            },
+            stats: {
+                title: 'Das Event in Zahlen',
+                items: [
+                    { value: '100', suffix: '+', label: 'Teilnehmer' },
+                    { value: '10', suffix: '+', label: 'Minispiele' },
+                    { value: '1', suffix: '', label: 'Sieger' },
+                    { value: '∞', suffix: '', label: 'Spaß' }
+                ]
+            },
+            cta: {
+                title: 'Bereit mitzumachen?',
+                paragraph: 'Bewirb dich jetzt und sichere dir einen Platz beim nächsten MPSQ-Event.',
+                button: { label: 'Jetzt bewerben →', href: 'bewerben.html' }
+            }
+        };
+        const DEFAULT_MIXELPIXEL_DATA = {
+            hero: {
+                title: 'MixelPixel',
+                subtitle: 'Projekte und Informationen rund um den MixelPixel-Server.'
+            },
+            about: {
+                paragraphs: [
+                    'MixelPixel ist ein deutsches Minecraft-Netzwerk, welches mit der neusten Java und Bedrock Version von Minecraft betreten werden kann.',
+                    'Es zeichnet sich durch seine einzigartig konfigurierten und optimierten Spielmodi aus, die ein freundliches Miteinander ermöglichen. Der Server ist am 17. Mai 2019 gegründet worden und kann sich seither an einer stetig wachsenden Community erfreuen.'
+                ]
+            },
+            projects: [
+                {
+                    title: 'MPSQ – Squid Game',
+                    text: 'Das ultimative Minecraft Squid Game Erlebnis – kompetitiv, spannend und unvergesslich.',
+                    button: { label: 'Mehr erfahren →', href: 'index.html' }
+                },
+                {
+                    title: 'Mord im Kekscafé – Video Projekt',
+                    text: 'Eine Video-Serie über einen Detektiv und einen „Sherif“, die versuchen, den Mörder zu finden, der jemanden in einem Café getötet hat.',
+                    button: { label: 'Zum Kanal →', href: 'https://www.youtube.com/@Harryron' }
+                },
+                {
+                    title: 'Stadtbauprojekt Langweid',
+                    text: 'Das Stadtbauprojekt Wohnbau Neu-/Langweid ist zusammen mit DirtyBirdy’s Shoppingmall eines der größten Stadtprojekte MixelPixels.',
+                    button: { label: 'Video ansehen →', href: 'https://www.youtube.com/watch?v=Vl2hfL7_nlU' }
+                }
+            ]
+        };
+
+        // ==============================
         // SOZIAL MEDIA – platform meta
         // ==============================
         const SOCIAL_PLATFORMS_ADMIN = {
@@ -1917,26 +2012,34 @@
         });
 
         function populateSocialMedia(data) {
-            if (!data) return;
             document.getElementById('sm-links-list-0').innerHTML = '';
             document.getElementById('sm-links-list-1').innerHTML = '';
-            if (Array.isArray(data.groups)) {
-                data.groups.forEach((group, i) => {
+            if (!data) {
+                DEFAULT_SOCIAL_DATA.groups.forEach((group, i) => {
                     (group.links || []).forEach(l => addSocialLink(l, i));
                 });
                 return;
             }
-            if (Array.isArray(data.links)) {
-                data.links.forEach(l => addSocialLink(l, 0));
+            if (Array.isArray(data.groups)) {
+                [0, 1].forEach((i) => {
+                    const links = Array.isArray(data.groups[i]?.links)
+                        ? data.groups[i].links
+                        : DEFAULT_SOCIAL_DATA.groups[i].links;
+                    links.forEach(l => addSocialLink(l, i));
+                });
+                return;
             }
-            if (Array.isArray(data.mpsqLinks)) {
-                data.mpsqLinks.forEach(l => addSocialLink(l, 0));
-            }
+            const mpsqLinks = []
+                .concat(Array.isArray(data.links) ? data.links : [])
+                .concat(Array.isArray(data.mpsqLinks) ? data.mpsqLinks : []);
+            if (mpsqLinks.length) mpsqLinks.forEach(l => addSocialLink(l, 0));
+            else DEFAULT_SOCIAL_DATA.groups[0].links.forEach(l => addSocialLink(l, 0));
             const mixelpixelLegacyLinks = []
                 .concat(Array.isArray(data.mixelpixelLinks) ? data.mixelpixelLinks : [])
                 .concat(Array.isArray(data.otherLinksFromMixelPixel) ? data.otherLinksFromMixelPixel : [])
                 .concat(Array.isArray(data.otherLinks) ? data.otherLinks : []);
-            mixelpixelLegacyLinks.forEach(l => addSocialLink(l, 1));
+            if (mixelpixelLegacyLinks.length) mixelpixelLegacyLinks.forEach(l => addSocialLink(l, 1));
+            else DEFAULT_SOCIAL_DATA.groups[1].links.forEach(l => addSocialLink(l, 1));
         }
 
         // ==============================
@@ -2133,7 +2236,6 @@
         function populateEventStats(data) {
             if (!data) return;
             const d = (data.stats !== undefined) ? data : (data.value || data);
-            setVal('hp-stats-section-title', '');
             document.getElementById('hp-stats-list').innerHTML = '';
             (d?.stats || []).forEach(s => addHpStat(s));
         }
@@ -2176,6 +2278,7 @@
             }
 
             // Load MixelPixel content block
+            populateMixelpixel(DEFAULT_MIXELPIXEL_DATA);
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=mixelpixel`);
                 const out = res.ok ? await res.json() : null;
@@ -2234,6 +2337,7 @@
             }
 
             // Load Homepage content block (new key), fallback to event-stats for backward compat
+            populateHomepage(DEFAULT_HOMEPAGE_DATA);
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=homepage`);
                 const out = res.ok ? await res.json() : null;
