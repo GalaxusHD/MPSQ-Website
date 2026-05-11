@@ -972,7 +972,9 @@
             if (!data || typeof data !== 'object' || Array.isArray(data)) return flags;
 
             Object.entries(data).forEach(([key, value]) => {
-                flags[key] = value !== false;
+                if (typeof value === 'boolean') {
+                    flags[key] = value;
+                }
             });
             return flags;
         }

@@ -26,7 +26,9 @@ function normalizePageFlags(rawFlags) {
     }
 
     Object.entries(rawFlags).forEach(([key, value]) => {
-        normalized[key] = value !== false;
+        if (typeof value === 'boolean') {
+            normalized[key] = value;
+        }
     });
 
     return normalized;
@@ -39,7 +41,11 @@ function readCachedPageFlags() {
 
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== 'object') return null;
-        if ((Date.now() - Number(parsed.savedAt || 0)) > PAGE_FLAGS_CACHE_TTL_MS) {
+        if (
+            typeof parsed.savedAt !== 'number' ||
+            parsed.savedAt <= 0 ||
+            (Date.now() - parsed.savedAt) > PAGE_FLAGS_CACHE_TTL_MS
+        ) {
             window.localStorage?.removeItem(PAGE_FLAGS_CACHE_KEY);
             return null;
         }
@@ -160,7 +166,7 @@ async function ensureCurrentPageAllowed(flags = null) {
     const activeFlags = flags || await loadSitePageFlags();
     if (activeFlags[currentPageKey] !== false) return true;
 
-    window.location.replace('index.html');
+    window.location.replace(new URL('index.html', window.location.href).href);
     return false;
 }
 
