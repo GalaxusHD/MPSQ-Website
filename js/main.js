@@ -69,6 +69,11 @@ function writeCachedPageFlags(flags) {
 }
 
 async function loadSitePageFlags({ forceRefresh = false } = {}) {
+    if (forceRefresh) {
+        pageFlagsMemoryCache = null;
+        pageFlagsRequest = null;
+    }
+
     if (!forceRefresh && pageFlagsMemoryCache) {
         return pageFlagsMemoryCache;
     }
