@@ -5,6 +5,7 @@
 const PAGE_FLAGS_CONTENT_KEY = 'site_page_flags';
 const PAGE_FLAGS_CACHE_KEY = 'mpsq_site_page_flags_cache';
 const PAGE_FLAGS_CACHE_TTL_MS = 2 * 60 * 1000;
+const PAGE_FLAGS_FALLBACK_PAGE = 'index.html';
 const PAGE_FLAGS_DEFAULTS = Object.freeze({
     team: true
 });
@@ -86,7 +87,7 @@ async function loadSitePageFlags({ forceRefresh = false } = {}) {
         return pageFlagsMemoryCache;
     }
 
-    pageFlagsRequest = (async () => {
+    const request = (async () => {
         try {
             const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=${encodeURIComponent(PAGE_FLAGS_CONTENT_KEY)}`, {
                 cache: 'no-store'
@@ -103,12 +104,17 @@ async function loadSitePageFlags({ forceRefresh = false } = {}) {
             console.warn('Page flags load failed, allowing pages:', error);
             pageFlagsMemoryCache = normalizePageFlags(null);
             return pageFlagsMemoryCache;
-        } finally {
-            pageFlagsRequest = null;
         }
     })();
 
-    return pageFlagsRequest;
+    pageFlagsRequest = request;
+    try {
+        return await request;
+    } finally {
+        if (pageFlagsRequest === request) {
+            pageFlagsRequest = null;
+        }
+    }
 }
 
 function isManagedPageLink(href) {
@@ -166,7 +172,7 @@ async function ensureCurrentPageAllowed(flags = null) {
     const activeFlags = flags || await loadSitePageFlags();
     if (activeFlags[currentPageKey] !== false) return true;
 
-    window.location.replace(new URL('index.html', window.location.href).href);
+    window.location.replace(new URL(PAGE_FLAGS_FALLBACK_PAGE, window.location.href).href);
     return false;
 }
 
