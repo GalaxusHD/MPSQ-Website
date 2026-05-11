@@ -83,6 +83,7 @@ async function loadSitePageFlags({ forceRefresh = false } = {}) {
     }
 
     if (!window.API_BASE_URL) {
+        pageFlagsRequest = null;
         pageFlagsMemoryCache = normalizePageFlags(null);
         return pageFlagsMemoryCache;
     }
@@ -144,7 +145,6 @@ function disablePageLink(link) {
     if (!link || link.dataset.pageLinkDisabled === 'true') return;
 
     link.dataset.pageLinkDisabled = 'true';
-    link.dataset.originalHref = link.getAttribute('href') || '';
     link.removeAttribute('href');
     link.removeAttribute('target');
     link.removeAttribute('rel');
