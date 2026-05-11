@@ -286,6 +286,39 @@
             font-size: 0.8rem;
             color: var(--text-muted);
         }
+        .page-flag-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .page-flag-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            cursor: pointer;
+        }
+        .page-flag-item input {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .page-flag-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .page-flag-copy strong {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+        .page-flag-copy span {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -651,6 +684,26 @@
                     <button type="button" class="btn-add-item" id="team-add-member">＋ Mitglied hinzufügen</button>
                 </div>
 
+                <div class="admin-section-box">
+                    <h3>Seiten veröffentlichen</h3>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:16px;">
+                        Schalte einzelne Seiten an oder aus. Deaktivierte Seiten werden in Navigation und Footer gesperrt und direkte Aufrufe auf
+                        die Startseite umgeleitet.
+                    </p>
+                    <div class="page-flag-list">
+                        <label class="page-flag-item" for="page-flag-team">
+                            <input type="checkbox" id="page-flag-team" data-page-flag="team">
+                            <div class="page-flag-copy">
+                                <strong>Team-Seite veröffentlichen</strong>
+                                <span>Steuert die Erreichbarkeit von <code>team.html</code>.</span>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="download-actions">
+                        <button type="button" class="btn-save" id="btn-save-page-flags">💾 Seitenstatus speichern</button>
+                    </div>
+                </div>
+
                 <div class="download-actions">
                     <button type="button" class="btn-save" id="btn-save-team">💾 Team speichern</button>
                     <button type="button" class="btn btn-primary" id="btn-download-team">⬇ JSON herunterladen</button>
@@ -907,6 +960,54 @@
         function extractUploadedImageUrl(result) {
             const raw = result?.url ?? result?.publicUrl ?? result?.data?.url ?? result?.data?.publicUrl ?? '';
             return normalizeSafeImageUrl(raw);
+        }
+
+        const PAGE_FLAGS_CONTENT_KEY = 'site_page_flags';
+        const DEFAULT_PAGE_FLAGS = Object.freeze({
+            team: true
+        });
+
+        function normalizePageFlags(data) {
+            const flags = { ...DEFAULT_PAGE_FLAGS };
+            if (!data || typeof data !== 'object' || Array.isArray(data)) return flags;
+
+            Object.entries(data).forEach(([key, value]) => {
+                if (typeof value === 'boolean') {
+                    flags[key] = value;
+                }
+            });
+            return flags;
+        }
+
+        function populatePageFlags(data) {
+            const flags = normalizePageFlags(data);
+            document.querySelectorAll('[data-page-flag]').forEach((checkbox) => {
+                checkbox.checked = flags[checkbox.dataset.pageFlag] !== false;
+            });
+        }
+
+        function readPageFlags() {
+            const flags = {};
+            document.querySelectorAll('[data-page-flag]').forEach((checkbox) => {
+                flags[checkbox.dataset.pageFlag] = checkbox.checked;
+            });
+            return flags;
+        }
+
+        async function savePageFlags() {
+            const btn = document.getElementById('btn-save-page-flags');
+            btn.disabled = true;
+            try {
+                await callEdge('/api/content-blocks', 'POST', {
+                    key: PAGE_FLAGS_CONTENT_KEY,
+                    value: readPageFlags()
+                });
+                showToast('✅ Seitenstatus gespeichert!');
+            } catch (err) {
+                showToast(`❌ Fehler: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
         }
 
         async function saveUeberUns() {
@@ -1770,6 +1871,7 @@
         }
 
         document.getElementById('btn-save-team').addEventListener('click', saveTeam);
+        document.getElementById('btn-save-page-flags').addEventListener('click', savePageFlags);
 
         document.getElementById('btn-download-team').addEventListener('click', () => {
             downloadJson(readTeamData(), 'team.json');
@@ -2310,6 +2412,17 @@
                 populateTeam(out?.data || []);
             } catch (err) {
                 console.warn('Team load failed:', err);
+            }
+
+            // Load page flags content block
+            populatePageFlags(DEFAULT_PAGE_FLAGS);
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=${encodeURIComponent(PAGE_FLAGS_CONTENT_KEY)}`);
+                const out = res.ok ? await res.json() : null;
+                // Support both the current { data: { value } } response and older direct-value reads.
+                populatePageFlags(out?.data?.value ?? out?.data);
+            } catch (err) {
+                console.warn('Page flags load failed:', err);
             }
 
             // Load Sozial Media content block
