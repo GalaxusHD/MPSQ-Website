@@ -2417,6 +2417,7 @@
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=${encodeURIComponent(PAGE_FLAGS_CONTENT_KEY)}`);
                 const out = res.ok ? await res.json() : null;
+                // Support both the current { data: { value } } response and older direct-value reads.
                 populatePageFlags(out?.data?.value ?? out?.data);
             } catch (err) {
                 console.warn('Page flags load failed:', err);

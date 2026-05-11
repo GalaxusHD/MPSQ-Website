@@ -16,8 +16,7 @@ let pageFlagsMemoryCache = null;
 let pageFlagsRequest = null;
 
 function getCurrentPageName(pathname = window.location.pathname) {
-    const page = String(pathname || '').split('/').pop() || 'index.html';
-    return page || 'index.html';
+    return String(pathname || '').split('/').pop() || 'index.html';
 }
 
 function normalizePageFlags(rawFlags) {
@@ -89,6 +88,7 @@ async function loadSitePageFlags({ forceRefresh = false } = {}) {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
             const out = await res.json();
+            // Support both the current { data: { value } } response and older direct-value reads.
             const flags = normalizePageFlags(out?.data?.value ?? out?.data);
             pageFlagsMemoryCache = flags;
             writeCachedPageFlags(flags);
@@ -106,7 +106,15 @@ async function loadSitePageFlags({ forceRefresh = false } = {}) {
 }
 
 function isManagedPageLink(href) {
-    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) {
+    if (
+        !href ||
+        href.startsWith('#') ||
+        href.startsWith('mailto:') ||
+        href.startsWith('tel:') ||
+        href.startsWith('javascript:') ||
+        href.startsWith('data:') ||
+        href.startsWith('vbscript:')
+    ) {
         return null;
     }
 
