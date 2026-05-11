@@ -159,6 +159,20 @@ ul {
     width: calc(100% - 28px);
 }
 
+.nav-links a.page-link-disabled,
+.footer-nav a.page-link-disabled,
+a.page-link-disabled {
+    color: var(--text-muted) !important;
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+    text-decoration: none !important;
+}
+
+.nav-links a.page-link-disabled::after {
+    width: 0 !important;
+}
+
 /* Hamburger menu */
 .nav-hamburger {
     display: none;

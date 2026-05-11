@@ -1,10 +1,172 @@
 // ===========================
-// NAVIGATION
+// NAVIGATION + PAGE FLAGS
 // ===========================
 
-document.addEventListener('DOMContentLoaded', () => {
+const PAGE_FLAGS_CONTENT_KEY = 'site_page_flags';
+const PAGE_FLAGS_CACHE_KEY = 'mpsq_site_page_flags_cache';
+const PAGE_FLAGS_CACHE_TTL_MS = 2 * 60 * 1000;
+const PAGE_FLAGS_DEFAULTS = Object.freeze({
+    team: true
+});
+const PAGE_FLAG_ROUTES = Object.freeze({
+    'team.html': 'team'
+});
+
+let pageFlagsMemoryCache = null;
+let pageFlagsRequest = null;
+
+function getCurrentPageName(pathname = window.location.pathname) {
+    const page = String(pathname || '').split('/').pop() || 'index.html';
+    return page || 'index.html';
+}
+
+function normalizePageFlags(rawFlags) {
+    const normalized = { ...PAGE_FLAGS_DEFAULTS };
+    if (!rawFlags || typeof rawFlags !== 'object' || Array.isArray(rawFlags)) {
+        return normalized;
+    }
+
+    Object.entries(rawFlags).forEach(([key, value]) => {
+        normalized[key] = value !== false;
+    });
+
+    return normalized;
+}
+
+function readCachedPageFlags() {
+    try {
+        const raw = window.localStorage?.getItem(PAGE_FLAGS_CACHE_KEY);
+        if (!raw) return null;
+
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return null;
+        if ((Date.now() - Number(parsed.savedAt || 0)) > PAGE_FLAGS_CACHE_TTL_MS) {
+            window.localStorage?.removeItem(PAGE_FLAGS_CACHE_KEY);
+            return null;
+        }
+
+        return normalizePageFlags(parsed.flags);
+    } catch {
+        return null;
+    }
+}
+
+function writeCachedPageFlags(flags) {
+    try {
+        window.localStorage?.setItem(PAGE_FLAGS_CACHE_KEY, JSON.stringify({
+            savedAt: Date.now(),
+            flags
+        }));
+    } catch {
+        // Ignore storage failures and continue without cache.
+    }
+}
+
+async function loadSitePageFlags({ forceRefresh = false } = {}) {
+    if (!forceRefresh && pageFlagsMemoryCache) {
+        return pageFlagsMemoryCache;
+    }
+
+    if (!forceRefresh) {
+        const cachedFlags = readCachedPageFlags();
+        if (cachedFlags) {
+            pageFlagsMemoryCache = cachedFlags;
+            return cachedFlags;
+        }
+        if (pageFlagsRequest) return pageFlagsRequest;
+    }
+
+    if (!window.API_BASE_URL) {
+        pageFlagsMemoryCache = normalizePageFlags(null);
+        return pageFlagsMemoryCache;
+    }
+
+    pageFlagsRequest = (async () => {
+        try {
+            const res = await fetch(`${window.API_BASE_URL}/api/content-blocks?key=${encodeURIComponent(PAGE_FLAGS_CONTENT_KEY)}`, {
+                cache: 'no-store'
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const out = await res.json();
+            const flags = normalizePageFlags(out?.data?.value ?? out?.data);
+            pageFlagsMemoryCache = flags;
+            writeCachedPageFlags(flags);
+            return flags;
+        } catch (error) {
+            console.warn('Page flags load failed, allowing pages:', error);
+            pageFlagsMemoryCache = normalizePageFlags(null);
+            return pageFlagsMemoryCache;
+        } finally {
+            pageFlagsRequest = null;
+        }
+    })();
+
+    return pageFlagsRequest;
+}
+
+function isManagedPageLink(href) {
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) {
+        return null;
+    }
+
+    try {
+        const resolved = new URL(href, window.location.href);
+        if (resolved.origin !== window.location.origin) return null;
+        const pageName = getCurrentPageName(resolved.pathname);
+        return PAGE_FLAG_ROUTES[pageName] ? { pageName, pageKey: PAGE_FLAG_ROUTES[pageName] } : null;
+    } catch {
+        return null;
+    }
+}
+
+function disablePageLink(link) {
+    if (!link || link.dataset.pageLinkDisabled === 'true') return;
+
+    link.dataset.pageLinkDisabled = 'true';
+    link.dataset.originalHref = link.getAttribute('href') || '';
+    link.removeAttribute('href');
+    link.removeAttribute('target');
+    link.removeAttribute('rel');
+    link.setAttribute('aria-disabled', 'true');
+    link.setAttribute('tabindex', '-1');
+    link.classList.remove('active');
+    link.classList.add('page-link-disabled');
+}
+
+function applyPageFlagsToLinks(flags) {
+    document.querySelectorAll('a[href]').forEach(link => {
+        const match = isManagedPageLink(link.getAttribute('href'));
+        if (!match) return;
+        if (flags[match.pageKey] === false) {
+            disablePageLink(link);
+        }
+    });
+}
+
+async function ensureCurrentPageAllowed(flags = null) {
+    const currentPage = getCurrentPageName();
+    const currentPageKey = PAGE_FLAG_ROUTES[currentPage];
+    if (!currentPageKey) return true;
+
+    const activeFlags = flags || await loadSitePageFlags();
+    if (activeFlags[currentPageKey] !== false) return true;
+
+    window.location.replace('index.html');
+    return false;
+}
+
+window.ensureCurrentPageAllowed = ensureCurrentPageAllowed;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const pageFlags = await loadSitePageFlags();
+    applyPageFlagsToLinks(pageFlags);
+
+    const currentPageAllowed = await ensureCurrentPageAllowed(pageFlags);
+    if (!currentPageAllowed) return;
+
     // Set active nav link based on current page
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const currentPage = getCurrentPageName();
     const navLinks = document.querySelectorAll('.nav-links a');
     navLinks.forEach(link => {
         const href = link.getAttribute('href');
