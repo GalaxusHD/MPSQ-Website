@@ -1509,3 +1509,27 @@ footer {
     font-size: 2rem;
     opacity: 0.5;
 }
+
+/* ===========================
+   MIXELPIXEL – PROJEKTE
+   emoji + title on one line
+   =========================== */
+.mx-project-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.mx-project-emoji {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.mx-project-heading .mx-project-title {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
