@@ -36,6 +36,12 @@ serve(async req => {
     const clientId = await auth(req); if (!clientId) return out({ error: "Unauthorized" }, 401);
     await rest(`/mpsq_clients?id=eq.${clientId}`, { method: "PATCH", body: JSON.stringify({ last_seen_at: new Date().toISOString() }) });
 
+    if (req.method === "PATCH" && path === "/me") {
+      const b = await json(req); const displayName = String(b.displayName ?? "Minecraft Client").trim().slice(0, 32) || "Minecraft Client";
+      const r = await rest(`/mpsq_clients?id=eq.${clientId}`, { method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify({ display_name: displayName, last_seen_at: new Date().toISOString() }) });
+      return out(await r.json(), r.status);
+    }
+
     if (req.method === "GET" && path === "/cameras") {
       const r = await rest(`/mpsq_cameras?owner_id=eq.${clientId}&order=created_at.asc`); return out(await r.json(), r.status);
     }
@@ -64,6 +70,22 @@ serve(async req => {
       const screenResult = groups[0] ? await rest(`/mpsq_screens?group_id=eq.${groups[0].id}&select=id`) : await rest(`/mpsq_screens?activation_code=eq.${encodeURIComponent(supplied)}&select=id`);
       const matches = await screenResult.json(); if (!matches[0]) return out({ error: "Code nicht gefunden" }, 404);
       const joined = await rest("/mpsq_screen_members", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify(matches.map((x: any) => ({ screen_id: x.id, client_id: clientId })) ) }); return out({ ok: joined.ok }, joined.ok ? 200 : joined.status);
+    }
+    if (path.match(/^\/screens\/[^/]+\/members$/) && req.method === "GET") {
+      const id = path.split("/")[2]; if (!await owned(clientId, id)) return out({ error: "Forbidden" }, 403);
+      const r = await rest(`/mpsq_screen_members?screen_id=eq.${id}&select=client_id,joined_at,mpsq_clients(display_name)&order=joined_at.asc`);
+      return out(await r.json(), r.status);
+    }
+    if (path.match(/^\/screens\/[^/]+\/members\/[^/]+$/) && req.method === "DELETE") {
+      const [, , id, , memberId] = path.split("/"); if (!await owned(clientId, id)) return out({ error: "Forbidden" }, 403);
+      const screenResult = await rest(`/mpsq_screens?id=eq.${id}&select=group_id`); const [screen] = await screenResult.json();
+      let screenIds = [id];
+      if (screen?.group_id) {
+        const groupResult = await rest(`/mpsq_screens?group_id=eq.${screen.group_id}&select=id`);
+        screenIds = (await groupResult.json()).map((row: any) => row.id);
+      }
+      const r = await rest(`/mpsq_screen_members?screen_id=in.(${screenIds.join(",")})&client_id=eq.${memberId}`, { method: "DELETE" });
+      return out({ ok: r.ok }, r.ok ? 200 : r.status);
     }
     if (req.method === "POST" && path === "/groups") {
       const b = await json(req); const ids = Array.isArray(b.screenIds) ? b.screenIds : []; if (ids.length < 2) return out({ error: "Mindestens zwei Bildschirme erforderlich" }, 400);
