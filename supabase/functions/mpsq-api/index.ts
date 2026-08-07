@@ -71,6 +71,23 @@ serve(async req => {
       const matches = await screenResult.json(); if (!matches[0]) return out({ error: "Code nicht gefunden" }, 404);
       const joined = await rest("/mpsq_screen_members", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify(matches.map((x: any) => ({ screen_id: x.id, client_id: clientId })) ) }); return out({ ok: joined.ok }, joined.ok ? 200 : joined.status);
     }
+    if (path.match(/^\/screens\/[^/]+\/members$/) && req.method === "POST") {
+      const id = path.split("/")[2]; if (!await owned(clientId, id)) return out({ error: "Forbidden" }, 403);
+      const b = await json(req); const displayName = String(b.displayName ?? "").trim().slice(0, 32);
+      if (!displayName) return out({ error: "Spielername fehlt" }, 400);
+      const clientResult = await rest(`/mpsq_clients?display_name=eq.${encodeURIComponent(displayName)}&select=id,display_name&limit=2`);
+      const clients = await clientResult.json();
+      if (!clients[0]) return out({ error: "Spieler nicht gefunden" }, 404);
+      if (clients.length > 1) return out({ error: "Spielername ist nicht eindeutig" }, 409);
+      const screenResult = await rest(`/mpsq_screens?id=eq.${id}&select=group_id`); const [screen] = await screenResult.json();
+      let screenIds = [id];
+      if (screen?.group_id) {
+        const groupResult = await rest(`/mpsq_screens?group_id=eq.${screen.group_id}&select=id`);
+        screenIds = (await groupResult.json()).map((row: any) => row.id);
+      }
+      const joined = await rest("/mpsq_screen_members", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify(screenIds.map((screenId: string) => ({ screen_id: screenId, client_id: clients[0].id }))) });
+      return out({ ok: joined.ok, displayName: clients[0].display_name }, joined.ok ? 200 : joined.status);
+    }
     if (path.match(/^\/screens\/[^/]+\/members$/) && req.method === "GET") {
       const id = path.split("/")[2]; if (!await owned(clientId, id)) return out({ error: "Forbidden" }, 403);
       const r = await rest(`/mpsq_screen_members?screen_id=eq.${id}&select=client_id,joined_at,mpsq_clients(display_name)&order=joined_at.asc`);
