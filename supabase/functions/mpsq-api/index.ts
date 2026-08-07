@@ -122,7 +122,14 @@ serve(async req => {
     if (path.startsWith("/screens/") && req.method === "PATCH") {
       const id = path.slice(9); if (!await owned(clientId, id)) return out({ error: "Forbidden" }, 403);
       const b = await json(req); const allowed: Record<string, unknown> = {};
-      if (typeof b.name === "string") allowed.name = b.name.slice(0, 64);
+      if (typeof b.name === "string") {
+        const name = b.name.trim().slice(0, 64);
+        if (!name) return out({ error: "Name fehlt" }, 400);
+        const duplicateResult = await rest(`/mpsq_screens?owner_id=eq.${clientId}&id=neq.${id}&name=eq.${encodeURIComponent(name)}&select=id&limit=1`);
+        const duplicates = await duplicateResult.json();
+        if (duplicates[0]) return out({ error: "Name bereits vergeben" }, 409);
+        allowed.name = name;
+      }
       if (typeof b.cinemaUrl === "string") allowed.cinema_url = b.cinemaUrl;
       if (b.mode === "KINO" || b.mode === "CAMERA") allowed.mode = b.mode;
       if (b.playbackState) allowed.playback_state = b.playbackState;
