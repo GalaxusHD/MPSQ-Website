@@ -42,13 +42,67 @@ serve(async req => {
       return out(await r.json(), r.status);
     }
 
+    if (req.method === "POST" && path === "/bodycam-requests") {
+      const b = await json(req); const targetName = String(b.targetDisplayName ?? "").trim().slice(0, 32);
+      if (!targetName) return out({ error: "Spielername fehlt" }, 400);
+      const targetResult = await rest(`/mpsq_clients?display_name=eq.${encodeURIComponent(targetName)}&select=id,display_name&limit=2`);
+      const targets = await targetResult.json();
+      if (!targets[0]) return out({ error: "Spieler nicht gefunden" }, 404);
+      if (targets.length > 1) return out({ error: "Spielername ist nicht eindeutig" }, 409);
+      if (targets[0].id === clientId) return out({ error: "Eigene Bodycam nicht anfragen" }, 400);
+      const r = await rest("/mpsq_bodycam_requests", { method: "POST", headers: { Prefer: "return=representation,resolution=merge-duplicates" }, body: JSON.stringify({ requester_id: clientId, target_id: targets[0].id }) });
+      return out(await r.json(), r.status);
+    }
+    if (req.method === "GET" && path === "/bodycam-requests") {
+      const r = await rest(`/mpsq_bodycam_requests?target_id=eq.${clientId}&status=eq.PENDING&select=id,requester_id,created_at&order=created_at.asc`);
+      const requests = await r.json();
+      const requesterIds = requests.map((row: any) => row.requester_id);
+      if (!requesterIds.length) return out([]);
+      const names = await (await rest(`/mpsq_clients?id=in.(${requesterIds.join(",")})&select=id,display_name`)).json();
+      const byId = new Map(names.map((row: any) => [row.id, row.display_name]));
+      return out(requests.map((row: any) => ({ ...row, requesterName: byId.get(row.requester_id) ?? "Unbekannt" })));
+    }
+    if (path.match(/^\/bodycam-requests\/[^/]+\/respond$/) && req.method === "POST") {
+      const id = path.split("/")[2]; const b = await json(req); const accepted = b.accepted === true;
+      const requestResult = await rest(`/mpsq_bodycam_requests?id=eq.${id}&target_id=eq.${clientId}&status=eq.PENDING&select=id,requester_id,target_id`);
+      const [request] = await requestResult.json(); if (!request) return out({ error: "Anfrage nicht gefunden" }, 404);
+      await rest(`/mpsq_bodycam_requests?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ status: accepted ? "ACCEPTED" : "DECLINED", responded_at: new Date().toISOString() }) });
+      if (accepted) {
+        const targetResult = await rest(`/mpsq_clients?id=eq.${clientId}&select=display_name`); const [target] = await targetResult.json();
+        const cameraName = `Bodycam ${target?.display_name ?? "Spieler"} ${id.slice(0, 4)}`;
+        await rest("/mpsq_cameras", { method: "POST", body: JSON.stringify({ owner_id: request.requester_id, name: cameraName, kind: "BODYCAM", dimension: "minecraft:overworld", body_owner_id: clientId }) });
+      }
+      return out({ ok: true, accepted });
+    }
+
     if (req.method === "GET" && path === "/cameras") {
       const r = await rest(`/mpsq_cameras?owner_id=eq.${clientId}&order=created_at.asc`); return out(await r.json(), r.status);
     }
     if (req.method === "POST" && path === "/cameras") {
       const b = await json(req); const kind = b.kind === "BODYCAM" ? "BODYCAM" : "STATIC";
-      const row = { owner_id: clientId, name: String(b.name ?? "Kamera").slice(0, 64), kind, dimension: String(b.dimension ?? "minecraft:overworld"), x: b.x ?? null, y: b.y ?? null, z: b.z ?? null, yaw: Number(b.yaw ?? 0), pitch: Number(b.pitch ?? 0), body_owner_id: kind === "BODYCAM" ? (b.bodyOwnerId ?? clientId) : null };
+      const name = String(b.name ?? "").trim().slice(0, 64);
+      if (!name) return out({ error: "Name fehlt" }, 400);
+      const duplicateResult = await rest(`/mpsq_cameras?owner_id=eq.${clientId}&name=eq.${encodeURIComponent(name)}&select=id&limit=1`);
+      const duplicates = await duplicateResult.json();
+      if (duplicates[0]) return out({ error: "Name bereits vergeben" }, 409);
+      const row = { owner_id: clientId, name, kind, dimension: String(b.dimension ?? "minecraft:overworld"), x: b.x ?? null, y: b.y ?? null, z: b.z ?? null, yaw: Number(b.yaw ?? 0), pitch: Number(b.pitch ?? 0), body_owner_id: kind === "BODYCAM" ? (b.bodyOwnerId ?? clientId) : null };
       const r = await rest("/mpsq_cameras", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(row) }); return out(await r.json(), r.status);
+    }
+    if (path.match(/^\/cameras\/[^/]+$/) && req.method === "PATCH") {
+      const id = path.slice(9); const b = await json(req); const allowed: Record<string, unknown> = {};
+      const cameraResult = await rest(`/mpsq_cameras?id=eq.${id}&owner_id=eq.${clientId}&select=id`);
+      const cameras = await cameraResult.json(); if (!cameras[0]) return out({ error: "Kamera nicht gefunden" }, 404);
+      if (typeof b.name === "string") {
+        const name = b.name.trim().slice(0, 64); if (!name) return out({ error: "Name fehlt" }, 400);
+        const duplicateResult = await rest(`/mpsq_cameras?owner_id=eq.${clientId}&id=neq.${id}&name=eq.${encodeURIComponent(name)}&select=id&limit=1`);
+        const duplicates = await duplicateResult.json(); if (duplicates[0]) return out({ error: "Name bereits vergeben" }, 409);
+        allowed.name = name;
+      }
+      if (typeof b.dimension === "string") allowed.dimension = b.dimension;
+      for (const key of ["x", "y", "z", "yaw", "pitch"]) if (typeof b[key] === "number") allowed[key] = b[key];
+      if (!Object.keys(allowed).length) return out({ error: "Keine Änderungen" }, 400);
+      const r = await rest(`/mpsq_cameras?id=eq.${id}&owner_id=eq.${clientId}`, { method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify(allowed) });
+      return out(await r.json(), r.status);
     }
     if (path.startsWith("/cameras/") && req.method === "DELETE") {
       const id = path.slice(9); const r = await rest(`/mpsq_cameras?id=eq.${id}&owner_id=eq.${clientId}`, { method: "DELETE" }); return out({ ok: r.ok }, r.ok ? 200 : r.status);
