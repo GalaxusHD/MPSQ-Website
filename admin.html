@@ -286,6 +286,12 @@
             font-size: 0.8rem;
             color: var(--text-muted);
         }
+        .rank-request-meta { color: var(--text-secondary); font-size: .84rem; margin: 6px 0 12px; }
+        .rank-request-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .rank-request-actions button { padding: 8px 12px; border: 0; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; }
+        .rank-approve { background: #1a7f37; color: #fff; }
+        .rank-reject { background: #8f1d1d; color: #fff; }
+        .rank-status { font-weight: 700; color: var(--accent-red); }
     </style>
 </head>
 <body>
@@ -346,6 +352,7 @@
                 <button class="admin-tab" data-target="panel-team">Team</button>
                 <button class="admin-tab" data-target="panel-sozial-media">Sozial Media</button>
                 <button class="admin-tab" data-target="panel-mixelpixel">MixelPixel</button>
+                <button class="admin-tab" data-target="panel-rang-log">Rang-Log</button>
             </div>
 
             <!-- ==================== ÜBER UNS PANEL ==================== -->
@@ -775,6 +782,28 @@
                 </div>
 
             </div><!-- /panel-homepage -->
+
+            <!-- ==================== MPSQ TEAM SECURITY PANEL ==================== -->
+            <div id="panel-rang-log" class="admin-panel">
+                <div class="admin-section-box">
+                    <h3>MPSQ Team – Rang-Anträge</h3>
+                    <p style="color:var(--text-secondary);margin-bottom:16px;">Ränge ab Soldat/Arbeiter werden erst nach deiner Freigabe wirksam. Der Editor benötigt dafür das oben eingegebene Admin-Passwort.</p>
+                    <div class="download-actions">
+                        <button type="button" class="btn-save" id="btn-load-rank-requests">Anträge laden</button>
+                        <button type="button" class="btn btn-primary" id="btn-load-rank-log">Protokoll laden</button>
+                    </div>
+                    <div id="rank-request-list" style="margin-top:18px;"></div>
+                    <div id="rank-log-list" style="margin-top:18px;"></div>
+                </div>
+                <div class="admin-section-box">
+                    <h3>Sr Offizier – einmalige Bindung</h3>
+                    <p style="color:var(--text-secondary);margin-bottom:12px;">Der Name <strong>MP_SquidGame</strong> erhält keinen automatischen Rang. Nachdem du dich mit diesem Account einmal in MPSQ Team registriert hast, wählst du hier den richtigen Eintrag und bindest ihn einmalig.</p>
+                    <div class="download-actions">
+                        <button type="button" class="btn btn-primary" id="btn-load-root-candidates">MP_SquidGame suchen</button>
+                    </div>
+                    <div id="root-candidate-list" style="margin-top:18px;"></div>
+                </div>
+            </div><!-- /panel-rang-log -->
 
         </div>
     </section>
@@ -2360,6 +2389,96 @@
 
             refreshImageUploadRows();
         });
+
+        const TEAM_ADMIN_API = `${SUPABASE_URL}/functions/v1/mpsq-api`;
+
+        async function callTeamAdmin(path, method = 'GET', body) {
+            const password = getAdminPassword();
+            if (!password) throw new Error('Bitte zuerst das Admin-Passwort eingeben.');
+            const options = { method, headers: { 'Content-Type': 'application/json', 'x-admin-password': password } };
+            if (body !== undefined) options.body = JSON.stringify(body);
+            const response = await fetch(`${TEAM_ADMIN_API}${path}`, options);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+            return data;
+        }
+
+        function readableDate(value) {
+            return value ? new Date(value).toLocaleString('de-DE') : '–';
+        }
+
+        function renderRankRequests(rows) {
+            const list = document.getElementById('rank-request-list');
+            list.replaceChildren();
+            if (!rows.length) { list.textContent = 'Keine Rang-Anträge vorhanden.'; return; }
+            for (const row of rows) {
+                const item = document.createElement('div'); item.className = 'admin-list-item';
+                const content = document.createElement('div'); content.className = 'admin-item-inputs';
+                const title = document.createElement('strong'); title.textContent = `${row.target_name}: ${row.previous_base_rank} → ${row.requested_rank}`;
+                const meta = document.createElement('div'); meta.className = 'rank-request-meta';
+                meta.textContent = `Beantragt von ${row.requester_name} · ${readableDate(row.created_at)} · ${row.status}`;
+                content.append(title, meta);
+                if (row.note) { const note = document.createElement('div'); note.textContent = row.note; content.append(note); }
+                if (row.status === 'PENDING') {
+                    const actions = document.createElement('div'); actions.className = 'rank-request-actions';
+                    const approve = document.createElement('button'); approve.className = 'rank-approve'; approve.textContent = 'Genehmigen';
+                    approve.onclick = () => decideRankRequest(row.id, true); const reject = document.createElement('button'); reject.className = 'rank-reject'; reject.textContent = 'Ablehnen';
+                    reject.onclick = () => decideRankRequest(row.id, false); actions.append(approve, reject); content.append(actions);
+                }
+                item.append(content); list.append(item);
+            }
+        }
+
+        async function loadRankRequests() {
+            try { renderRankRequests(await callTeamAdmin('/admin/rank-requests')); }
+            catch (error) { showToast(`Rang-Log: ${error.message}`, 'error'); }
+        }
+        async function decideRankRequest(id, approved) {
+            const action = approved ? 'genehmigen' : 'ablehnen';
+            if (!confirm(`Diesen Rang-Antrag wirklich ${action}?`)) return;
+            try { await callTeamAdmin(`/admin/rank-requests/${id}/decision`, 'POST', { approved }); showToast(approved ? 'Rang genehmigt.' : 'Rang-Antrag abgelehnt.'); await loadRankRequests(); }
+            catch (error) { showToast(`Rang-Antrag: ${error.message}`, 'error'); }
+        }
+        function renderRankLog(rows) {
+            const list = document.getElementById('rank-log-list'); list.replaceChildren();
+            if (!rows.length) { list.textContent = 'Noch keine Rangänderungen protokolliert.'; return; }
+            const heading = document.createElement('h3'); heading.textContent = 'Dauerhaftes Protokoll'; list.append(heading);
+            for (const row of rows) {
+                const item = document.createElement('div'); item.className = 'admin-list-item';
+                const text = document.createElement('div');
+                text.textContent = `${readableDate(row.created_at)} · ${row.action}: ${row.target_name} – ${row.old_base_rank} → ${row.new_base_rank} · durch ${row.actor_name}`;
+                item.append(text); list.append(item);
+            }
+        }
+        async function loadRankLog() {
+            try { renderRankLog(await callTeamAdmin('/admin/rank-log')); }
+            catch (error) { showToast(`Rang-Protokoll: ${error.message}`, 'error'); }
+        }
+
+        function renderRootCandidates(payload) {
+            const list = document.getElementById('root-candidate-list'); list.replaceChildren();
+            if (payload.root.root_client_id) { list.textContent = 'Sr Offizier ist bereits dauerhaft gebunden.'; return; }
+            if (!payload.candidates.length) { list.textContent = 'Noch kein MP_SquidGame-Konto gefunden. Öffne MPSQ Team einmal mit diesem Minecraft-Account und suche danach erneut.'; return; }
+            for (const candidate of payload.candidates) {
+                const item = document.createElement('div'); item.className = 'admin-list-item';
+                const content = document.createElement('div'); content.className = 'admin-item-inputs';
+                const title = document.createElement('strong'); title.textContent = `${candidate.display_name} – zuletzt aktiv: ${readableDate(candidate.last_seen_at)}`;
+                const button = document.createElement('button'); button.className = 'rank-approve'; button.textContent = 'Als Sr Offizier binden';
+                button.onclick = () => bindRoot(candidate.id); content.append(title, button); item.append(content); list.append(item);
+            }
+        }
+        async function loadRootCandidates() {
+            try { renderRootCandidates(await callTeamAdmin('/admin/root-candidates')); }
+            catch (error) { showToast(`Sr-Offizier: ${error.message}`, 'error'); }
+        }
+        async function bindRoot(clientId) {
+            if (!confirm('Diese Bindung ist dauerhaft. Wirklich den ausgewählten MP_SquidGame-Account als Sr Offizier festlegen?')) return;
+            try { await callTeamAdmin('/admin/root-bind', 'POST', { clientId }); showToast('Sr Offizier sicher gebunden.'); await loadRootCandidates(); }
+            catch (error) { showToast(`Sr-Offizier: ${error.message}`, 'error'); }
+        }
+        document.getElementById('btn-load-rank-requests').addEventListener('click', loadRankRequests);
+        document.getElementById('btn-load-rank-log').addEventListener('click', loadRankLog);
+        document.getElementById('btn-load-root-candidates').addEventListener('click', loadRootCandidates);
     </script>
 </body>
 </html>
