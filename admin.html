@@ -791,17 +791,11 @@
                     <div class="download-actions">
                         <button type="button" class="btn-save" id="btn-load-rank-requests">Anträge laden</button>
                         <button type="button" class="btn btn-primary" id="btn-load-rank-log">Protokoll laden</button>
-                    </div>
-                    <div id="rank-request-list" style="margin-top:18px;"></div>
-                    <div id="rank-log-list" style="margin-top:18px;"></div>
-                </div>
-                <div class="admin-section-box">
-                    <h3>Sr Offizier – einmalige Bindung</h3>
-                    <p style="color:var(--text-secondary);margin-bottom:12px;">Der Name <strong>MP_SquidGame</strong> erhält keinen automatischen Rang. Nachdem du dich mit diesem Account einmal in MPSQ Team registriert hast, wählst du hier den richtigen Eintrag und bindest ihn einmalig.</p>
-                    <div class="download-actions">
-                        <button type="button" class="btn btn-primary" id="btn-load-root-candidates">MP_SquidGame suchen</button>
+                        <button type="button" class="btn btn-primary" id="btn-find-root">MP_SquidGame suchen</button>
                     </div>
                     <div id="root-candidate-list" style="margin-top:18px;"></div>
+                    <div id="rank-request-list" style="margin-top:18px;"></div>
+                    <div id="rank-log-list" style="margin-top:18px;"></div>
                 </div>
             </div><!-- /panel-rang-log -->
 
@@ -2455,30 +2449,39 @@
             catch (error) { showToast(`Rang-Protokoll: ${error.message}`, 'error'); }
         }
 
-        function renderRootCandidates(payload) {
-            const list = document.getElementById('root-candidate-list'); list.replaceChildren();
-            if (payload.root.root_client_id) { list.textContent = 'Sr Offizier ist bereits dauerhaft gebunden.'; return; }
-            if (!payload.candidates.length) { list.textContent = 'Noch kein MP_SquidGame-Konto gefunden. Öffne MPSQ Team einmal mit diesem Minecraft-Account und suche danach erneut.'; return; }
-            for (const candidate of payload.candidates) {
-                const item = document.createElement('div'); item.className = 'admin-list-item';
-                const content = document.createElement('div'); content.className = 'admin-item-inputs';
-                const title = document.createElement('strong'); title.textContent = `${candidate.display_name} – zuletzt aktiv: ${readableDate(candidate.last_seen_at)}`;
-                const button = document.createElement('button'); button.className = 'rank-approve'; button.textContent = 'Als Sr Offizier binden';
-                button.onclick = () => bindRoot(candidate.id); content.append(title, button); item.append(content); list.append(item);
-            }
-        }
-        async function loadRootCandidates() {
-            try { renderRootCandidates(await callTeamAdmin('/admin/root-candidates')); }
-            catch (error) { showToast(`Sr-Offizier: ${error.message}`, 'error'); }
-        }
-        async function bindRoot(clientId) {
-            if (!confirm('Diese Bindung ist dauerhaft. Wirklich den ausgewählten MP_SquidGame-Account als Sr Offizier festlegen?')) return;
-            try { await callTeamAdmin('/admin/root-bind', 'POST', { clientId }); showToast('Sr Offizier sicher gebunden.'); await loadRootCandidates(); }
-            catch (error) { showToast(`Sr-Offizier: ${error.message}`, 'error'); }
+        async function findRootCandidate() {
+            const list = document.getElementById('root-candidate-list');
+            list.replaceChildren();
+            try {
+                const data = await callTeamAdmin('/admin/root-candidates');
+                const title = document.createElement('h3');
+                title.textContent = 'MP_SquidGame';
+                list.append(title);
+                if (!data.candidates?.length) { list.append('Noch kein passender Mod-Account gefunden.'); return; }
+                for (const candidate of data.candidates) {
+                    const item = document.createElement('div');
+                    item.className = 'admin-list-item';
+                    item.textContent = `${candidate.display_name} · zuletzt aktiv: ${readableDate(candidate.last_seen_at)}`;
+                    if (!data.root?.root_client_id) {
+                        const bind = document.createElement('button');
+                        bind.className = 'rank-approve';
+                        bind.textContent = 'Als Sr Offizier binden';
+                        bind.onclick = async () => { await callTeamAdmin('/admin/root-bind', 'POST', { clientId: candidate.id }); await findRootCandidate(); };
+                        item.append(bind);
+                    } else if (data.root.root_client_id === candidate.id) {
+                        const restore = document.createElement('button');
+                        restore.className = 'rank-approve';
+                        restore.textContent = 'Sr Offizier wiederherstellen';
+                        restore.onclick = async () => { await callTeamAdmin('/admin/root-restore', 'POST'); await findRootCandidate(); };
+                        item.append(restore);
+                    }
+                    list.append(item);
+                }
+            } catch (error) { showToast(`Sr Offizier: ${error.message}`, 'error'); }
         }
         document.getElementById('btn-load-rank-requests').addEventListener('click', loadRankRequests);
         document.getElementById('btn-load-rank-log').addEventListener('click', loadRankLog);
-        document.getElementById('btn-load-root-candidates').addEventListener('click', loadRootCandidates);
+        document.getElementById('btn-find-root').addEventListener('click', findRootCandidate);
     </script>
 </body>
 </html>
