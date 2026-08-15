@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { AwsClient } from "npm:aws4fetch@1.0.20";
 
 const cors = { "Access-Control-Allow-Origin": "https://www.mixelpixel-squidgame.net", "Access-Control-Allow-Headers": "content-type, x-mpsq-token, x-admin-password", "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS" };
 const base = () => `${Deno.env.get("SUPABASE_URL")}/rest/v1`;
@@ -34,43 +35,38 @@ async function screenIdsFor(clientId: string) {
   const joined = await (await rest(`/mpsq_screen_members?client_id=eq.${clientId}&select=screen_id`)).json();
   return [...new Set([...mine.map((x: any) => x.id), ...joined.map((x: any) => x.screen_id)])];
 }
-// A camera owns exactly one fixed image in Supabase Storage.  Every upload
-// overwrites this file, so old frames never build up in the bucket.
-const frameBucket = "mpsq_live";
+// Live frames do not belong in Supabase Storage: every picture would count as
+// Supabase egress and as an Edge Function invocation.  R2 owns one overwrite-
+// only object per camera instead.  The mod receives short-lived, scoped S3
+// links and transfers PNG data directly to/from R2.
+const r2AccountId = () => Deno.env.get("R2_ACCOUNT_ID") ?? Deno.env.get("CLOUDFLARE_R2_ACCOUNT_ID") ?? "";
+const r2AccessKeyId = () => Deno.env.get("R2_ACCESS_KEY_ID") ?? Deno.env.get("CLOUDFLARE_R2_ACCESS_KEY_ID") ?? "";
+const r2SecretAccessKey = () => Deno.env.get("R2_SECRET_ACCESS_KEY") ?? Deno.env.get("CLOUDFLARE_R2_SECRET_ACCESS_KEY") ?? "";
+const r2Bucket = () => Deno.env.get("R2_BUCKET") ?? "mpsq-camera-frames";
 const framePath = (cameraId: string) => `frames/${cameraId}.png`;
-const storageBase = () => `${Deno.env.get("SUPABASE_URL")}/storage/v1`;
-const storageHeaders = () => ({ apikey: key(), Authorization: `Bearer ${key()}` });
 
-async function storagePutFrame(cameraId: string, bytes: Uint8Array) {
-  return fetch(`${storageBase()}/object/${frameBucket}/${framePath(cameraId)}`, {
-    method: "POST",
-    headers: {
-      ...storageHeaders(),
-      "Content-Type": "image/png",
-      "x-upsert": "true",
-      // A frame is deliberately never cached: the next request must see the
-      // replacement that was just written to the same object key.
-      "Cache-Control": "no-store, no-cache, max-age=0"
-    },
-    body: bytes
-  });
+function requireR2() {
+  if (!r2AccountId() || !r2AccessKeyId() || !r2SecretAccessKey()) {
+    throw new Error("R2 ist noch nicht konfiguriert. Es fehlen R2_ACCOUNT_ID, R2_ACCESS_KEY_ID oder R2_SECRET_ACCESS_KEY.");
+  }
 }
-async function storageGetFrame(cameraId: string) {
-  return fetch(`${storageBase()}/object/${frameBucket}/${framePath(cameraId)}`, {
-    headers: { ...storageHeaders(), "Cache-Control": "no-cache" }
+
+async function r2SignedFrameUrl(cameraId: string, method: "GET" | "PUT", expiresIn: number) {
+  requireR2();
+  const endpoint = `https://${r2AccountId()}.r2.cloudflarestorage.com/${r2Bucket()}/${framePath(cameraId)}?X-Amz-Expires=${expiresIn}`;
+  const client = new AwsClient({
+    service: "s3",
+    region: "auto",
+    accessKeyId: r2AccessKeyId(),
+    secretAccessKey: r2SecretAccessKey()
   });
-}
-async function storageSignedFrameUrl(cameraId: string, expiresIn = 5) {
-  const response = await fetch(`${storageBase()}/object/sign/${frameBucket}/${framePath(cameraId)}`, {
-    method: "POST",
-    headers: { ...storageHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ expiresIn })
-  });
-  if (!response.ok) throw new Error(await response.text());
-  const data = await response.json();
-  const signedPath = data.signedURL ?? data.signedUrl;
-  if (typeof signedPath !== "string") throw new Error("Supabase lieferte keine signierte Frame-URL.");
-  return `${storageBase()}${signedPath}`;
+  const request = new Request(endpoint, method === "PUT" ? {
+    method,
+    // The header is covered by the signature; the mod must send the exact
+    // same type, so a temporary write URL cannot be used for another format.
+    headers: { "Content-Type": "image/png" }
+  } : { method });
+  return (await client.sign(request, { aws: { signQuery: true } })).url.toString();
 }
 async function canPublishCamera(clientId: string, cameraId: string) {
   const r = await rest(`/mpsq_cameras?id=eq.${cameraId}&select=owner_id,body_owner_id&limit=1`);
@@ -131,11 +127,29 @@ const canEditTodo = (profile: any) => level(permissionRank(profile)) >= 4;
 const canEditEvent = (profile: any) => level(permissionRank(profile)) >= 5;
 const approvalRanks = ["vip", "spieler", "soldat", "arbeiter", "offizier", "frontman"];
 async function addRankLog(actorId: string | null, targetId: string, before: any, after: any, action: string, requestId: string | null = null) {
+  // Do not create noise in the protocol for a click that keeps exactly the
+  // same rank (for example: an officer selecting "Offizier" again).
+  if ((before.base_rank ?? "spieler") === (after.base_rank ?? "spieler")
+      && (before.active_rank ?? null) === (after.active_rank ?? null)) return;
   await rest("/mpsq_team_rank_log", { method: "POST", body: JSON.stringify({
     request_id: requestId, actor_id: actorId, target_id: targetId,
     old_base_rank: before.base_rank ?? "spieler", old_active_rank: before.active_rank ?? null,
     new_base_rank: after.base_rank ?? "spieler", new_active_rank: after.active_rank ?? null, action
   }) });
+  await cleanupRankRecords();
+}
+async function trimToNewestTen(path: string) {
+  const response = await rest(`${path}&select=id&order=created_at.desc&offset=10`);
+  const rows = await response.json();
+  if (!Array.isArray(rows) || !rows.length) return;
+  await rest(`${path}&id=in.(${rows.map((row: any) => row.id).join(",")})`, { method: "DELETE" });
+}
+/** Open applications expire after a week; only the ten newest final records remain. */
+async function cleanupRankRecords() {
+  const expiry = encodeURIComponent(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+  await rest(`/mpsq_team_rank_requests?status=eq.PENDING&created_at=lt.${expiry}`, { method: "DELETE" });
+  await trimToNewestTen("/mpsq_team_rank_log?");
+  await trimToNewestTen("/mpsq_team_rank_requests?status=in.(APPROVED,REJECTED)");
 }
 async function rootInfo() {
   const result = await rest("/mpsq_team_root?id=eq.1&select=root_display_name,root_client_id");
@@ -156,6 +170,7 @@ serve(async req => {
     // token; they require the password stored only as an Edge Function secret.
     if (path.startsWith("/admin/") && !isAdmin(req)) return out({ error: "Unauthorized" }, 401);
     if (path === "/admin/rank-requests" && req.method === "GET") {
+      await cleanupRankRecords();
       const rows = await (await rest("/mpsq_team_rank_requests?select=*&order=created_at.desc&limit=200")).json();
       const ids = [...new Set(rows.flatMap((row: any) => [row.requested_by, row.target_id, row.decided_by]).filter(Boolean))];
       const users = ids.length ? await (await rest(`/mpsq_clients?id=in.(${ids.join(",")})&select=id,display_name`)).json() : [];
@@ -163,6 +178,7 @@ serve(async req => {
       return out(rows.map((row: any) => ({ ...row, requester_name: names.get(row.requested_by) ?? "Unbekannt", target_name: names.get(row.target_id) ?? "Unbekannt", decided_by_name: names.get(row.decided_by) ?? null })));
     }
     if (path === "/admin/rank-log" && req.method === "GET") {
+      await cleanupRankRecords();
       const rows = await (await rest("/mpsq_team_rank_log?select=*&order=created_at.desc&limit=200")).json();
       const ids = [...new Set(rows.flatMap((row: any) => [row.actor_id, row.target_id]).filter(Boolean))];
       const users = ids.length ? await (await rest(`/mpsq_clients?id=in.(${ids.join(",")})&select=id,display_name`)).json() : [];
@@ -206,6 +222,21 @@ serve(async req => {
       await addRankLog(candidateId, candidateId, before, after ?? { ...before, ...update }, "ROOT_BOUND");
       return out({ ok: true, root: rootRows[0] });
     }
+    // Recovery endpoint: a bound root account cannot be permanently demoted
+    // by an ordinary rank assignment in the client UI.
+    if (path === "/admin/root-restore" && req.method === "POST") {
+      const root = await rootInfo();
+      if (!root.root_client_id) return out({ error: "Sr-Offizier ist noch nicht gebunden" }, 409);
+      const before = await teamProfile(root.root_client_id);
+      const update = { base_rank: "sr_offizier", active_rank: null, updated_at: new Date().toISOString() };
+      const changed = await rest(`/mpsq_team_profiles?client_id=eq.${root.root_client_id}`, {
+        method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify(update)
+      });
+      if (!changed.ok) return out({ error: await changed.text() }, changed.status);
+      const [after] = await changed.json();
+      await addRankLog(root.root_client_id, root.root_client_id, before, after ?? { ...before, ...update }, "ROOT_BOUND");
+      return out({ ok: true, root });
+    }
     const clientId = await auth(req); if (!clientId) return out({ error: "Unauthorized" }, 401);
     await rest(`/mpsq_clients?id=eq.${clientId}`, { method: "PATCH", body: JSON.stringify({ last_seen_at: new Date().toISOString() }) });
 
@@ -225,12 +256,26 @@ serve(async req => {
       const memberId = path.split("/")[3]; const body = await json(req); const requested = String(body.rank ?? "");
       const self = await teamProfile(clientId); const target = await teamProfile(memberId);
       if (!validRank(requested) || requested === "sr_offizier") return out({ error: "Dieser Rang kann nicht vergeben werden" }, 403);
-      const self001 = memberId === clientId && (self.base_rank === "soldat" || self.base_rank === "arbeiter") && requested === "001";
-      if (!self001) return out({ error: "Rangänderung muss im Admin-Log bestätigt werden" }, 403);
-      const update = { active_rank: "001" };
+      const ownRank = permissionRank(self);
+      const affectsLeadership = requested === "offizier" || requested === "frontman"
+        || target.base_rank === "offizier" || target.base_rank === "frontman";
+      // The bound Sr Offizier is the root administrator and may apply a
+      // leadership change immediately. Everybody else still has to use the
+      // reviewable rank-request flow below.
+      if (affectsLeadership && ownRank !== "sr_offizier") return out({ error: "Leadership changes require approval" }, 403);
+      // 001 is a personal, temporary event rank. It may be toggled only by
+      // the member itself and only if its real base rank is staff level or
+      // higher. Never trust the client-side rank button for this decision.
+      const self001 = memberId === clientId
+        && ["arbeiter", "soldat", "offizier", "frontman", "sr_offizier"].includes(self.base_rank ?? "")
+        && requested === "001";
+      const mayAssign = ownRank === "sr_offizier"
+        || ((ownRank === "offizier" || ownRank === "frontman") && level(shownRank(target)) <= level("arbeiter"));
+      if (!self001 && !mayAssign) return out({ error: "No permission for this rank change" }, 403);
+      const update = requested === "001" ? { active_rank: "001" } : { base_rank: requested, active_rank: null, updated_at: new Date().toISOString() };
       const result = await rest(`/mpsq_team_profiles?client_id=eq.${memberId}`, { method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify(update) });
       const rows = await result.json();
-      if (result.ok) await addRankLog(clientId, memberId, target, rows[0] ?? { ...target, ...update }, "EVENT_001");
+      if (result.ok) await addRankLog(clientId, memberId, target, rows[0] ?? { ...target, ...update }, requested === "001" ? "EVENT_001" : "DIRECT_CHANGE");
       return out(rows, result.ok ? 200 : result.status);
     }
     if (path === "/team/rank-requests" && req.method === "POST") {
@@ -251,10 +296,16 @@ serve(async req => {
       return out({ ok: result.ok }, result.ok ? 200 : result.status);
     }
     if (path === "/team/chat" && req.method === "GET") {
-      const self = await teamProfile(clientId); if (!teamAllowed(self)) return out({ error: "Forbidden" }, 403);
+      const self = await teamProfile(clientId);
+      const publicViewer = shownRank(self) === "spieler" || shownRank(self) === "vip";
+      if (!teamAllowed(self) && !publicViewer) return out({ error: "Forbidden" }, 403);
       const rows = await (await rest("/mpsq_team_messages?select=id,sender_id,message,created_at&order=created_at.desc&limit=100")).json();
       const messages = [];
-      for (const row of rows.reverse()) { const sender = await teamIdentity(row.sender_id); messages.push({ sender_name: sender.display_name, sender_rank: shownRank(sender), message: row.message, created_at: row.created_at }); }
+      for (const row of rows.reverse()) {
+        if (publicViewer && !String(row.message).match(/.+ wurde disqualifiziert\.$/i)) continue;
+        const sender = await teamIdentity(row.sender_id);
+        messages.push({ id: row.id, sender_name: sender.display_name, sender_rank: shownRank(sender), message: row.message, created_at: row.created_at });
+      }
       return out(messages);
     }
     if (path === "/team/chat" && req.method === "POST") {
@@ -306,17 +357,32 @@ serve(async req => {
       await rest("/mpsq_team_messages", { method: "POST", body: JSON.stringify({ sender_id: clientId, message: `${name} wurde disqualifiziert.` }) });
       return out({ ok: true });
     }
+    if (path === "/team/camera-events" && req.method === "GET") {
+      const self = await teamProfile(clientId); if (!teamAllowed(self)) return out({ error: "Forbidden" }, 403);
+      const after = encodeURIComponent(new Date(Date.now() - 15_000).toISOString());
+      const rows = await (await rest(`/mpsq_team_camera_presence?updated_at=gt.${after}&select=camera_id,viewer_id,updated_at`)).json();
+      const cameraIds = [...new Set(rows.map((row: any) => row.camera_id))];
+      const viewerIds = [...new Set(rows.map((row: any) => row.viewer_id))];
+      const cameras = cameraIds.length ? await (await rest(`/mpsq_cameras?id=in.(${cameraIds.join(",")})&select=id,name`)).json() : [];
+      const viewers = viewerIds.length ? await (await rest(`/mpsq_clients?id=in.(${viewerIds.join(",")})&select=id,display_name`)).json() : [];
+      const cameraNames = new Map(cameras.map((row: any) => [row.id, row.name]));
+      const viewerNames = new Map(viewers.map((row: any) => [row.id, row.display_name]));
+      return out(rows.map((row: any) => ({ camera_id: row.camera_id, camera_name: cameraNames.get(row.camera_id) ?? "Kamera", viewer_name: viewerNames.get(row.viewer_id) ?? "Unbekannt" })));
+    }
     if (path === "/team/camera-events" && req.method === "POST") {
       const self = await teamProfile(clientId); const body = await json(req);
       if (!teamAllowed(self)) return out({ error: "Forbidden" }, 403);
       const cameraId = String(body.cameraId ?? ""); const action = body.action === "stop" ? "stop" : "start";
       const cameras = await (await rest(`/mpsq_cameras?id=eq.${cameraId}&select=name`)).json();
       if (!cameras[0]) return out({ error: "Kamera nicht gefunden" }, 404);
-      const sender = await teamIdentity(clientId);
-      const message = action === "start"
-        ? `${sender.display_name} nutzt Kamera ${cameras[0].name}.`
-        : `Kamera ${cameras[0].name} ist nicht mehr live geladen.`;
-      const result = await rest("/mpsq_team_messages", { method: "POST", body: JSON.stringify({ sender_id: clientId, message }) });
+      if (action === "stop") {
+        const result = await rest(`/mpsq_team_camera_presence?camera_id=eq.${cameraId}&viewer_id=eq.${clientId}`, { method: "DELETE" });
+        return out({ ok: result.ok }, result.ok ? 200 : result.status);
+      }
+      const result = await rest("/mpsq_team_camera_presence?on_conflict=camera_id", {
+        method: "POST", headers: { Prefer: "resolution=merge-duplicates" },
+        body: JSON.stringify({ camera_id: cameraId, viewer_id: clientId, updated_at: new Date().toISOString() })
+      });
       return out({ ok: result.ok }, result.ok ? 201 : result.status);
     }
 
@@ -436,33 +502,22 @@ serve(async req => {
       return out({ ok: r.ok }, r.ok ? 200 : r.status);
     }
 
-    // Exactly one Storage object exists per camera. Every upload replaces this
-    // same file, so old frames can never accumulate.
-    if (path.match(/^\/cameras\/[^/]+\/frame$/) && req.method === "POST") {
+    // Each active source obtains a temporary R2 PUT link roughly once a
+    // minute. The following PNG uploads go directly to R2 and never traverse
+    // Supabase, preventing camera use from consuming Edge Function calls or
+    // Supabase egress for every frame.
+    if (path.match(/^\/cameras\/[^/]+\/frame-upload-url$/) && req.method === "POST") {
       const id = path.split("/")[2];
       if (!await canPublishCamera(clientId, id)) return out({ error: "Keine Berechtigung für dieses Kamera-Bild" }, 403);
-      const b = await json(req); const encoded = typeof b.pngBase64 === "string" ? b.pngBase64 : "";
-      if (!encoded || encoded.length > 2_500_000) return out({ error: "Ungültiges Kamera-Bild" }, 400);
-      let bytes: Uint8Array;
-      try { bytes = Uint8Array.from(atob(encoded), character => character.charCodeAt(0)); }
-      catch { return out({ error: "Ungültiges Kamera-Bild" }, 400); }
-      const upload = await storagePutFrame(id, bytes);
-      if (!upload.ok) return out({ error: await upload.text() }, upload.status);
-      return out({ ok: true });
+      return out({ url: await r2SignedFrameUrl(id, "PUT", 90), expiresIn: 90 });
     }
     if (path.match(/^\/cameras\/[^/]+\/frame$/) && req.method === "GET") {
       const id = path.split("/")[2];
       if (!await canReadCamera(clientId, id)) return out({ error: "Keine Freigabe für dieses Kamera-Bild" }, 403);
-      // Used only if the client cannot download the temporary signed URL.
-      if (url.searchParams.get("inline") === "1") {
-        const frame = await storageGetFrame(id);
-        if (!frame.ok) return out({ error: "Kamera ist offline" }, frame.status === 404 ? 404 : 502);
-        const bytes = new Uint8Array(await frame.arrayBuffer());
-        let binary = "";
-        for (const byte of bytes) binary += String.fromCharCode(byte);
-        return out({ pngBase64: btoa(binary) });
-      }
-      return out({ url: await storageSignedFrameUrl(id), expiresIn: 5 });
+      // GET links can be reused by the viewer for 90 seconds. Each individual
+      // frame download is a direct R2 read (free R2 egress), not an Edge
+      // Function invocation or Supabase Storage download.
+      return out({ url: await r2SignedFrameUrl(id, "GET", 90), expiresIn: 90 });
     }
 
     if (req.method === "GET" && path === "/screens") {
