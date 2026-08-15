@@ -16,6 +16,15 @@ create table if not exists public.mpsq_team_messages (
 );
 create index if not exists mpsq_team_messages_created_at_idx on public.mpsq_team_messages(created_at desc);
 
+-- Short-lived active camera records for the lower-right live indicator.
+create table if not exists public.mpsq_team_camera_presence (
+  camera_id uuid primary key references public.mpsq_cameras(id) on delete cascade,
+  viewer_id uuid not null references public.mpsq_clients(id) on delete cascade,
+  updated_at timestamptz not null default now()
+);
+create index if not exists mpsq_team_camera_presence_updated_idx
+  on public.mpsq_team_camera_presence(updated_at desc);
+
 create table if not exists public.mpsq_team_todos (
   id uuid primary key default gen_random_uuid(),
   text text not null check (char_length(text) between 1 and 256),
@@ -44,6 +53,7 @@ create table if not exists public.mpsq_team_templates (
 
 alter table public.mpsq_team_profiles enable row level security;
 alter table public.mpsq_team_messages enable row level security;
+alter table public.mpsq_team_camera_presence enable row level security;
 alter table public.mpsq_team_todos enable row level security;
 alter table public.mpsq_team_timer enable row level security;
 alter table public.mpsq_team_templates enable row level security;
@@ -103,7 +113,7 @@ create table if not exists public.mpsq_team_rank_log (
   old_active_rank text,
   new_base_rank text not null,
   new_active_rank text,
-  action text not null check (action in ('APPROVED','REJECTED','ROOT_BOUND','AUTO_VIP','EVENT_001')),
+  action text not null check (action in ('APPROVED','REJECTED','ROOT_BOUND','AUTO_VIP','EVENT_001','DIRECT_CHANGE')),
   created_at timestamptz not null default now()
 );
 create index if not exists mpsq_team_rank_log_created_idx
@@ -112,6 +122,11 @@ create index if not exists mpsq_team_rank_log_created_idx
 alter table public.mpsq_team_root enable row level security;
 alter table public.mpsq_team_rank_requests enable row level security;
 alter table public.mpsq_team_rank_log enable row level security;
+
+-- Applies safely to databases created before DIRECT_CHANGE existed.
+alter table public.mpsq_team_rank_log drop constraint if exists mpsq_team_rank_log_action_check;
+alter table public.mpsq_team_rank_log add constraint mpsq_team_rank_log_action_check
+  check (action in ('APPROVED','REJECTED','ROOT_BOUND','AUTO_VIP','EVENT_001','DIRECT_CHANGE'));
 
 -- The Edge Function uses the service role. Do not add public policies to these
 -- tables: rank requests and the audit log must never be readable directly.
