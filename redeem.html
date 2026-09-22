@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>MPSQ Redeem</title><link rel="stylesheet" href="css/style.css"></head>
+<body><main class="page"><h1>Redeem</h1><p>Löse einen MPSQ-Code ein, um ein Accessoire freizuschalten.</p>
+<form id="redeem-form"><label>Minecraft-Spielername <input id="player" required maxlength="32"></label>
+<label>Code <input id="code" required maxlength="64" autocomplete="off"></label><button>Einlösen</button></form>
+<p id="redeem-result" role="status"></p>
+<script>document.querySelector('#redeem-form').addEventListener('submit',async e=>{e.preventDefault();const out=document.querySelector('#redeem-result');out.textContent='Code wird geprüft…';try{const r=await fetch('/api/redeem',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({player:player.value,code:code.value})});const d=await r.json();out.textContent=r.ok?`Freigeschaltet: ${d.accessoryName}`:(d.error||'Code konnte nicht eingelöst werden.')}catch(_){out.textContent='Redeem-Dienst nicht erreichbar.'}});</script></main></body></html>
