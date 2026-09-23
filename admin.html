@@ -293,6 +293,7 @@
         .rank-reject { background: #8f1d1d; color: #fff; }
         .rank-status { font-weight: 700; color: var(--accent-red); }
     </style>
+<script src="js/model-import.js"></script>
 </head>
 <body>
 
@@ -353,6 +354,31 @@
                 <button class="admin-tab" data-target="panel-sozial-media">Sozial Media</button>
                 <button class="admin-tab" data-target="panel-mixelpixel">MixelPixel</button>
                 <button class="admin-tab" data-target="panel-rang-log">Rang-Log</button>
+                <button class="admin-tab" data-target="panel-redeem">Redeem</button>
+                <button class="admin-tab" data-target="panel-mod">MPSQ Mod</button>
+            </div>
+
+            <div id="panel-redeem" class="admin-panel">
+                <div class="admin-section-box">
+                    <h3>Redeem-Code erstellen</h3>
+                    <div class="admin-field-group"><label>Code</label><input id="redeem-code" type="text" maxlength="64" placeholder="CREATOR2026"></div>
+                    <div class="admin-field-group"><label>Enddatum und Uhrzeit</label><input id="redeem-expires" type="datetime-local"></div>
+                    <div class="admin-field-group"><label>Accessoire-/Modell-ID</label><input id="redeem-model" type="text" maxlength="128" placeholder="creator_brille"></div>
+                    <div class="admin-field-group"><label>Maximale Einlösungen</label><input id="redeem-limit" type="number" min="1" placeholder="unbegrenzt"></div>
+                    <button class="btn btn-primary" id="btn-create-redeem" type="button">Code erstellen</button><p id="redeem-admin-status" class="admin-status"></p>
+                </div>
+            </div>
+
+            <div id="panel-mod" class="admin-panel">
+                <div class="admin-section-box">
+                    <h3>MPSQ-Mod-Dateien</h3>
+                    <div class="admin-field-group"><label>Mod-JAR</label><input id="mod-jar-file" type="file" accept=".jar"></div>
+                    <div class="admin-field-group"><label>Modell-Datei</label><input id="mod-model-file" type="file" accept=".json,.bbmodel"></div>
+                    <div class="admin-field-group"><label>PNG-Texturen zum Java-Modell</label><input id="mod-model-textures" type="file" accept=".png" multiple></div>
+<div class="admin-field-group"><label>Datei-/Modell-ID</label><input id="mod-asset-id" placeholder="creator_brille" pattern="[a-z0-9_-]+" maxlength="64"></div>
+<div class="admin-field-group"><label>Accessoire-Name</label><input id="mod-asset-name" placeholder="Creator-Brille" maxlength="80"></div>
+<button class="btn btn-primary" id="btn-upload-mod-files" type="button">Dateien hochladen</button><p id="mod-upload-status" class="admin-status"></p>
+                </div>
             </div>
 
             <!-- ==================== ÜBER UNS PANEL ==================== -->
@@ -2483,5 +2509,36 @@
         document.getElementById('btn-load-rank-log').addEventListener('click', loadRankLog);
         document.getElementById('btn-find-root').addEventListener('click', findRootCandidate);
     </script>
+    <script>
+      document.getElementById('btn-create-redeem')?.addEventListener('click', async () => {
+        const status = document.getElementById('redeem-admin-status');
+        const code = document.getElementById('redeem-code').value.trim().toUpperCase();
+        const modelId = document.getElementById('redeem-model').value.trim();
+        const expires = document.getElementById('redeem-expires').value;
+        const maxUses = document.getElementById('redeem-limit').value;
+        if (!code || !modelId) { status.textContent = 'Code und Modell-ID sind erforderlich.'; return; }
+        try { await callTeamAdmin('/admin/redeem-codes', 'POST', { code, modelId, expiresAt: expires ? new Date(expires).toISOString() : null, maxUses: maxUses ? Number(maxUses) : null }); status.textContent = 'Redeem-Code gespeichert.'; }
+        catch (error) { status.textContent = `Fehler: ${error.message}`; }
+      });
+      document.getElementById('btn-upload-mod-files')?.addEventListener('click', async event => {
+        const status=document.getElementById('mod-upload-status'), button=event.currentTarget;
+        const jar=document.getElementById('mod-jar-file').files[0], model=document.getElementById('mod-model-file').files[0];
+        const id=document.getElementById('mod-asset-id').value.trim();
+        if(!/^[a-z0-9_-]{1,64}$/.test(id)){status.textContent='Bitte eine gültige ID eingeben.';return;}
+        if(!jar&&!model){status.textContent='Bitte eine Datei auswählen.';return;}
+        if(jar&&model){status.textContent='JAR und Modell bitte einzeln mit eigener ID hochladen.';return;}
+        button.disabled=true;status.textContent='Wird geprüft und hochgeladen…';
+        try{
+          let payload;
+          if(model)payload={id,kind:'model',name:document.getElementById('mod-asset-name').value||id,bundle:await importMpsqModel(model,document.getElementById('mod-model-textures').files)};
+          else{
+            if(jar.size>16777216)throw Error('JAR maximal 16 MiB.');
+            const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(',')[1]);r.onerror=reject;r.readAsDataURL(jar);});
+            payload={id,kind:'jar',data};
+          }
+          await callTeamAdmin('/admin/assets','POST',payload);status.textContent='Gespeichert: '+id;
+        }catch(e){status.textContent='Fehler: '+e.message;}finally{button.disabled=false;}
+      });    </script>
 </body>
 </html>
+

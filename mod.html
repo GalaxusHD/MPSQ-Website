@@ -1,7 +1,18 @@
-<!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>MPSQ Mod</title><link rel="stylesheet" href="css/style.css"></head>
-<body><main class="page"><h1>MPSQ Mod</h1>
-<p>Installationshilfe, Wiki, Downloads und aktuelle Informationen zur MPSQ-Mod.</p>
-<nav><a href="https://modrinth.com/">Download</a> <a href="mpsq-player.html">Spieler-Mod</a></nav>
-<h2>Tutorial und Wiki</h2><p>Die Mod verbindet registrierte Weltobjekte mit Audio, Bossbars, Ansagen, Accessoires und Events.</p>
-<h2>Versionen</h2><div id="mod-status">Versionsinformationen werden geladen.</div></main></body></html>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MPSQ Mod – MPSQ</title><link rel="stylesheet" href="css/style.css"></head><body><nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-logo"><img src="assets/images/mpsq-logo.png" alt="MPSQ Logo" class="nav-logo-img"></a>
+            <ul class="nav-links">
+                <li><a href="ueber-uns.html">Über uns</a></li>
+                <li><a href="event.html">Event</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="bewerben.html">Bewerben</a></li>
+                <li><a href="sozial-media.html">Sozial Media</a></li>
+                <li><a href="mixelpixel.html">MixelPixel</a></li>
+                <li><a href="mod.html">MPSQ Mod</a></li>
+                <li><a href="redeem.html">Redeem</a></li>
+            </ul>
+            <button class="nav-hamburger" aria-label="Menü öffnen">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav><main class="page" style="padding-top:48px"><div class="section-header"><h1 class="gradient-text">MPSQ Mod</h1><span class="section-divider"></span></div><p>Das MPSQ-Team und das Event direkt in Minecraft: Ränge, gemeinsame Texte, Kameras, Eventaktionen und freischaltbare Accessoires.</p><div class="card-grid card-grid-3"><article class="card"><h2>Installieren</h2><p>Nutze Minecraft 1.21.8 mit Fabric und den im Mod-Paket angegebenen Abhängigkeiten. Lege die JAR in den mods-Ordner deines Profils.</p></article><article class="card"><h2>Mitmachen</h2><p>Öffne die Mod-Einstellungen für deine freigeschalteten Werkzeuge. Über „Accessoires“ kannst du Codes einlösen und deine Auswahl anlegen.</p></article><article class="card"><h2>Event steuern</h2><p>Berechtigte Teammitglieder können Knöpfe mit Musik, Ansagen oder Countdowns verbinden. Dafür den Block anschauen und /mpsq-knopf verwenden.</p></article></div><h2>Downloads</h2><p id="download-status" role="status">Downloads werden geladen…</p><nav id="downloads" aria-label="Mod-Downloads"></nav><h2>Texte und Ränge</h2><p>Texte werden mit &amp;-Codes bearbeitet und formatiert angezeigt. Beim Kopieren bleiben die ursprünglichen Codes erhalten. Die Rangübersicht erklärt die Aufgaben und Berechtigungen.</p><h2>Accessoires</h2><p>Accessoires sind für andere Nutzer der MPSQ Mod sichtbar. Der jeweilige Launcher allein genügt dafür nicht.</p></main><script src="js/config.js"></script><script src="js/main.js"></script><script>fetch(SUPABASE_URL+'/functions/v1/mpsq-api/assets').then(async r=>{if(!r.ok)throw Error();return r.json();}).then(rows=>{document.getElementById('download-status').textContent=rows.length?'Wähle eine veröffentlichte Version:':'Aktuell ist noch keine Download-Datei veröffentlicht.';for(const row of rows){const link=document.createElement('a');const url=new URL(row.url);if(url.protocol!=='https:')continue;link.href=url.href;link.textContent=row.filename;link.className='btn btn-primary';document.getElementById('downloads').append(link);}}).catch(()=>document.getElementById('download-status').textContent='Downloads sind vorübergehend nicht erreichbar.');</script></body></html>

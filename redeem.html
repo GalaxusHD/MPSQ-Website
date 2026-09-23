@@ -1,7 +1,18 @@
-<!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>MPSQ Redeem</title><link rel="stylesheet" href="css/style.css"></head>
-<body><main class="page"><h1>Redeem</h1><p>Löse einen MPSQ-Code ein, um ein Accessoire freizuschalten.</p>
-<form id="redeem-form"><label>Minecraft-Spielername <input id="player" required maxlength="32"></label>
-<label>Code <input id="code" required maxlength="64" autocomplete="off"></label><button>Einlösen</button></form>
-<p id="redeem-result" role="status"></p>
-<script>document.querySelector('#redeem-form').addEventListener('submit',async e=>{e.preventDefault();const out=document.querySelector('#redeem-result');out.textContent='Code wird geprüft…';try{const r=await fetch('/api/redeem',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({player:player.value,code:code.value})});const d=await r.json();out.textContent=r.ok?`Freigeschaltet: ${d.accessoryName}`:(d.error||'Code konnte nicht eingelöst werden.')}catch(_){out.textContent='Redeem-Dienst nicht erreichbar.'}});</script></main></body></html>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Redeem – MPSQ</title><link rel="stylesheet" href="css/style.css"></head><body><nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-logo"><img src="assets/images/mpsq-logo.png" alt="MPSQ Logo" class="nav-logo-img"></a>
+            <ul class="nav-links">
+                <li><a href="ueber-uns.html">Über uns</a></li>
+                <li><a href="event.html">Event</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="bewerben.html">Bewerben</a></li>
+                <li><a href="sozial-media.html">Sozial Media</a></li>
+                <li><a href="mixelpixel.html">MixelPixel</a></li>
+                <li><a href="mod.html">MPSQ Mod</a></li>
+                <li><a href="redeem.html">Redeem</a></li>
+            </ul>
+            <button class="nav-hamburger" aria-label="Menü öffnen">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav><main class="page" style="padding-top:48px"><div class="section-header"><h1 class="gradient-text">Redeem</h1><span class="section-divider"></span></div><p>Dein Code. Dein Accessoire. Löse Event- oder Creatorcodes ein und wähle dein freigeschaltetes Accessoire anschließend in der Mod aus.</p><form id="redeem-form"><label for="player">Minecraft-Spielername</label><input id="player" required minlength="3" maxlength="16" pattern="[A-Za-z0-9_]+" autocomplete="off" placeholder="Dein Minecraft-Name"><label for="code">Dein Code</label><input id="code" required maxlength="64" autocomplete="off" placeholder="Event- oder Creatorcode"><button class="btn btn-primary" type="submit">Accessoire freischalten</button><p id="redeem-result" role="status" aria-live="polite"></p></form><h2>So funktioniert es</h2><p>Starte die MPSQ Mod mindestens einmal mit deinem Minecraft-Konto. Gib hier deinen Namen und den Code ein. Unter „Accessoires“ kannst du deine Auswahl anschließend anlegen oder wieder ablegen.</p></main><script src="js/config.js"></script><script src="js/main.js"></script><script>document.getElementById('redeem-form').addEventListener('submit',async e=>{e.preventDefault();const form=e.currentTarget,button=form.querySelector('button'),out=document.getElementById('redeem-result');button.disabled=true;out.textContent='Code wird geprüft…';try{const r=await fetch(SUPABASE_URL+'/functions/v1/mpsq-api/public/redeem',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({player:document.getElementById('player').value.trim(),code:document.getElementById('code').value})});const data=await r.json();out.textContent=r.ok?'Freigeschaltet: '+data.accessoryName:(data.error||'Einlösen fehlgeschlagen.');}catch(e){out.textContent='Der Dienst ist derzeit nicht erreichbar.';}finally{button.disabled=false;}});</script></body></html>
