@@ -292,6 +292,11 @@
         .rank-approve { background: #1a7f37; color: #fff; }
         .rank-reject { background: #8f1d1d; color: #fff; }
         .rank-status { font-weight: 700; color: var(--accent-red); }
+        .asset-library { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:16px; }
+        .asset-folder { background:var(--bg-tertiary); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:14px; min-height:90px; }
+        .asset-folder h4 { margin:0 0 10px; color:var(--accent-red); }
+        .asset-row { border-top:1px solid var(--border-default); padding:8px 0; font-size:.88rem; overflow-wrap:anywhere; }
+        .admin-field-group[hidden] { display:none; }
     </style>
 <script src="js/model-import.js"></script>
 </head>
@@ -371,13 +376,20 @@
 
             <div id="panel-mod" class="admin-panel">
                 <div class="admin-section-box">
-                    <h3>MPSQ-Mod-Dateien</h3>
-                    <div class="admin-field-group"><label>Mod-JAR</label><input id="mod-jar-file" type="file" accept=".jar"></div>
-                    <div class="admin-field-group"><label>Modell-Datei</label><input id="mod-model-file" type="file" accept=".json,.bbmodel"></div>
-                    <div class="admin-field-group"><label>PNG-Texturen zum Java-Modell</label><input id="mod-model-textures" type="file" accept=".png" multiple></div>
-<div class="admin-field-group"><label>Datei-/Modell-ID</label><input id="mod-asset-id" placeholder="creator_brille" pattern="[a-z0-9_-]+" maxlength="64"></div>
-<div class="admin-field-group"><label>Accessoire-Name</label><input id="mod-asset-name" placeholder="Creator-Brille" maxlength="80"></div>
-<button class="btn btn-primary" id="btn-upload-mod-files" type="button">Dateien hochladen</button><p id="mod-upload-status" class="admin-status"></p>
+                    <h3>Zentrale MPSQ-Dateiverwaltung</h3>
+                    <p>Alle Dateien erhalten hier eine eindeutige ID. Modelle werden beim Upload entweder Möbeln oder Accessoires zugeordnet; Mod-JARs bleiben als Downloads abrufbar.</p>
+                    <div class="admin-field-group"><label>Bereich</label><select id="mod-asset-category">
+                        <option value="furniture">Möbel</option><option value="accessory">Accessoires</option>
+                        <option value="sound">Sounds / Musik</option><option value="npc_skin">NPCs (Skins)</option>
+                        <option value="mod_release">Mod-Download (JAR)</option>
+                    </select></div>
+                    <div class="admin-field-group"><label>Datei(en)</label><input id="mod-asset-files" type="file" accept=".bbmodel,.json,.png,.ogg,.mp3,.wav,.jar" multiple></div>
+                    <div class="admin-field-group"><label>ID (eindeutig, nur a–z, 0–9, _ und -)</label><input id="mod-asset-id" placeholder="creator_brille" pattern="[a-z0-9_-]+" maxlength="64"></div>
+                    <div class="admin-field-group" id="mod-asset-name-row"><label>Anzeigename</label><input id="mod-asset-name" placeholder="Creator-Brille" maxlength="80"></div>
+                    <div class="admin-field-group" id="mod-furniture-behavior-row"><label>Funktion des Möbels</label><select id="mod-furniture-behavior"><option value="decoration">Nur Dekoration</option><option value="interactive">Interaktiv – für eine spätere Systemaktion vorgesehen</option></select><small>Die Auswahl wird gespeichert. Die Knopfaktion muss vorerst separat mit „System“ im Spiel eingerichtet werden.</small></div>
+                    <button class="btn btn-primary" id="btn-upload-mod-files" type="button">Datei hochladen</button>
+                    <button class="btn" id="btn-refresh-mod-assets" type="button">Dateiliste laden</button><p id="mod-upload-status" class="admin-status"></p>
+                    <div id="mod-asset-library" class="asset-library" aria-live="polite"></div>
                 </div>
             </div>
 
@@ -2520,25 +2532,37 @@
         try { await callTeamAdmin('/admin/redeem-codes', 'POST', { code, modelId, expiresAt: expires ? new Date(expires).toISOString() : null, maxUses: maxUses ? Number(maxUses) : null }); status.textContent = 'Redeem-Code gespeichert.'; }
         catch (error) { status.textContent = `Fehler: ${error.message}`; }
       });
+      const assetCategory=document.getElementById('mod-asset-category');
+      function updateAssetForm(){const category=assetCategory.value;document.getElementById('mod-asset-name-row').hidden=!['furniture','accessory'].includes(category);document.getElementById('mod-furniture-behavior-row').hidden=category!=='furniture';document.getElementById('mod-asset-files').accept=category==='furniture'||category==='accessory'?'.bbmodel,.json,.png':category==='sound'?'.ogg,.mp3,.wav':category==='npc_skin'?'.png':'.jar';}
+      assetCategory?.addEventListener('change',updateAssetForm);updateAssetForm();
+      async function loadModAssets(){const list=document.getElementById('mod-asset-library');list.textContent='Dateien werden geladen…';try{const rows=await callTeamAdmin('/admin/assets');const folders=[['furniture','Möbel'],['accessory','Accessoires'],['sound','Sounds / Musik'],['npc_skin','NPCs (Skins)']];list.replaceChildren();for(const [key,label] of folders){const section=document.createElement('section');section.className='asset-folder';const heading=document.createElement('h4');heading.textContent=label;section.append(heading);const items=rows.filter(row=>row.category===key||(row.category==='shared'&&(key==='furniture'||key==='accessory')));if(!items.length){const empty=document.createElement('small');empty.textContent='Noch keine Dateien.';section.append(empty);}for(const row of items){const item=document.createElement('div');item.className='asset-row';item.textContent=`${row.id} · ${row.filename}${row.behavior==='interactive'?' · interaktiv':''}`;section.append(item);}list.append(section);}const releases=rows.filter(row=>row.category==='mod_release');if(releases.length){const section=document.createElement('section');section.className='asset-folder';const heading=document.createElement('h4');heading.textContent='Mod-Downloads';section.append(heading);for(const row of releases){const item=document.createElement('div');item.className='asset-row';item.textContent=`${row.id} · ${row.filename}`;section.append(item);}list.append(section);}}catch(error){list.textContent=`Dateiliste nicht verfügbar: ${error.message}`;}}
+      document.getElementById('btn-refresh-mod-assets')?.addEventListener('click',loadModAssets);
       document.getElementById('btn-upload-mod-files')?.addEventListener('click', async event => {
         const status=document.getElementById('mod-upload-status'), button=event.currentTarget;
-        const jar=document.getElementById('mod-jar-file').files[0], model=document.getElementById('mod-model-file').files[0];
+        const files=[...document.getElementById('mod-asset-files').files],category=assetCategory.value;
         const id=document.getElementById('mod-asset-id').value.trim();
         if(!/^[a-z0-9_-]{1,64}$/.test(id)){status.textContent='Bitte eine gültige ID eingeben.';return;}
-        if(!jar&&!model){status.textContent='Bitte eine Datei auswählen.';return;}
-        if(jar&&model){status.textContent='JAR und Modell bitte einzeln mit eigener ID hochladen.';return;}
+        if(!files.length){status.textContent='Bitte eine Datei auswählen.';return;}
         button.disabled=true;status.textContent='Wird geprüft und hochgeladen…';
         try{
           let payload;
-          if(model)payload={id,kind:'model',name:document.getElementById('mod-asset-name').value||id,bundle:await importMpsqModel(model,document.getElementById('mod-model-textures').files)};
-          else{
-            if(jar.size>16777216)throw Error('JAR maximal 16 MiB.');
-            const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(',')[1]);r.onerror=reject;r.readAsDataURL(jar);});
-            payload={id,kind:'jar',data};
+          const model=files.find(file=>/\.(bbmodel|json)$/i.test(file.name));
+          if(category==='furniture'||category==='accessory'){
+            if(!model)throw Error('Für Möbel und Accessoires bitte eine .bbmodel- oder .json-Datei auswählen.');
+            payload={id,kind:'model',category,name:document.getElementById('mod-asset-name').value||id,behavior:category==='furniture'?document.getElementById('mod-furniture-behavior').value:'decoration',bundle:await importMpsqModel(model,files.filter(file=>/\.png$/i.test(file.name)))};
+          }else{
+            if(files.length!==1)throw Error('In diesem Bereich bitte genau eine Datei auswählen.');
+            const file=files[0],isJar=category==='mod_release';
+            const max=isJar?16777216:category==='sound'?12582912:2097152;
+            if(file.size>max)throw Error(`Datei zu groß (maximal ${Math.round(max/1048576)} MiB).`);
+            const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(',')[1]);r.onerror=reject;r.readAsDataURL(file);});
+            payload={id,category,kind:isJar?'jar':category==='sound'?'sound':'npc_skin',filename:file.name,data};
           }
-          await callTeamAdmin('/admin/assets','POST',payload);status.textContent='Gespeichert: '+id;
+          await callTeamAdmin('/admin/assets','POST',payload);status.textContent='Gespeichert: '+id;document.getElementById('mod-asset-files').value='';await loadModAssets();
         }catch(e){status.textContent='Fehler: '+e.message;}finally{button.disabled=false;}
-      });    </script>
+      });
+      loadModAssets();
+    </script>
 </body>
 </html>
 
