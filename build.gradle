@@ -1,0 +1,75 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		maven { url = "https://maven.fabricmc.net/" }
+	}
+	dependencies {
+		classpath "net.fabricmc:fabric-loom:1.13.3"
+	}
+}
+
+apply plugin: 'fabric-loom'
+apply plugin: 'maven-publish'
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = "mpsq-team"
+}
+
+repositories {
+	mavenCentral()
+	maven { url = "https://maven.fabricmc.net/" }
+	maven { url = "https://keksuccino.github.io/maven/" }
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	// MCEF provides the in-game Chromium browser used by cinema screens.
+	modImplementation files("libs/mcef-fabric-2.1.6-1.21.6.jar")
+}
+
+loom {
+	splitEnvironmentSourceSets()
+
+	mods {
+		"mpsqcamera" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+	withSourcesJar()
+}
+
+// Replay is deferred and is not part of this release.
+sourceSets.client.java.exclude '**/MpsqReplayManager.java', '**/MpsqReplayScreen.java'
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+jar {
+	from("LICENSE") {
+		rename { "${it}_${project.base.archivesName.get()}" }
+	}
+}
