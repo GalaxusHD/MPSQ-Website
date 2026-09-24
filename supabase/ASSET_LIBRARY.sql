@@ -5,6 +5,7 @@ on conflict(id) do update set public=true,file_size_limit=33554432;
 
 alter table public.mpsq_assets add column if not exists category text not null default 'shared';
 alter table public.mpsq_assets add column if not exists behavior text not null default 'decoration';
+alter table public.mpsq_assets add column if not exists display_name text;
 alter table public.mpsq_assets drop constraint if exists mpsq_assets_kind_check;
 alter table public.mpsq_assets drop constraint if exists mpsq_assets_category_check;
 alter table public.mpsq_assets drop constraint if exists mpsq_assets_behavior_check;
