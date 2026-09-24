@@ -199,6 +199,9 @@ function validAction(type:string,data:any):boolean {
   default:return false;
  }
 }
+const NPC_GLOW_COLORS=["none","white","orange","magenta","light_blue","yellow","lime","pink","gray","light_gray","cyan","purple","blue","brown","green","red","black"];
+const NPC_ANIMATIONS=["none","bob","turn","pulse"];
+function validNpcPages(pages:any):boolean{return Array.isArray(pages)&&pages.length>=1&&pages.length<=12&&pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);}
 serve(async req => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   const url = new URL(req.url); const path = url.pathname.replace(/^.*\/mpsq-api/, "") || "/";
@@ -391,9 +394,9 @@ serve(async req => {
     }
     if(path==="/npcs" && req.method==="GET"){
       const server=url.searchParams.get("server")??"",world=url.searchParams.get("world")??"";if(!server||!world)return out({error:"Welt fehlt"},400);
-      const r=await rest(`/mpsq_world_npcs?server_id=eq.${encodeURIComponent(server.toLowerCase())}&world_id=eq.${encodeURIComponent(world)}&select=*,mpsq_assets(id,category,filename,path)&limit=500`);
+      const r=await rest(`/mpsq_world_npcs?server_id=eq.${encodeURIComponent(server.toLowerCase())}&world_id=eq.${encodeURIComponent(world)}&select=*,mpsq_assets(id,category,filename,display_name,path)&limit=500`);
       const rows=await r.json();if(!r.ok)return out({error:"NPCs nicht verfügbar; bitte die aktuelle Supabase-Migration ausführen."},r.status);
-      return out(rows.map((n:any)=>({...n,asset_id:n.model_id,category:n.mpsq_assets?.category,name:n.mpsq_assets?.display_name??n.mpsq_assets?.filename??n.model_id,url:n.mpsq_assets?.path?`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${n.mpsq_assets.path}`:null})));
+      return out(rows.map((n:any)=>({...n,asset_id:n.model_id,category:n.mpsq_assets?.category,name:n.display_name??n.mpsq_assets?.display_name??n.mpsq_assets?.filename??n.model_id,url:n.mpsq_assets?.path?`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${n.mpsq_assets.path}`:null})));
     }
     if(path==="/npcs" && req.method==="POST"){
       const self=await teamProfile(clientId);if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);const b=await json(req);
@@ -401,7 +404,15 @@ serve(async req => {
       if(b.remove===true){const r=await rest(`/mpsq_world_npcs?server_id=eq.${encodeURIComponent(String(b.server).toLowerCase())}&world_id=eq.${encodeURIComponent(String(b.world))}&x=eq.${b.x}&y=eq.${b.y}&z=eq.${b.z}`,{method:"DELETE"});return out({ok:r.ok},r.ok?200:r.status);}
       if(!/^[a-z0-9_-]{1,64}$/.test(String(b.assetId??"")))return out({error:"NPC-Daten ungültig"},400);
       const asset=await(await rest(`/mpsq_assets?id=eq.${encodeURIComponent(b.assetId)}&kind=eq.model&category=eq.npc_model&select=id`)).json();if(!asset[0])return out({error:"NPC-Modell nicht gefunden oder nicht dem NPC-Bereich zugeordnet"},404);
-      const r=await rest("/mpsq_world_npcs?on_conflict=server_id,world_id,x,y,z,model_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify({server_id:String(b.server).toLowerCase(),world_id:String(b.world),x:b.x,y:b.y,z:b.z,model_id:b.assetId,created_by:clientId})});return out(r.ok?await r.json():{error:await r.text()},r.ok?201:r.status);
+      const displayName=String(b.name??asset[0].id).trim().slice(0,64)||String(asset[0].id);const scale=Number(b.scale??1),glow=String(b.glowColor??"none"),animation=String(b.animation??"none"),pages=b.interactionData?.pages??["Hallo!"];
+      if(!Number.isFinite(scale)||scale<0.25||scale>3||!NPC_GLOW_COLORS.includes(glow)||!NPC_ANIMATIONS.includes(animation)||!validNpcPages(pages))return out({error:"NPC-Eigenschaften ungültig"},400);
+      const r=await rest("/mpsq_world_npcs?on_conflict=server_id,world_id,x,y,z,model_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify({server_id:String(b.server).toLowerCase(),world_id:String(b.world),x:b.x,y:b.y,z:b.z,model_id:b.assetId,display_name:displayName,scale,glow_color:glow,animation,interaction_data:{pages},created_by:clientId})});return out(r.ok?await r.json():{error:await r.text()},r.ok?201:r.status);
+    }
+    if(path.match(/^\/npcs\/[0-9a-f-]{36}$/)&&req.method==="PATCH"){
+      const self=await teamProfile(clientId);if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);const b=await json(req);const name=String(b.name??"").trim(),scale=Number(b.scale),glow=String(b.glowColor??"none"),animation=String(b.animation??"none"),pages=b.interactionData?.pages;
+      if(!name||name.length>64||!Number.isFinite(scale)||scale<0.25||scale>3||!NPC_GLOW_COLORS.includes(glow)||!NPC_ANIMATIONS.includes(animation)||!validNpcPages(pages))return out({error:"NPC-Eigenschaften ungültig"},400);
+      const id=path.split("/")[2],server=String(b.server??"").trim().toLowerCase(),world=String(b.world??"").trim();if(!server||server.length>255||!world||world.length>255)return out({error:"Welt fehlt"},400);
+      const r=await rest(`/mpsq_world_npcs?id=eq.${id}&server_id=eq.${encodeURIComponent(server)}&world_id=eq.${encodeURIComponent(world)}`,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({display_name:name,scale,glow_color:glow,animation,interaction_data:{pages}})});return out(r.ok?await r.json():{error:await r.text()},r.status);
     }
     if(path==="/me/accessories/equip" && req.method==="POST"){
       const body=await json(req);
