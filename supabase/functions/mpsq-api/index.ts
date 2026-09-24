@@ -226,44 +226,64 @@ serve(async req => {
       if(!r.ok)return out({error:"Downloads nicht verfügbar"},r.status);
       return out(rows.map((a:any)=>({...a,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${a.path}`})));
     }
+    if (path === "/admin/assets" && req.method === "GET") {
+      const r=await rest("/mpsq_assets?select=id,kind,category,behavior,path,filename,created_at&order=category.asc,created_at.desc&limit=500");
+      const rows=await r.json();return out(Array.isArray(rows)?rows:[],r.status);
+    }
     if (path === "/admin/assets" && req.method === "POST") {
-      const body=await json(req), kind=body.kind;
+      const body=await json(req), kind=String(body.kind??"");
       const id=String(body.id??"").trim();
-      if(!/^[a-z0-9_-]{1,64}$/.test(id)||!["model","jar"].includes(kind))return out({error:"ID: nur a-z, 0-9, _ und -"},400);
+      const category=String(body.category??(kind==="model"?"accessory":kind==="jar"?"mod_release":""));
+      const validCategory=kind==="model"?["furniture","accessory"].includes(category):kind==="sound"?category==="sound":kind==="npc_skin"?category==="npc_skin":kind==="jar"?category==="mod_release":false;
+      if(!/^[a-z0-9_-]{1,64}$/.test(id)||!validCategory)return out({error:"Bitte ID und passenden Datei-Bereich angeben."},400);
       let bytes:Uint8Array, filename:string, contentType:string;
-      if(kind==="jar"){
+      if(kind==="jar"||kind==="sound"||kind==="npc_skin"){
         const encoded=String(body.data??"");
-        if(encoded.length>24_000_000)return out({error:"JAR maximal 16 MiB"},413);
-        bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));
-        if(bytes.length>16_777_216||bytes[0]!==80||bytes[1]!==75)return out({error:"Ungültige JAR-Datei"},400);
-        filename=id+".jar";contentType="application/java-archive";
+        const maxBytes=kind==="jar"?16_777_216:kind==="sound"?12_582_912:2_097_152;
+        if(encoded.length>Math.ceil(maxBytes*4/3)+8)return out({error:`Datei maximal ${Math.round(maxBytes/1048576)} MiB`},413);
+        try{bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));}catch{return out({error:"Dateiinhalt ungültig"},400);}
+        if(!bytes.length||bytes.length>maxBytes)return out({error:"Datei fehlt oder ist zu groß"},400);
+        filename=String(body.filename??(id+(kind==="jar"?".jar":kind==="sound"?".ogg":".png"))).split(/[\\/]/).pop()??id;
+        if(!/^[a-zA-Z0-9._-]{1,100}$/.test(filename))return out({error:"Dateiname ungültig"},400);
+        const ext=filename.split(".").pop()?.toLowerCase();
+        if(kind==="jar"){
+          if(ext!=="jar"||bytes[0]!==80||bytes[1]!==75)return out({error:"Ungültige JAR-Datei"},400);
+          contentType="application/java-archive";
+        }else if(kind==="sound"){
+          if(ext==="ogg"&&new TextDecoder().decode(bytes.slice(0,4))==="OggS")contentType="audio/ogg";
+          else if(ext==="wav"&&new TextDecoder().decode(bytes.slice(0,4))==="RIFF")contentType="audio/wav";
+          else if(ext==="mp3"&&(new TextDecoder().decode(bytes.slice(0,3))==="ID3"||(bytes[0]===0xff&&(bytes[1]&0xe0)===0xe0)))contentType="audio/mpeg";
+          else return out({error:"Bitte eine gültige OGG-, WAV- oder MP3-Datei auswählen."},400);
+        }else{
+          const png=[137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v);
+          const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),w=bytes.length>=24?view.getUint32(16):0,h=bytes.length>=24?view.getUint32(20):0;
+          if(ext!=="png"||!png||!([32,64].includes(w)&&[32,64].includes(h)))return out({error:"NPC-Skin muss eine PNG-Datei mit 32×32 oder 64×64 Pixeln sein."},400);
+          contentType="image/png";
+        }
       }else{
         const bundle=body.bundle;
         if(!bundle||!Array.isArray(bundle.elements)||bundle.elements.length>512||!bundle.elements.length)return out({error:"Modell benötigt 1–512 Würfelelemente"},400);
         if(!bundle.textures||Object.keys(bundle.textures).length>32)return out({error:"Maximal 32 PNG-Texturen"},400);
-        for(const texture of Object.values(bundle.textures)){
-          if(typeof texture!=="string"||!texture.startsWith("data:image/png;base64,")||texture.length>3_000_000)return out({error:"PNG-Textur ungültig oder zu groß"},400);
-        }
+        for(const texture of Object.values(bundle.textures))if(typeof texture!=="string"||!texture.startsWith("data:image/png;base64,")||texture.length>3_000_000)return out({error:"PNG-Textur ungültig oder zu groß"},400);
         for(const e of bundle.elements){
-          for(const field of ["from","to","origin","rotation"]){if(!Array.isArray(e[field])||e[field].length!==3||e[field].some((n:any)=>!Number.isFinite(n)||Math.abs(n)>1024))return out({error:"Ungültige Modellkoordinaten"},400);}
+          for(const field of ["from","to","origin","rotation"])if(!Array.isArray(e[field])||e[field].length!==3||e[field].some((n:any)=>!Number.isFinite(n)||Math.abs(n)>1024))return out({error:"Ungültige Modellkoordinaten"},400);
           if(!e.faces||Object.values(e.faces).some((f:any)=>!bundle.textures[f.texture]||!Array.isArray(f.uv)||f.uv.length!==4||f.uv.some((v:any)=>!Number.isFinite(v))))return out({error:"Ungültige Modellflächen"},400);
         }
         bytes=new TextEncoder().encode(JSON.stringify(bundle));filename=id+".json";contentType="application/json";
         if(bytes.length>12_000_000)return out({error:"Modellpaket maximal 12 MB"},413);
       }
-      const pathKey=`${kind}/${id}/${crypto.randomUUID()}/${filename}`;
+      const behavior=category==="furniture"&&body.behavior==="interactive"?"interactive":"decoration";
+      const pathKey=`${category}/${id}/${crypto.randomUUID()}/${filename}`;
       const upload=await fetch(`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/mpsq-assets/${pathKey}`,{method:"POST",headers:{apikey:key(),Authorization:`Bearer ${key()}`,"Content-Type":contentType},body:bytes});
-      if(!upload.ok)return out({error:"Upload fehlgeschlagen. ASSETS.sql ausführen und Storage prüfen."},502);
-      const saved=await rest("/mpsq_assets?on_conflict=id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates"},body:JSON.stringify({id,kind,path:pathKey,filename,created_at:new Date().toISOString()})});
+      if(!upload.ok)return out({error:"Upload fehlgeschlagen. ASSET_LIBRARY.sql ausführen und Storage prüfen."},502);
+      const saved=await rest("/mpsq_assets?on_conflict=id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates"},body:JSON.stringify({id,kind,category,behavior,path:pathKey,filename,created_at:new Date().toISOString()})});
       if(!saved.ok)return out({error:"Datei gespeichert, Metadaten konnten nicht gespeichert werden"},500);
-      if(kind==="model"){
+      if(kind==="model"&&category==="accessory"){
         const savedModel=await rest("/mpsq_accessories?on_conflict=accessory_key",{method:"POST",headers:{Prefer:"resolution=merge-duplicates"},body:JSON.stringify({accessory_key:id,model_id:id,display_name:String(body.name??id).slice(0,80)})});
         if(!savedModel.ok)return out({error:"Modell gespeichert, Accessoire konnte nicht angelegt werden"},500);
       }
-      return out({ok:true,id,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${pathKey}`},201);
-    }
-
-    if (path === "/admin/redeem-codes" && req.method === "POST") {
+      return out({ok:true,id,kind,category,behavior,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${pathKey}`},201);
+    }    if (path === "/admin/redeem-codes" && req.method === "POST") {
       const body = await json(req); const code = String(body.code ?? "").trim().toUpperCase(); const modelId = String(body.modelId ?? "").trim();
       if (!code || !modelId) return out({ error: "Code und Modell-ID fehlen" }, 400);
       const accessories = await (await rest(`/mpsq_accessories?model_id=eq.${encodeURIComponent(modelId)}&select=id&limit=1`)).json();
@@ -359,7 +379,7 @@ serve(async req => {
       const worn=await r.json();
       const ids=[...new Set(worn.map((w:any)=>w.client_id))];
       const users=ids.length?await(await rest(`/mpsq_clients?id=in.(${ids.join(",")})&select=id,display_name`)).json():[];
-      const assets=await(await rest("/mpsq_assets?kind=eq.model&select=id,path")).json();
+      const assets=await(await rest("/mpsq_assets?kind=eq.model&category=in.(accessory,shared)&select=id,path")).json();
       return out(worn.map((w:any)=>{
         const asset=assets.find((a:any)=>a.id===w.mpsq_accessories?.model_id);
         return {name:users.find((u:any)=>u.id===w.client_id)?.display_name,url:asset?`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${asset.path}`:null};
@@ -392,7 +412,7 @@ serve(async req => {
       if(!b.server||!b.world||![b.x,b.y,b.z].every(n=>Number.isInteger(n)&&Math.abs(n)<=30000000))return out({error:"Position ungültig"},400);
       if(b.remove===true){const r=await rest(`/mpsq_world_objects?server_id=eq.${encodeURIComponent(String(b.server).toLowerCase())}&world_id=eq.${encodeURIComponent(b.world)}&x=eq.${b.x}&y=eq.${b.y}&z=eq.${b.z}`,{method:"DELETE"});return out({ok:r.ok},r.ok?200:r.status);}
       if(!/^[a-z0-9_-]{1,64}$/.test(b.modelId)||![0,90,180,270].includes(b.rotation))return out({error:"Modell oder Drehung ungültig"},400);
-      const assets=await(await rest(`/mpsq_assets?id=eq.${b.modelId}&kind=eq.model&select=id`)).json();if(!assets[0])return out({error:"Modell nicht gefunden"},404);
+      const assets=await(await rest(`/mpsq_assets?id=eq.${b.modelId}&kind=eq.model&category=in.(furniture,shared)&select=id`)).json();if(!assets[0])return out({error:"Möbelmodell nicht gefunden oder nicht dem Möbelbereich zugeordnet"},404);
       const r=await rest("/mpsq_world_objects?on_conflict=server_id,world_id,x,y,z",{method:"POST",headers:{Prefer:"resolution=merge-duplicates"},body:JSON.stringify({server_id:String(b.server).toLowerCase(),world_id:b.world,x:b.x,y:b.y,z:b.z,model_id:b.modelId,rotation:b.rotation,created_by:clientId})});return out({ok:r.ok},r.ok?200:r.status);
     }
     if(path === "/calendar" && req.method === "GET") {
