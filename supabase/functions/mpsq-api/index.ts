@@ -193,6 +193,7 @@ function validAction(type:string,data:any):boolean {
   case "START_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256;
   case "SHOW_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256;
   case "SEND_ANNOUNCEMENT":return typeof data.text==="string"&&data.text.length<=512&&(!data.sound||sound(data.sound));
+  case "SHOW_DIALOGUE":return Array.isArray(data.pages)&&data.pages.length>0&&data.pages.length<=12&&data.pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);
   case "OPEN_LINK":try{const u=new URL(data.url);return u.protocol==="https:"&&!u.username&&!u.password&&u.href.length<=2048;}catch{return false;}
   case "OPEN_REDEEM":case "STOP_AUDIO":case "HIDE_BOSSBAR":return true;
   default:return false;
@@ -227,14 +228,14 @@ serve(async req => {
       return out(rows.map((a:any)=>({...a,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${a.path}`})));
     }
     if (path === "/admin/assets" && req.method === "GET") {
-      const r=await rest("/mpsq_assets?select=id,kind,category,behavior,path,filename,created_at&order=category.asc,created_at.desc&limit=500");
+      const r=await rest("/mpsq_assets?select=id,kind,category,behavior,path,filename,display_name,created_at&order=category.asc,created_at.desc&limit=500");
       const rows=await r.json();return out(Array.isArray(rows)?rows:[],r.status);
     }
     if (path === "/admin/assets" && req.method === "POST") {
       const body=await json(req), kind=String(body.kind??"");
       const id=String(body.id??"").trim();
       const category=String(body.category??(kind==="model"?"accessory":kind==="jar"?"mod_release":""));
-      const validCategory=kind==="model"?["furniture","accessory"].includes(category):kind==="sound"?category==="sound":kind==="npc_skin"?category==="npc_skin":kind==="jar"?category==="mod_release":false;
+      const validCategory=kind==="model"?["furniture","accessory","npc_model"].includes(category):kind==="sound"?category==="sound":kind==="npc_skin"?["npc_skin","npc_skin_normal","npc_skin_slim"].includes(category):kind==="jar"?category==="mod_release":false;
       if(!/^[a-z0-9_-]{1,64}$/.test(id)||!validCategory)return out({error:"Bitte ID und passenden Datei-Bereich angeben."},400);
       let bytes:Uint8Array, filename:string, contentType:string;
       if(kind==="jar"||kind==="sound"||kind==="npc_skin"){
@@ -262,12 +263,19 @@ serve(async req => {
         }
       }else{
         const bundle=body.bundle;
-        if(!bundle||!Array.isArray(bundle.elements)||bundle.elements.length>512||!bundle.elements.length)return out({error:"Modell benötigt 1–512 Würfelelemente"},400);
+        const elements=Array.isArray(bundle?.elements)?bundle.elements:[],meshes=Array.isArray(bundle?.meshes)?bundle.meshes:[];
+        if(!bundle||elements.length>512||meshes.length>512||(!elements.length&&!meshes.length))return out({error:"Modell benötigt Würfelelemente oder Mesh-Flächen"},400);
         if(!bundle.textures||Object.keys(bundle.textures).length>32)return out({error:"Maximal 32 PNG-Texturen"},400);
         for(const texture of Object.values(bundle.textures))if(typeof texture!=="string"||!texture.startsWith("data:image/png;base64,")||texture.length>3_000_000)return out({error:"PNG-Textur ungültig oder zu groß"},400);
-        for(const e of bundle.elements){
+        for(const e of elements){
           for(const field of ["from","to","origin","rotation"])if(!Array.isArray(e[field])||e[field].length!==3||e[field].some((n:any)=>!Number.isFinite(n)||Math.abs(n)>1024))return out({error:"Ungültige Modellkoordinaten"},400);
           if(!e.faces||Object.values(e.faces).some((f:any)=>!bundle.textures[f.texture]||!Array.isArray(f.uv)||f.uv.length!==4||f.uv.some((v:any)=>!Number.isFinite(v))))return out({error:"Ungültige Modellflächen"},400);
+        }
+        let vertexTotal=0;
+        for(const mesh of meshes){
+          if(!mesh||!bundle.textures[mesh.texture]||!Array.isArray(mesh.vertices)||!Array.isArray(mesh.indices)||mesh.vertices.length>200000)return out({error:"Ungültiges Mesh"},400);
+          vertexTotal+=mesh.vertices.length;if(vertexTotal>200000||mesh.indices.length>600000||mesh.indices.length%3!==0)return out({error:"Mesh überschreitet die Modellgrenze"},400);
+          if(mesh.vertices.some((v:any)=>!Array.isArray(v)||v.length!==5||v.some((n:any)=>!Number.isFinite(n)||Math.abs(n)>8192))||mesh.indices.some((i:any)=>!Number.isInteger(i)||i<0||i>=mesh.vertices.length))return out({error:"Ungültige Mesh-Koordinaten"},400);
         }
         bytes=new TextEncoder().encode(JSON.stringify(bundle));filename=id+".json";contentType="application/json";
         if(bytes.length>12_000_000)return out({error:"Modellpaket maximal 12 MB"},413);
@@ -276,7 +284,8 @@ serve(async req => {
       const pathKey=`${category}/${id}/${crypto.randomUUID()}/${filename}`;
       const upload=await fetch(`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/mpsq-assets/${pathKey}`,{method:"POST",headers:{apikey:key(),Authorization:`Bearer ${key()}`,"Content-Type":contentType},body:bytes});
       if(!upload.ok)return out({error:"Upload fehlgeschlagen. ASSET_LIBRARY.sql ausführen und Storage prüfen."},502);
-      const saved=await rest("/mpsq_assets?on_conflict=id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates"},body:JSON.stringify({id,kind,category,behavior,path:pathKey,filename,created_at:new Date().toISOString()})});
+      const displayName=String(body.name??id).trim().slice(0,80)||id;
+      const saved=await rest("/mpsq_assets?on_conflict=id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates"},body:JSON.stringify({id,kind,category,behavior,path:pathKey,filename,display_name:displayName,created_at:new Date().toISOString()})});
       if(!saved.ok)return out({error:"Datei gespeichert, Metadaten konnten nicht gespeichert werden"},500);
       if(kind==="model"&&category==="accessory"){
         const savedModel=await rest("/mpsq_accessories?on_conflict=accessory_key",{method:"POST",headers:{Prefer:"resolution=merge-duplicates"},body:JSON.stringify({accessory_key:id,model_id:id,display_name:String(body.name??id).slice(0,80)})});
@@ -367,9 +376,37 @@ serve(async req => {
 
     // MPSQ Team: public rank display plus private staff tools. All permission
     // decisions are made here, never trusted from the client UI.
+    if(path==="/accessory-catalog" && req.method==="GET"){
+      const assets=await(await rest("/mpsq_assets?kind=eq.model&category=eq.accessory&select=id,category,filename,display_name,created_at&order=created_at.desc&limit=500")).json();
+      if(!Array.isArray(assets))return out({error:"Accessoirekatalog nicht verfügbar"},502);
+      const defs=await(await rest("/mpsq_accessories?select=id,accessory_key,display_name,model_id,description&order=display_name.asc&limit=500")).json();
+      return out(assets.map((a:any)=>{const d=defs.find((x:any)=>x.model_id===a.id);return {id:a.id,asset_id:a.id,accessory_id:d?.id??null,display_name:d?.display_name??a.display_name??a.id,description:d?.description??null,category:a.category,filename:a.filename};}));
+    }
+    if(path==="/models/catalog" && req.method==="GET"){
+      const self=await teamProfile(clientId);if(level(permissionRank(self))<level("offizier"))return out({error:"Keine Berechtigung"},403);
+      const r=await rest("/mpsq_assets?kind=in.(model,npc_skin)&category=in.(furniture,npc_model,npc_skin,npc_skin_normal,npc_skin_slim)&select=id,kind,category,behavior,filename,display_name,created_at&order=category.asc,created_at.desc&limit=1000");
+      const assets=await r.json();if(!r.ok)return out({error:"Modellkatalog nicht verfügbar"},r.status);
+      const defs=await(await rest("/mpsq_accessories?select=display_name,model_id&limit=1000")).json();
+      return out(assets.map((a:any)=>({id:a.id,asset_id:a.id,kind:a.kind,category:a.category,behavior:a.behavior,filename:a.filename,name:defs.find((n:any)=>n.model_id===a.id)?.display_name??a.display_name??a.id,created_at:a.created_at})));
+    }
+    if(path==="/npcs" && req.method==="GET"){
+      const server=url.searchParams.get("server")??"",world=url.searchParams.get("world")??"";if(!server||!world)return out({error:"Welt fehlt"},400);
+      const r=await rest(`/mpsq_world_npcs?server_id=eq.${encodeURIComponent(server.toLowerCase())}&world_id=eq.${encodeURIComponent(world)}&select=*,mpsq_assets(id,category,filename,path)&limit=500`);
+      const rows=await r.json();if(!r.ok)return out({error:"NPCs nicht verfügbar; bitte die aktuelle Supabase-Migration ausführen."},r.status);
+      return out(rows.map((n:any)=>({...n,asset_id:n.model_id,category:n.mpsq_assets?.category,name:n.mpsq_assets?.display_name??n.mpsq_assets?.filename??n.model_id,url:n.mpsq_assets?.path?`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${n.mpsq_assets.path}`:null})));
+    }
+    if(path==="/npcs" && req.method==="POST"){
+      const self=await teamProfile(clientId);if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);const b=await json(req);
+      if(!b.server||!b.world||![b.x,b.y,b.z].every((n:any)=>Number.isInteger(n)&&Math.abs(n)<=30000000))return out({error:"NPC-Daten ungültig"},400);
+      if(b.remove===true){const r=await rest(`/mpsq_world_npcs?server_id=eq.${encodeURIComponent(String(b.server).toLowerCase())}&world_id=eq.${encodeURIComponent(String(b.world))}&x=eq.${b.x}&y=eq.${b.y}&z=eq.${b.z}`,{method:"DELETE"});return out({ok:r.ok},r.ok?200:r.status);}
+      if(!/^[a-z0-9_-]{1,64}$/.test(String(b.assetId??"")))return out({error:"NPC-Daten ungültig"},400);
+      const asset=await(await rest(`/mpsq_assets?id=eq.${encodeURIComponent(b.assetId)}&kind=eq.model&category=eq.npc_model&select=id`)).json();if(!asset[0])return out({error:"NPC-Modell nicht gefunden oder nicht dem NPC-Bereich zugeordnet"},404);
+      const r=await rest("/mpsq_world_npcs?on_conflict=server_id,world_id,x,y,z,model_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify({server_id:String(b.server).toLowerCase(),world_id:String(b.world),x:b.x,y:b.y,z:b.z,model_id:b.assetId,created_by:clientId})});return out(r.ok?await r.json():{error:await r.text()},r.ok?201:r.status);
+    }
     if(path==="/me/accessories/equip" && req.method==="POST"){
       const body=await json(req);
       if(body.id!==null&&!/^[0-9a-f-]{36}$/i.test(String(body.id)))return out({error:"Ungültiges Accessoire"},400);
+      const root=await rootInfo();if(body.id!==null&&root.root_client_id===clientId)await rest("/mpsq_user_accessories?on_conflict=client_id,accessory_id",{method:"POST",headers:{Prefer:"resolution=ignore-duplicates"},body:JSON.stringify({client_id:clientId,accessory_id:body.id})});
       const r=await rest("/rpc/mpsq_equip_accessory",{method:"POST",body:JSON.stringify({p_client:clientId,p_accessory:body.id})});
       return out(r.ok?{ok:true}:{error:"Accessoire nicht freigeschaltet"},r.ok?200:403);
     }
@@ -389,7 +426,7 @@ serve(async req => {
       const self=await teamProfile(clientId); if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);
       const body=await json(req), type=String(body.actionType??""), data=body.actionData??{};
       if(!validAction(type,data))return out({error:"Ungültige Aktionsdaten"},400);
-      const supported=["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","SEND_ANNOUNCEMENT"];
+      const supported=["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","SEND_ANNOUNCEMENT","SHOW_DIALOGUE"];
       if(!supported.includes(type)||!body.serverId||!body.worldId||JSON.stringify(data).length>8192)return out({error:"Ungültige Aktion"},400);
       if(type==="START_COUNTDOWN"&&(!Number.isInteger(data.duration)||data.duration<1||data.duration>7200))return out({error:"Ungültige Dauer"},400);
       if(["START_COUNTDOWN","SHOW_BOSSBAR"].includes(type)&&typeof data.title!=="string")return out({error:"Titel fehlt"},400);
@@ -402,9 +439,9 @@ serve(async req => {
     if(path==="/objects"&&req.method==="GET"){
       const server=url.searchParams.get("server")??"",world=url.searchParams.get("world")??"";
       if(!server||!world)return out({error:"Welt fehlt"},400);
-      const r=await rest(`/mpsq_world_objects?server_id=eq.${encodeURIComponent(server)}&world_id=eq.${encodeURIComponent(world)}&select=*,mpsq_assets(path)&limit=500`);
+      const r=await rest(`/mpsq_world_objects?server_id=eq.${encodeURIComponent(server)}&world_id=eq.${encodeURIComponent(world)}&select=*,mpsq_assets(path,display_name,filename,category)&limit=500`);
       const rows=await r.json();if(!r.ok)return out({error:"Objekte nicht verfügbar"},r.status);
-      return out(rows.map((o:any)=>({...o,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${o.mpsq_assets.path}`})));
+      return out(rows.map((o:any)=>({...o,name:o.mpsq_assets?.display_name??o.mpsq_assets?.filename??o.model_id,category:o.mpsq_assets?.category,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${o.mpsq_assets.path}`})));
     }
     if(path==="/objects"&&req.method==="POST"){
       const self=await teamProfile(clientId);if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);
@@ -431,6 +468,12 @@ serve(async req => {
       const r=await rest(`/mpsq_calendar?id=eq.${path.split("/")[2]}`,{method:"DELETE"});return out({ok:r.ok},r.status);
     }
     if (path === "/me/accessories" && req.method === "GET") {
+      const root=await rootInfo();
+      if(root.root_client_id===clientId){
+        const [all,owned]=await Promise.all([rest("/mpsq_accessories?select=id,accessory_key,display_name,model_id,description&order=display_name.asc&limit=1000"),rest(`/mpsq_user_accessories?client_id=eq.${clientId}&select=accessory_id,equipped,granted_at`)]);
+        const defs=await all.json(),mine=await owned.json();if(!Array.isArray(defs)||!Array.isArray(mine))return out({error:"Accessoires konnten nicht geladen werden"},502);
+        return out(defs.map((a:any)=>{const record=mine.find((x:any)=>x.accessory_id===a.id);return {accessory_id:a.id,equipped:record?.equipped??false,granted_at:record?.granted_at??null,mpsq_accessories:a};}));
+      }
       const result = await rest(`/mpsq_user_accessories?client_id=eq.${clientId}&select=accessory_id,equipped,granted_at,mpsq_accessories(accessory_key,display_name,model_id,description)&order=granted_at.desc`);
       return out(await result.json(), result.status);
     }
@@ -474,7 +517,7 @@ serve(async req => {
       const actionType = String(body.actionType ?? "").trim().toUpperCase(); const blockId = String(body.blockId ?? "").trim();
       const pos = body.position ?? {};
       if(!validAction(actionType,body.actionData??{}))return out({error:"Ungültige Aktionsdaten"},400);
-      const supported = ["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","SEND_ANNOUNCEMENT","OPEN_REDEEM","OPEN_LINK"];
+      const supported = ["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","SEND_ANNOUNCEMENT","SHOW_DIALOGUE","OPEN_REDEEM","OPEN_LINK"];
       if (!supported.includes(actionType) || !String(body.serverId ?? "").trim()) return out({error:"Aktion oder Server ungültig"},400);
       if (!validRank(String(body.minimumRank ?? "offizier"))) return out({error:"Ungültiger Mindestrang"},400);
       if (JSON.stringify(body.actionData ?? {}).length > 8192) return out({error:"Aktionsdaten zu groß"},400);
@@ -704,6 +747,13 @@ serve(async req => {
     if (path.match(/^\/team\/templates\/[^/]+$/) && req.method === "DELETE") {
       const self = await teamProfile(clientId); if (!canUseTexts(self)) return out({ error: "Forbidden" }, 403);
       const result = await rest(`/mpsq_team_templates?id=eq.${path.split("/")[3]}`, { method: "DELETE" }); return out({ ok: result.ok }, result.ok ? 200 : result.status);
+    }
+    if (path === "/kick-animation" && req.method === "POST") {
+      const self=await teamProfile(clientId); const body=await json(req); const name=String(body.displayName??"").trim().slice(0,32);
+      const server=String(body.serverId??"").trim().toLowerCase(),world=String(body.worldId??"").trim();
+      if(!teamAllowed(self)||!name||!server||server.length>255||!world||world.length>255)return out({error:"Forbidden"},403);
+      const event=await rest("/mpsq_action_events",{method:"POST",body:JSON.stringify({trigger_id:null,server_id:server,world_id:world,actor_id:clientId,action_type:"KICK_ANIMATION",action_data:{targetName:name}})});
+      return out(event.ok?{ok:true}:{error:"Animation konnte nicht verteilt werden"},event.ok?202:event.status);
     }
     if (path === "/team/disqualify" && req.method === "POST") {
       const self = await teamProfile(clientId); const body = await json(req); const name = String(body.displayName ?? "").trim().slice(0, 32);
