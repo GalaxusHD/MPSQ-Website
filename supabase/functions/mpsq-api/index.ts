@@ -201,7 +201,7 @@ function validAction(type:string,data:any):boolean {
 }
 const NPC_GLOW_COLORS=["none","white","orange","magenta","light_blue","yellow","lime","pink","gray","light_gray","cyan","purple","blue","brown","green","red","black"];
 const NPC_ANIMATIONS=["none","bob","turn","pulse"];
-function validNpcPages(pages:any):boolean{return Array.isArray(pages)&&pages.length>=1&&pages.length<=12&&pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);}
+function validNpcPages(pages:any):boolean{return Array.isArray(pages)&&pages.length<=12&&pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);}
 function validSoundSource(data:any):boolean{
   const kind=String(data.sourceType??"minecraft"),value=data.sound;
   if(kind==="minecraft")return typeof value==="string"&&/^(?:[a-z0-9_.-]+:)?[a-z0-9_./-]+$/.test(value)&&value.length<=128;
@@ -474,7 +474,7 @@ serve(async req => {
       if(!b.server||!b.world||![b.x,b.y,b.z].every((n:any)=>Number.isInteger(n)&&Math.abs(n)<=30000000))return out({error:"Server, Welt oder NPC-Koordinaten fehlen oder sind ungültig"},400);
       if(b.remove===true){const r=await rest(`/mpsq_world_npcs?server_id=eq.${encodeURIComponent(String(b.server).toLowerCase())}&world_id=eq.${encodeURIComponent(String(b.world))}&x=eq.${b.x}&y=eq.${b.y}&z=eq.${b.z}`,{method:"DELETE"});return out({ok:r.ok},r.ok?200:r.status);}
       if(!/^[a-z0-9_-]{1,64}$/.test(String(b.assetId??"")))return out({error:"Ungültige NPC-Modell-ID"},400);
-      const asset=await(await rest(`/mpsq_assets?id=eq.${encodeURIComponent(b.assetId)}&kind=eq.model&category=eq.npc_model&select=id`)).json();if(!asset[0])return out({error:"NPC-Modell nicht gefunden oder nicht dem NPC-Bereich zugeordnet"},404);
+      const asset=await(await rest(`/mpsq_assets?id=eq.${encodeURIComponent(b.assetId)}&kind=in.(model,npc_skin)&category=in.(npc_model,npc_skin_normal,npc_skin_slim)&select=id,kind,category`)).json();if(!asset[0])return out({error:"NPC-Modell oder Skin nicht gefunden oder nicht dem NPC-Bereich zugeordnet"},404);
       const displayName=String(b.name??asset[0].id).trim().slice(0,64)||String(asset[0].id);const scale=Number(b.scale??1),glow=String(b.glowColor??"none"),animation=String(b.animation??"none"),pages=b.interactionData?.pages??["Hallo!"],yaw=Number(b.yaw??0),pitch=Number(b.pitch??0),facePlayer=b.facePlayer===true,positionX=Number(b.positionX??(b.x+0.5)),positionY=Number(b.positionY??b.y),positionZ=Number(b.positionZ??(b.z+0.5));
       if(!Number.isFinite(scale)||scale<0.25||scale>3||!Number.isFinite(yaw)||Math.abs(yaw)>3600||!Number.isFinite(pitch)||pitch < -90||pitch > 90||![positionX,positionY,positionZ].every((n:any)=>Number.isFinite(n)&&Math.abs(n)<=30000000)||!NPC_GLOW_COLORS.includes(glow)||!NPC_ANIMATIONS.includes(animation)||!validNpcPages(pages))return out({error:"NPC-Eigenschaften ungültig"},400);
       const taskType=String(b.taskType??"none");if(!["none","accessories","tutorial","quest"].includes(taskType))return out({error:"NPC-Aufgabe ungültig"},400);
