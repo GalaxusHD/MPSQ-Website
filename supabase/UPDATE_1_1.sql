@@ -86,7 +86,7 @@ begin
  if not found or not t.enabled or t.server_id<>p_server or t.world_id<>p_world then
    raise exception 'Trigger nicht verfügbar';
  end if;
- select case when base_rank='sr_offizier' then base_rank else coalesce(active_rank,base_rank) end into actor_rank from public.mpsq_team_profiles where client_id=p_actor;
+ select coalesce(base_rank,'spieler') into actor_rank from public.mpsq_team_profiles where client_id=p_actor;
  if not (ranks ? t.minimum_rank) or coalesce((ranks->>actor_rank)::integer,-1)<(ranks->>t.minimum_rank)::integer then raise exception 'Keine Berechtigung'; end if;
  if t.last_fired_at > now()-interval '2 seconds' then return jsonb_build_object('cooldown',true); end if;
  update public.mpsq_action_triggers set last_fired_at=now() where id=t.id;
