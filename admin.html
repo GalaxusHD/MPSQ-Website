@@ -384,7 +384,7 @@
                         <option value="npc_skin_normal">NPC-Skin (Normal)</option><option value="npc_skin_slim">NPC-Skin (Slim)</option>
                         <option value="mod_release">Mod-Download (JAR)</option>
                     </select></div>
-                    <div class="admin-field-group"><label>Datei(en)</label><input id="mod-asset-files" type="file" accept=".bbmodel,.json,.png,.ogg,.mp3,.mp4,.wav,.jar" multiple></div>
+                    <div class="admin-field-group"><label>Datei(en) (Modell/PNG oder ZIP)</label><input id="mod-asset-files" type="file" accept=".bbmodel,.json,.png,.ogg,.mp3,.mp4,.wav,.jar,.zip" multiple></div>
                     <div class="admin-field-group"><label>ID (eindeutig, nur a–z, 0–9, _ und -)</label><input id="mod-asset-id" placeholder="creator_brille" pattern="[a-z0-9_-]+" maxlength="64"></div>
                     <div class="admin-field-group" id="mod-asset-name-row"><label>Anzeigename</label><input id="mod-asset-name" placeholder="Creator-Brille" maxlength="80"></div>
                     <div class="admin-field-group" id="mod-furniture-behavior-row"><label>Funktion des Möbels</label><select id="mod-furniture-behavior"><option value="decoration">Nur Dekoration</option><option value="interactive">Interaktiv – für eine spätere Systemaktion vorgesehen</option></select><small>Die Auswahl wird gespeichert. Die Knopfaktion muss vorerst separat mit „System“ im Spiel eingerichtet werden.</small></div>
@@ -2534,19 +2534,21 @@
         catch (error) { status.textContent = `Fehler: ${error.message}`; }
       });
       const assetCategory=document.getElementById('mod-asset-category');
-      function updateAssetForm(){const category=assetCategory.value;document.getElementById('mod-asset-name-row').hidden=!['furniture','accessory','npc_model','npc_skin','npc_skin_normal','npc_skin_slim'].includes(category);document.getElementById('mod-furniture-behavior-row').hidden=category!=='furniture';document.getElementById('mod-asset-files').accept=['furniture','accessory','npc_model'].includes(category)?'.bbmodel,.json,.gltf,.obj,.png':category==='sound'?'.ogg,.mp3,.mp4,.wav':['npc_skin','npc_skin_normal','npc_skin_slim'].includes(category)?'.png':'.jar';}
+      function updateAssetForm(){const category=assetCategory.value;document.getElementById('mod-asset-name-row').hidden=!['furniture','accessory','npc_model','npc_skin','npc_skin_normal','npc_skin_slim'].includes(category);document.getElementById('mod-furniture-behavior-row').hidden=category!=='furniture';document.getElementById('mod-asset-files').accept=['furniture','accessory','npc_model'].includes(category)?'.bbmodel,.json,.gltf,.obj,.png,.zip':category==='sound'?'.ogg,.mp3,.mp4,.wav':['npc_skin','npc_skin_normal','npc_skin_slim'].includes(category)?'.png,.zip':'.jar';}
       assetCategory?.addEventListener('change',updateAssetForm);updateAssetForm();
       async function loadModAssets(){const list=document.getElementById('mod-asset-library');list.textContent='Dateien werden geladen…';try{const rows=await callTeamAdmin('/admin/assets');const folders=[[['furniture'],'Möbel'],[['accessory'],'Accessoires'],[['sound'],'Sounds / Musik'],[['npc_model','npc_skin','npc_skin_normal','npc_skin_slim'],'NPCs (Modelle & Skins)']];list.replaceChildren();for(const [keys,label] of folders){const section=document.createElement('section');section.className='asset-folder';const heading=document.createElement('h4');heading.textContent=label;section.append(heading);const items=rows.filter(row=>keys.includes(row.category)||(row.category==='shared'&&(keys.includes('furniture')||keys.includes('accessory'))));if(!items.length){const empty=document.createElement('small');empty.textContent='Noch keine Dateien.';section.append(empty);}for(const row of items){const item=document.createElement('div');item.className='asset-row';item.textContent=`${row.display_name||row.id} · ${row.id} · ${row.filename}${row.behavior==='interactive'?' · interaktiv':''}`;section.append(item);}list.append(section);}const releases=rows.filter(row=>row.category==='mod_release');if(releases.length){const section=document.createElement('section');section.className='asset-folder';const heading=document.createElement('h4');heading.textContent='Mod-Downloads';section.append(heading);for(const row of releases){const item=document.createElement('div');item.className='asset-row';item.textContent=`${row.id} · ${row.filename}`;section.append(item);}list.append(section);}}catch(error){list.textContent=`Dateiliste nicht verfügbar: ${error.message}`;}}
       document.getElementById('btn-refresh-mod-assets')?.addEventListener('click',loadModAssets);
       document.getElementById('btn-upload-mod-files')?.addEventListener('click', async event => {
         const status=document.getElementById('mod-upload-status'), button=event.currentTarget;
-        const files=[...document.getElementById('mod-asset-files').files],category=assetCategory.value;
+        let files=[...document.getElementById('mod-asset-files').files];const category=assetCategory.value;
         const id=document.getElementById('mod-asset-id').value.trim();
         if(!/^[a-z0-9_-]{1,64}$/.test(id)){status.textContent='Bitte eine gültige ID eingeben.';return;}
         if(!files.length){status.textContent='Bitte eine Datei auswählen.';return;}
         button.disabled=true;status.textContent='Wird geprüft und hochgeladen…';
         try{
           let payload;
+          const zipFiles=files.filter(file=>/\.zip$/i.test(file.name));
+          if(zipFiles.length){if(zipFiles.length!==1||files.length!==1)throw Error('Bitte ein ZIP-Archiv einzeln auswählen.');const skinCategory=['npc_skin','npc_skin_normal','npc_skin_slim'].includes(category);const unpacked=await extractMpsqModelZip(zipFiles[0],skinCategory?'skin':'model');files=skinCategory?[unpacked.skin]:[unpacked.model,...unpacked.textures];}
           const model=files.find(file=>/\.(bbmodel|json|gltf|obj)$/i.test(file.name));
           if(['furniture','accessory','npc_model'].includes(category)){
             if(!model)throw Error('Bitte ein .bbmodel-, .json-, .gltf- oder .obj-Modell auswählen und benötigte PNG-Texturen mit markieren.');
