@@ -239,6 +239,48 @@ serve(async req => {
       const r=await rest("/mpsq_assets?select=id,kind,category,behavior,path,filename,display_name,created_at&order=category.asc,created_at.desc&limit=500");
       const rows=await r.json();return out(Array.isArray(rows)?rows:[],r.status);
     }
+    const assetRoute=path.match(/^\/admin\/assets\/([^/]+)$/);
+    if(assetRoute&&req.method==="PATCH"){
+      const id=decodeURIComponent(assetRoute[1]),body=await json(req);
+      const current=await rest(`/mpsq_assets?id=eq.${encodeURIComponent(id)}&select=id,category,kind&limit=1`),rows=await current.json();
+      if(!current.ok)return out({error:"Asset konnte nicht geladen werden"},current.status);
+      if(!rows[0])return out({error:"Asset nicht gefunden"},404);
+      const displayName=String(body.name??"").trim().slice(0,80);
+      if(!displayName)return out({error:"Anzeigename darf nicht leer sein"},400);
+      const behavior=rows[0].category==="furniture"&&body.behavior==="interactive"?"interactive":"decoration";
+      const saved=await rest(`/mpsq_assets?id=eq.${encodeURIComponent(id)}`,{method:"PATCH",body:JSON.stringify({display_name:displayName,behavior})});
+      if(!saved.ok)return out({error:"Asset konnte nicht aktualisiert werden"},saved.status);
+      if(rows[0].kind==="model"&&rows[0].category==="accessory"){
+        const accessory=await rest(`/mpsq_accessories?model_id=eq.${encodeURIComponent(id)}`,{method:"PATCH",body:JSON.stringify({display_name:displayName})});
+        if(!accessory.ok)return out({error:"Asset aktualisiert, aber Accessoire-Anzeigename konnte nicht synchronisiert werden"},502);
+      }
+      return out({ok:true,id,display_name:displayName,behavior});
+    }
+    if(assetRoute&&req.method==="DELETE"){
+      const id=decodeURIComponent(assetRoute[1]);
+      const current=await rest(`/mpsq_assets?id=eq.${encodeURIComponent(id)}&select=id,path&limit=1`),rows=await current.json();
+      if(!current.ok)return out({error:"Asset konnte nicht geladen werden"},current.status);
+      if(!rows[0])return out({error:"Asset nicht gefunden"},404);
+      const accessoryRows=await rest(`/mpsq_accessories?model_id=eq.${encodeURIComponent(id)}&select=id`),accessories=await accessoryRows.json();
+      if(!accessoryRows.ok)return out({error:"Accessoire-Verknüpfungen konnten nicht geladen werden"},accessoryRows.status);
+      const accessoryIds=Array.isArray(accessories)?accessories.map((item:any)=>item.id).filter(Boolean):[];
+      if(accessoryIds.length){
+        const codes=await rest(`/mpsq_redeem_codes?accessory_id=in.(${accessoryIds.map(encodeURIComponent).join(",")})`,{method:"DELETE"});
+        if(!codes.ok)return out({error:"Redeem-Codes konnten nicht entfernt werden"},codes.status);
+      }
+      const placements=await rest(`/mpsq_world_objects?model_id=eq.${encodeURIComponent(id)}`,{method:"DELETE"});
+      if(!placements.ok)return out({error:"Möbelplatzierungen konnten nicht entfernt werden"},placements.status);
+      if(accessoryIds.length){
+        const removedAccessories=await rest(`/mpsq_accessories?id=in.(${accessoryIds.map(encodeURIComponent).join(",")})`,{method:"DELETE"});
+        if(!removedAccessories.ok)return out({error:"Accessoire-Einträge konnten nicht entfernt werden"},removedAccessories.status);
+      }
+      const removed=await rest(`/mpsq_assets?id=eq.${encodeURIComponent(id)}`,{method:"DELETE"});
+      if(!removed.ok)return out({error:"Asset-Datensatz konnte nicht gelöscht werden"},removed.status);
+      const storagePath=String(rows[0].path??"").split("/").map(encodeURIComponent).join("/");
+      const storage=await fetch(`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/mpsq-assets/${storagePath}`,{method:"DELETE",headers:{apikey:key(),Authorization:`Bearer ${key()}`}});
+      if(!storage.ok)return out({ok:true,id,warning:"Datensatz gelöscht, Storage-Datei konnte nicht entfernt werden"});
+      return out({ok:true,id});
+    }
     if (path === "/admin/assets" && req.method === "POST") {
       const body=await json(req), kind=String(body.kind??"");
       const id=String(body.id??"").trim();
@@ -290,6 +332,8 @@ serve(async req => {
         if(bytes.length>12_000_000)return out({error:"Modellpaket maximal 12 MB"},413);
       }
       const behavior=category==="furniture"&&body.behavior==="interactive"?"interactive":"decoration";
+      const previousResult=await rest(`/mpsq_assets?id=eq.${encodeURIComponent(id)}&select=path&limit=1`),previousRows=await previousResult.json();
+      const previousPath=previousResult.ok?previousRows[0]?.path:null;
       const pathKey=`${category}/${id}/${crypto.randomUUID()}/${filename}`;
       const upload=await fetch(`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/mpsq-assets/${pathKey}`,{method:"POST",headers:{apikey:key(),Authorization:`Bearer ${key()}`,"Content-Type":contentType},body:bytes});
       if(!upload.ok)return out({error:"Upload fehlgeschlagen. ASSET_LIBRARY.sql ausführen und Storage prüfen."},502);
@@ -300,6 +344,7 @@ serve(async req => {
         const savedModel=await rest("/mpsq_accessories?on_conflict=accessory_key",{method:"POST",headers:{Prefer:"resolution=merge-duplicates"},body:JSON.stringify({accessory_key:id,model_id:id,display_name:String(body.name??id).slice(0,80)})});
         if(!savedModel.ok)return out({error:"Modell gespeichert, Accessoire konnte nicht angelegt werden"},500);
       }
+      if(previousPath&&previousPath!==pathKey){const oldPath=String(previousPath).split("/").map(encodeURIComponent).join("/");await fetch(`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/mpsq-assets/${oldPath}`,{method:"DELETE",headers:{apikey:key(),Authorization:`Bearer ${key()}`}});}
       return out({ok:true,id,kind,category,behavior,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${pathKey}`},201);
     }    if (path === "/admin/redeem-codes" && req.method === "POST") {
       const body = await json(req); const code = String(body.code ?? "").trim().toUpperCase(); const modelId = String(body.modelId ?? "").trim();
