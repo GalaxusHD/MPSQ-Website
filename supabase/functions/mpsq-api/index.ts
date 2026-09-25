@@ -139,7 +139,7 @@ async function teamIdentity(clientId: string) {
   return { id: clientId, display_name: clients[0]?.display_name ?? "Minecraft Spieler", base_rank: profile.base_rank ?? "spieler", active_rank: profile.active_rank ?? null, name_visible: profile.name_visible !== false };
 }
 const shownRank = (profile: any) => profile.active_rank ?? profile.base_rank ?? "spieler";
-const permissionRank = (profile: any) => profile.base_rank === "sr_offizier" ? "sr_offizier" : shownRank(profile);
+const permissionRank = (profile: any) => profile.base_rank ?? "spieler";
 // Streamer and every higher rank may use cameras and linked screens.
 const teamAllowed = (profile: any) => level(permissionRank(profile)) >= level("streamer");
 // To-do editing starts at Offizier.  Sr Offizier remains an Officer-category
@@ -188,8 +188,8 @@ function validAction(type:string,data:any):boolean {
  if(!data||typeof data!=="object"||Array.isArray(data)||JSON.stringify(data).length>8192)return false;
  const sound=(v:any)=>typeof v==="string"&&/^(?:[a-z0-9_.-]+:)?[a-z0-9_./-]+$/.test(v)&&v.length<=128;
  switch(type){
-  case "PLAY_AUDIO":return sound(data.sound);
-  case "START_PLAYLIST":return Array.isArray(data.tracks)&&data.tracks.length>0&&data.tracks.length<=100&&data.tracks.every(sound);
+  case "PLAY_AUDIO":return validSoundSource(data);
+  case "START_PLAYLIST":return Array.isArray(data.tracks)&&data.tracks.length>0&&data.tracks.length<=100&&(String(data.sourceType??"minecraft")==="minecraft"?data.tracks.every(sound):["mp3","mp4"].includes(String(data.sourceType))&&data.tracks.every((x:any)=>typeof x==="string"&&/^[a-z0-9_-]{1,64}$/i.test(x)));
   case "START_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256;
   case "SHOW_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256;
   case "SEND_ANNOUNCEMENT":return typeof data.text==="string"&&data.text.length<=512&&(!data.sound||sound(data.sound));
@@ -202,6 +202,11 @@ function validAction(type:string,data:any):boolean {
 const NPC_GLOW_COLORS=["none","white","orange","magenta","light_blue","yellow","lime","pink","gray","light_gray","cyan","purple","blue","brown","green","red","black"];
 const NPC_ANIMATIONS=["none","bob","turn","pulse"];
 function validNpcPages(pages:any):boolean{return Array.isArray(pages)&&pages.length>=1&&pages.length<=12&&pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);}
+function validSoundSource(data:any):boolean{
+  const kind=String(data.sourceType??"minecraft"),value=data.sound;
+  if(kind==="minecraft")return typeof value==="string"&&/^(?:[a-z0-9_.-]+:)?[a-z0-9_./-]+$/.test(value)&&value.length<=128;
+  return ["mp3","mp4"].includes(kind)&&typeof value==="string"&&/^[a-z0-9_-]{1,64}$/i.test(value);
+}
 serve(async req => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   const url = new URL(req.url); const path = url.pathname.replace(/^.*\/mpsq-api/, "") || "/";
@@ -257,7 +262,8 @@ serve(async req => {
           if(ext==="ogg"&&new TextDecoder().decode(bytes.slice(0,4))==="OggS")contentType="audio/ogg";
           else if(ext==="wav"&&new TextDecoder().decode(bytes.slice(0,4))==="RIFF")contentType="audio/wav";
           else if(ext==="mp3"&&(new TextDecoder().decode(bytes.slice(0,3))==="ID3"||(bytes[0]===0xff&&(bytes[1]&0xe0)===0xe0)))contentType="audio/mpeg";
-          else return out({error:"Bitte eine gültige OGG-, WAV- oder MP3-Datei auswählen."},400);
+          else if(ext==="mp4"&&bytes.length>=12&&new TextDecoder().decode(bytes.slice(4,8))==="ftyp")contentType="video/mp4";
+          else return out({error:"Bitte eine gültige OGG-, WAV-, MP3- oder MP4-Datei auswählen."},400);
         }else{
           const png=[137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v);
           const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),w=bytes.length>=24?view.getUint32(16):0,h=bytes.length>=24?view.getUint32(20):0;
@@ -392,11 +398,17 @@ serve(async req => {
       const defs=await(await rest("/mpsq_accessories?select=display_name,model_id&limit=1000")).json();
       return out(assets.map((a:any)=>({id:a.id,asset_id:a.id,kind:a.kind,category:a.category,behavior:a.behavior,filename:a.filename,name:defs.find((n:any)=>n.model_id===a.id)?.display_name??a.display_name??a.id,created_at:a.created_at})));
     }
+    if(path.match(/^\/sounds\/[a-z0-9_-]{1,64}$/i)&&req.method==="GET"){
+      const id=path.split("/")[2],kind=url.searchParams.get("type");if(!["mp3","mp4"].includes(kind??""))return out({error:"Audioformat ungültig"},400);
+      const rows=await(await rest(`/mpsq_assets?id=eq.${encodeURIComponent(id)}&kind=eq.sound&category=eq.sound&select=id,filename,path&limit=1`)).json(),asset=rows[0];
+      if(!asset?.path||!String(asset.filename??"").toLowerCase().endsWith(`.${kind}`))return out({error:"Sounddatei nicht gefunden oder falsches Format"},404);
+      return out({id:asset.id,type:kind,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${asset.path}`});
+    }
     if(path==="/npcs" && req.method==="GET"){
       const server=url.searchParams.get("server")??"",world=url.searchParams.get("world")??"";if(!server||!world)return out({error:"Welt fehlt"},400);
       const r=await rest(`/mpsq_world_npcs?server_id=eq.${encodeURIComponent(server.toLowerCase())}&world_id=eq.${encodeURIComponent(world)}&select=*,mpsq_assets(id,category,filename,display_name,path)&limit=500`);
       const rows=await r.json();if(!r.ok)return out({error:"NPCs nicht verfügbar; bitte die aktuelle Supabase-Migration ausführen."},r.status);
-      return out(rows.map((n:any)=>({...n,asset_id:n.model_id,category:n.mpsq_assets?.category,name:n.display_name??n.mpsq_assets?.display_name??n.mpsq_assets?.filename??n.model_id,url:n.mpsq_assets?.path?`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${n.mpsq_assets.path}`:null})));
+      return out(rows.map((n:any)=>({...n,world_x:n.position_x??n.x+0.5,world_y:n.position_y??n.y,world_z:n.position_z??n.z+0.5,asset_id:n.model_id,category:n.mpsq_assets?.category,name:n.display_name??n.mpsq_assets?.display_name??n.mpsq_assets?.filename??n.model_id,url:n.mpsq_assets?.path?`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${n.mpsq_assets.path}`:null})));
     }
     if(path==="/npcs" && req.method==="POST"){
       const self=await teamProfile(clientId);if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);const b=await json(req);
@@ -404,15 +416,15 @@ serve(async req => {
       if(b.remove===true){const r=await rest(`/mpsq_world_npcs?server_id=eq.${encodeURIComponent(String(b.server).toLowerCase())}&world_id=eq.${encodeURIComponent(String(b.world))}&x=eq.${b.x}&y=eq.${b.y}&z=eq.${b.z}`,{method:"DELETE"});return out({ok:r.ok},r.ok?200:r.status);}
       if(!/^[a-z0-9_-]{1,64}$/.test(String(b.assetId??"")))return out({error:"NPC-Daten ungültig"},400);
       const asset=await(await rest(`/mpsq_assets?id=eq.${encodeURIComponent(b.assetId)}&kind=eq.model&category=eq.npc_model&select=id`)).json();if(!asset[0])return out({error:"NPC-Modell nicht gefunden oder nicht dem NPC-Bereich zugeordnet"},404);
-      const displayName=String(b.name??asset[0].id).trim().slice(0,64)||String(asset[0].id);const scale=Number(b.scale??1),glow=String(b.glowColor??"none"),animation=String(b.animation??"none"),pages=b.interactionData?.pages??["Hallo!"];
-      if(!Number.isFinite(scale)||scale<0.25||scale>3||!NPC_GLOW_COLORS.includes(glow)||!NPC_ANIMATIONS.includes(animation)||!validNpcPages(pages))return out({error:"NPC-Eigenschaften ungültig"},400);
-      const r=await rest("/mpsq_world_npcs?on_conflict=server_id,world_id,x,y,z,model_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify({server_id:String(b.server).toLowerCase(),world_id:String(b.world),x:b.x,y:b.y,z:b.z,model_id:b.assetId,display_name:displayName,scale,glow_color:glow,animation,interaction_data:{pages},created_by:clientId})});return out(r.ok?await r.json():{error:await r.text()},r.ok?201:r.status);
+      const displayName=String(b.name??asset[0].id).trim().slice(0,64)||String(asset[0].id);const scale=Number(b.scale??1),glow=String(b.glowColor??"none"),animation=String(b.animation??"none"),pages=b.interactionData?.pages??["Hallo!"],yaw=Number(b.yaw??0),pitch=Number(b.pitch??0),facePlayer=b.facePlayer===true,positionX=Number(b.positionX??(b.x+0.5)),positionY=Number(b.positionY??b.y),positionZ=Number(b.positionZ??(b.z+0.5));
+      if(!Number.isFinite(scale)||scale<0.25||scale>3||!Number.isFinite(yaw)||Math.abs(yaw)>3600||!Number.isFinite(pitch)||pitch < -90||pitch > 90||![positionX,positionY,positionZ].every((n:any)=>Number.isFinite(n)&&Math.abs(n)<=30000000)||!NPC_GLOW_COLORS.includes(glow)||!NPC_ANIMATIONS.includes(animation)||!validNpcPages(pages))return out({error:"NPC-Eigenschaften ungültig"},400);
+      const r=await rest("/mpsq_world_npcs?on_conflict=server_id,world_id,x,y,z,model_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify({server_id:String(b.server).toLowerCase(),world_id:String(b.world),x:b.x,y:b.y,z:b.z,position_x:positionX,position_y:positionY,position_z:positionZ,model_id:b.assetId,display_name:displayName,scale,glow_color:glow,animation,yaw:((yaw%360)+360)%360,pitch,face_player:facePlayer,interaction_data:{pages},created_by:clientId})});return out(r.ok?await r.json():{error:await r.text()},r.ok?201:r.status);
     }
     if(path.match(/^\/npcs\/[0-9a-f-]{36}$/)&&req.method==="PATCH"){
-      const self=await teamProfile(clientId);if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);const b=await json(req);const name=String(b.name??"").trim(),scale=Number(b.scale),glow=String(b.glowColor??"none"),animation=String(b.animation??"none"),pages=b.interactionData?.pages;
-      if(!name||name.length>64||!Number.isFinite(scale)||scale<0.25||scale>3||!NPC_GLOW_COLORS.includes(glow)||!NPC_ANIMATIONS.includes(animation)||!validNpcPages(pages))return out({error:"NPC-Eigenschaften ungültig"},400);
+      const self=await teamProfile(clientId);if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);const b=await json(req);const name=String(b.name??"").trim(),scale=Number(b.scale),glow=String(b.glowColor??"none"),animation=String(b.animation??"none"),pages=b.interactionData?.pages,yaw=Number(b.yaw??0),pitch=Number(b.pitch??0),facePlayer=b.facePlayer===true;
+      if(!name||name.length>64||!Number.isFinite(scale)||scale<0.25||scale>3||!Number.isFinite(yaw)||Math.abs(yaw)>3600||!Number.isFinite(pitch)||pitch < -90||pitch > 90||!NPC_GLOW_COLORS.includes(glow)||!NPC_ANIMATIONS.includes(animation)||!validNpcPages(pages))return out({error:"NPC-Eigenschaften ungültig"},400);
       const id=path.split("/")[2],server=String(b.server??"").trim().toLowerCase(),world=String(b.world??"").trim();if(!server||server.length>255||!world||world.length>255)return out({error:"Welt fehlt"},400);
-      const r=await rest(`/mpsq_world_npcs?id=eq.${id}&server_id=eq.${encodeURIComponent(server)}&world_id=eq.${encodeURIComponent(world)}`,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({display_name:name,scale,glow_color:glow,animation,interaction_data:{pages}})});return out(r.ok?await r.json():{error:await r.text()},r.status);
+      const r=await rest(`/mpsq_world_npcs?id=eq.${id}&server_id=eq.${encodeURIComponent(server)}&world_id=eq.${encodeURIComponent(world)}`,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({display_name:name,scale,glow_color:glow,animation,yaw:((yaw%360)+360)%360,pitch,face_player:facePlayer,interaction_data:{pages}})});return out(r.ok?await r.json():{error:await r.text()},r.status);
     }
     if(path==="/me/accessories/equip" && req.method==="POST"){
       const body=await json(req);
@@ -616,7 +628,7 @@ serve(async req => {
         && requested === "001";
       const senior001 = ownRank === "sr_offizier" && requested === "001";
       const mayAssign = ownRank === "sr_offizier"
-        || ((ownRank === "offizier" || ownRank === "frontman") && level(shownRank(target)) <= level("arbeiter"));
+        || ((ownRank === "offizier" || ownRank === "frontman") && level(target.base_rank) <= level("arbeiter"));
       if (requested === "001" && !self001 && !senior001) return out({ error: "001 darf nur an sich selbst vergeben werden" }, 403);
       if (!self001 && !mayAssign) return out({ error: "No permission for this rank change" }, 403);
       const update = requested === "001" ? { active_rank: "001" } : { base_rank: requested, active_rank: null, updated_at: new Date().toISOString() };
@@ -678,7 +690,7 @@ serve(async req => {
         return out({ error: "Der Sr-Offizier kann nicht durch einen Rang-Antrag verändert werden" }, 403);
       }
       const canRequest = ownRank === "sr_offizier"
-        || ((ownRank === "offizier" || ownRank === "frontman") && approvalRanks.slice(0, 5).includes(requested) && level(shownRank(target)) <= level("arbeiter"));
+        || ((ownRank === "offizier" || ownRank === "frontman") && approvalRanks.slice(0, 5).includes(requested) && level(target.base_rank) <= level("arbeiter"));
       if (!canRequest) return out({ error: "Keine Berechtigung für diesen Rang-Antrag" }, 403);
       if (targetId === clientId && ownRank !== "sr_offizier") return out({ error: "Eigene Beförderung ist nicht erlaubt" }, 403);
       const result = await rest("/mpsq_team_rank_requests", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ requested_by: clientId, target_id: targetId, requested_rank: requested, previous_base_rank: target.base_rank, note: String(body.note ?? "").trim().slice(0, 256) }) });
@@ -691,7 +703,7 @@ serve(async req => {
     }
     if (path === "/team/chat" && req.method === "GET") {
       const self = await teamProfile(clientId);
-      const publicViewer = shownRank(self) === "spieler" || shownRank(self) === "vip";
+      const publicViewer = ["spieler", "vip"].includes(self.base_rank ?? "spieler");
       if (!teamAllowed(self) && !publicViewer) return out({ error: "Forbidden" }, 403);
       const rows = await (await rest("/mpsq_team_messages?select=id,sender_id,message,created_at&order=created_at.desc&limit=100")).json();
       const messages = [];
