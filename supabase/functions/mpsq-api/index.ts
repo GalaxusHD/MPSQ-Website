@@ -398,6 +398,11 @@ serve(async req => {
       const defs=await(await rest("/mpsq_accessories?select=display_name,model_id&limit=1000")).json();
       return out(assets.map((a:any)=>({id:a.id,asset_id:a.id,kind:a.kind,category:a.category,behavior:a.behavior,filename:a.filename,name:defs.find((n:any)=>n.model_id===a.id)?.display_name??a.display_name??a.id,created_at:a.created_at})));
     }
+    if(path==="/furniture/catalog" && req.method==="GET"){
+      const r=await rest("/mpsq_assets?kind=eq.model&category=in.(furniture,shared)&select=id,path,display_name,filename&order=display_name.asc&limit=500");
+      const assets=await r.json();if(!r.ok||!Array.isArray(assets))return out({error:"Möbelkatalog nicht verfügbar"},r.status||502);
+      return out(assets.map((a:any)=>({id:a.id,name:a.display_name??a.filename??a.id,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${a.path}`})));
+    }
     if(path.match(/^\/sounds\/[a-z0-9_-]{1,64}$/i)&&req.method==="GET"){
       const id=path.split("/")[2],kind=url.searchParams.get("type");if(!["mp3","mp4"].includes(kind??""))return out({error:"Audioformat ungültig"},400);
       const rows=await(await rest(`/mpsq_assets?id=eq.${encodeURIComponent(id)}&kind=eq.sound&category=eq.sound&select=id,filename,path&limit=1`)).json(),asset=rows[0];
