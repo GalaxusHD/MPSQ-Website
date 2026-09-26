@@ -191,7 +191,10 @@ function validAction(type:string,data:any):boolean {
   case "PLAY_AUDIO":return validSoundSource(data);
   case "START_PLAYLIST":return Array.isArray(data.tracks)&&data.tracks.length>0&&data.tracks.length<=100&&(String(data.sourceType??"minecraft")==="minecraft"?data.tracks.every(sound):["mp3","mp4"].includes(String(data.sourceType))&&data.tracks.every((x:any)=>typeof x==="string"&&/^[a-z0-9_-]{1,64}$/i.test(x)));
   case "START_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256;
+  case "TOGGLE_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256;
   case "SHOW_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256;
+  case "TOGGLE_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256;
+  case "TOGGLE_AUDIO":return validSoundSource(data);
   case "SEND_ANNOUNCEMENT":return typeof data.text==="string"&&data.text.length<=512&&(!data.sound||sound(data.sound));
   case "SHOW_DIALOGUE":return Array.isArray(data.pages)&&data.pages.length>0&&data.pages.length<=12&&data.pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);
   case "OPEN_LINK":try{const u=new URL(data.url);return u.protocol==="https:"&&!u.username&&!u.password&&u.href.length<=2048;}catch{return false;}
@@ -200,7 +203,7 @@ function validAction(type:string,data:any):boolean {
  }
 }
 const NPC_GLOW_COLORS=["none","white","orange","magenta","light_blue","yellow","lime","pink","gray","light_gray","cyan","purple","blue","brown","green","red","black"];
-const NPC_ANIMATIONS=["none","bob","turn","pulse"];
+const NPC_ANIMATIONS=["none","bob","turn","pulse","nod","tilt","look_around","shake","wave"];
 function validNpcPages(pages:any):boolean{return Array.isArray(pages)&&pages.length<=12&&pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);}
 function validSoundSource(data:any):boolean{
   const kind=String(data.sourceType??"minecraft"),value=data.sound;
@@ -465,6 +468,10 @@ serve(async req => {
     if(path==="/me/points" && req.method==="GET"){
       const rows=await(await rest(`/mpsq_point_accounts?client_id=eq.${clientId}&select=balance&limit=1`)).json();return out({points:Number(rows?.[0]?.balance??0),currency:"MPSQ-Punkte"});
     }
+    if(path==="/me/points/grant" && req.method==="POST"){
+      const self=await teamProfile(clientId);if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);const body=await json(req),amount=Number(body.amount);if(!Number.isInteger(amount)||amount<1||amount>10000)return out({error:"Punkte: 1–10000"},400);
+      const r=await rest("/rpc/mpsq_grant_points",{method:"POST",body:JSON.stringify({p_client_id:clientId,p_amount:amount})}),result=await r.json();return out(r.ok?result:{error:result?.message??"Punkte konnten nicht gutgeschrieben werden"},r.ok?200:r.status);
+    }
     if(path==="/me/accessories/buy" && req.method==="POST"){
       const body=await json(req);if(!/^[0-9a-f-]{36}$/i.test(String(body.accessoryId??"")))return out({error:"Accessoire ungültig"},400);
       const r=await rest("/rpc/mpsq_buy_accessory",{method:"POST",body:JSON.stringify({p_client_id:clientId,p_accessory_id:body.accessoryId})});const result=await r.json();return out(r.ok?result:{error:result?.message??"Kauf fehlgeschlagen"},r.status);
@@ -539,7 +546,7 @@ serve(async req => {
       const self=await teamProfile(clientId); if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);
       const body=await json(req), type=String(body.actionType??""), data=body.actionData??{};
       if(!validAction(type,data))return out({error:"Ungültige Aktionsdaten"},400);
-      const supported=["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","SEND_ANNOUNCEMENT","SHOW_DIALOGUE"];
+      const supported=["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","TOGGLE_AUDIO","TOGGLE_COUNTDOWN","TOGGLE_BOSSBAR","SEND_ANNOUNCEMENT","SHOW_DIALOGUE"];
       if(!supported.includes(type)||!body.serverId||!body.worldId||JSON.stringify(data).length>8192)return out({error:"Ungültige Aktion"},400);
       if(type==="START_COUNTDOWN"&&(!Number.isInteger(data.duration)||data.duration<1||data.duration>7200))return out({error:"Ungültige Dauer"},400);
       if(["START_COUNTDOWN","SHOW_BOSSBAR"].includes(type)&&typeof data.title!=="string")return out({error:"Titel fehlt"},400);
@@ -633,7 +640,7 @@ serve(async req => {
       const actionType = String(body.actionType ?? "").trim().toUpperCase(); const blockId = String(body.blockId ?? "").trim();
       const pos = body.position ?? {};
       if(!validAction(actionType,body.actionData??{}))return out({error:"Ungültige Aktionsdaten"},400);
-      const supported = ["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","SEND_ANNOUNCEMENT","SHOW_DIALOGUE","OPEN_REDEEM","OPEN_LINK"];
+      const supported = ["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","TOGGLE_AUDIO","TOGGLE_COUNTDOWN","TOGGLE_BOSSBAR","SEND_ANNOUNCEMENT","SHOW_DIALOGUE","OPEN_REDEEM","OPEN_LINK"];
       if (!supported.includes(actionType) || !String(body.serverId ?? "").trim()) return out({error:"Aktion oder Server ungültig"},400);
       if (!validRank(String(body.minimumRank ?? "offizier"))) return out({error:"Ungültiger Mindestrang"},400);
       if (JSON.stringify(body.actionData ?? {}).length > 8192) return out({error:"Aktionsdaten zu groß"},400);
