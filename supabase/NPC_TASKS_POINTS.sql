@@ -184,5 +184,23 @@ $$;
 revoke all on function public.mpsq_claim_quest(uuid,uuid) from public, anon, authenticated;
 grant execute on function public.mpsq_claim_quest(uuid,uuid) to service_role;
 
+create or replace function public.mpsq_grant_points(p_client_id uuid,p_amount integer)
+returns jsonb language plpgsql security definer set search_path = public
+as $$
+declare current_balance bigint; grant_id uuid := gen_random_uuid();
+begin
+  if p_amount < 1 or p_amount > 10000 then raise exception 'Punkte müssen zwischen 1 und 10000 liegen'; end if;
+  insert into public.mpsq_point_ledger(client_id,amount,reason,source_type,source_id)
+    values(p_client_id,p_amount,'Team-Punktgutschrift','staff_grant',grant_id);
+  insert into public.mpsq_point_accounts(client_id,balance,updated_at)
+    values(p_client_id,p_amount,now())
+    on conflict(client_id) do update set balance=public.mpsq_point_accounts.balance+p_amount,updated_at=now()
+    returning balance into current_balance;
+  return jsonb_build_object('points',current_balance,'added',p_amount);
+end;
+$$;
+revoke all on function public.mpsq_grant_points(uuid,integer) from public, anon, authenticated;
+grant execute on function public.mpsq_grant_points(uuid,integer) to service_role;
+
 commit;
 
