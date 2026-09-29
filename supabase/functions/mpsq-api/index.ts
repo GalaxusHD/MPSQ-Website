@@ -325,6 +325,7 @@ serve(async req => {
           for(const field of ["from","to","origin","rotation"])if(!Array.isArray(e[field])||e[field].length!==3||e[field].some((n:any)=>!Number.isFinite(n)||Math.abs(n)>1024))return out({error:"Ungültige Modellkoordinaten"},400);
           if(!e.faces||Object.values(e.faces).some((f:any)=>!bundle.textures[f.texture]||!Array.isArray(f.uv)||f.uv.length!==4||f.uv.some((v:any)=>!Number.isFinite(v))))return out({error:"Ungültige Modellflächen"},400);
         }
+        if(bundle.bones!==undefined){let boneCount=0;const validateBones=(bones:any[],depth=0):boolean=>{if(!Array.isArray(bones)||depth>32)return false;for(const bone of bones){if(++boneCount>256||!bone||typeof bone!=="object"||!Array.isArray(bone.origin)||bone.origin.length!==3||bone.origin.some((n:any)=>!Number.isFinite(n)||Math.abs(n)>1024)||!Array.isArray(bone.rotation)||bone.rotation.length!==3||bone.rotation.some((n:any)=>!Number.isFinite(n)||Math.abs(n)>3600)||!Array.isArray(bone.elements??[])||(bone.elements??[]).some((i:any)=>!Number.isInteger(i)||i<0||i>=elements.length)||!validateBones(bone.children??[],depth+1))return false;}return true;};if(!validateBones(bundle.bones))return out({error:"Ungültige Blockbench-Knochenhierarchie"},400);}
         let vertexTotal=0;
         for(const mesh of meshes){
           if(!mesh||!bundle.textures[mesh.texture]||!Array.isArray(mesh.vertices)||!Array.isArray(mesh.indices)||mesh.vertices.length>200000)return out({error:"Ungültiges Mesh"},400);
