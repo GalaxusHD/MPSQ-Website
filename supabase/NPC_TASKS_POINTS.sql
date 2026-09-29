@@ -34,6 +34,7 @@ create table if not exists public.mpsq_quests (
   id uuid primary key default gen_random_uuid(),
   npc_id uuid not null references public.mpsq_world_npcs(id) on delete cascade,
   title text not null check (length(title) between 1 and 80),
+  description text not null default '' check (length(description) <= 240),
   icon_item text not null default 'minecraft:paper',
   objective_item text not null,
   target_count integer not null check (target_count between 1 and 1000000),
@@ -43,6 +44,7 @@ create table if not exists public.mpsq_quests (
   created_at timestamptz not null default now(),
   check ((reward_points > 0 and reward_accessory_id is null) or (reward_points = 0 and reward_accessory_id is not null))
 );
+alter table public.mpsq_quests add column if not exists description text not null default '';
 create table if not exists public.mpsq_user_quests (
   client_id uuid not null references public.mpsq_clients(id) on delete cascade,
   quest_id uuid not null references public.mpsq_quests(id) on delete cascade,
