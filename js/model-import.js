@@ -1,4 +1,4 @@
-/* Converts static Blockbench, glTF and Wavefront OBJ models to the MPSQ client bundle. */
+/* Converts Blockbench, glTF and Wavefront OBJ models to the MPSQ client bundle. */
 async function importMpsqModel(file, pngFiles) {
   if(file.size>12000000)throw Error('Modell maximal 12 MB.');
   const text=await file.text(),ext=file.name.split('.').pop().toLowerCase(),source=ext==='obj'?null:JSON.parse(text);
@@ -33,11 +33,24 @@ async function importMpsqModel(file, pngFiles) {
   }
   const bb=ext==='bbmodel';if(!['bbmodel','json'].includes(ext))throw Error('Unterstützt werden .bbmodel, .json, .gltf oder .obj.');
   if(!Array.isArray(source.elements)||!source.elements.length)throw Error('Das Blockbench-Modell muss Würfelelemente enthalten.');
-  if(source.animations?.length)throw Error('Bitte Animationen vor dem Export entfernen.');
-  function checkGroups(groups){for(const g of groups??[]){if(typeof g!=='object')continue;if(g.rotation?.some(v=>v!==0))throw Error('Gruppenrotationen vor dem Export auf die Würfel anwenden.');checkGroups(g.children);}}if(bb)checkGroups(source.outliner);
+  if(source.animations?.length)throw Error('Blockbench-Animationsclips werden noch nicht unterstützt; bitte Animationen vor dem Export entfernen. Knochen und Gruppenrotationen bleiben erhalten.');
   const aliases={},pngMap=new Map((pngFiles??[]).map(p=>[p.name.replace(/\.png$/i,'').toLowerCase(),p]));
   if(bb){for(let i=0;i<(source.textures??[]).length;i++){const t=source.textures[i];let data=t.source;if(!data?.startsWith('data:image/png;base64,')){const png=pngMap.get((t.name??'').replace(/\.png$/i,'').toLowerCase());if(!png)throw Error('Fehlende Textur: '+t.name);data=await read(png);}textures[String(i)]=data;}}
   else{for(const [k,v] of Object.entries(source.textures??{})){if(v.startsWith('#')){aliases[k]=v.slice(1);continue;}const name=v.split('/').pop().replace(/\.png$/i,'').toLowerCase(),png=pngMap.get(name);if(!png)throw Error('PNG fehlt: '+name+'.png');textures[k]=await read(png);}for(const k of Object.keys(aliases)){let target=k,seen=new Set();while(aliases[target]){if(seen.has(target))throw Error('Zyklischer Texturverweis');seen.add(target);target=aliases[target];}if(!textures[target])throw Error('Texturverweis fehlt');textures[k]=textures[target];}}
-  const elements=source.elements.filter(e=>e.visibility!==false).map(e=>{if(e.type&&e.type!=='cube')throw Error('Dieses Blockbench-Meshformat wird nicht unterstützt. Bitte als GLTF oder OBJ exportieren.');const rotation=[0,0,0];let origin=e.origin??[8,8,8];if(bb){if(e.rotation)rotation.splice(0,3,...e.rotation);}else if(e.rotation){origin=e.rotation.origin??origin;rotation['xyz'.indexOf(e.rotation.axis)]=e.rotation.angle;if(e.rotation.rescale)throw Error('Rotation mit rescale bitte vor dem Export anwenden.');}const faces={};for(const [side,f]of Object.entries(e.faces??{})){if(f.texture==null)continue;const texture=String(f.texture).replace(/^#/,'');if(!textures[texture])throw Error('Textur fehlt für Fläche '+side);if(!f.uv)throw Error('Bitte explizite UV-Koordinaten exportieren.');const w=bb?(source.resolution?.width??16):16,h=bb?(source.resolution?.height??16):16;faces[side]={texture,uv:f.uv.map((v,i)=>v/(i%2?h:w)),rotation:f.rotation??0};}return {from:e.from,to:e.to,origin,rotation,faces};});
-  return {format:1,elements,meshes:[],textures};
+  const elements=[],elementByUuid=new Map();
+  for(const e of source.elements.filter(e=>e.visibility!==false)){
+    if(e.type&&e.type!=='cube')throw Error('Dieses Blockbench-Meshformat wird nicht unterstützt. Bitte als GLTF oder OBJ exportieren.');
+    const rotation=[0,0,0];let origin=e.origin??[8,8,8];if(bb){if(e.rotation)rotation.splice(0,3,...e.rotation);}else if(e.rotation){origin=e.rotation.origin??origin;rotation['xyz'.indexOf(e.rotation.axis)]=e.rotation.angle;if(e.rotation.rescale)throw Error('Rotation mit rescale bitte vor dem Export anwenden.');}
+    const faces={};for(const [side,f]of Object.entries(e.faces??{})){if(f.texture==null)continue;const texture=String(f.texture).replace(/^#/,'');if(!textures[texture])throw Error('Textur fehlt für Fläche '+side);if(!f.uv)throw Error('Bitte explizite UV-Koordinaten exportieren.');const w=bb?(source.resolution?.width??16):16,h=bb?(source.resolution?.height??16):16;faces[side]={texture,uv:f.uv.map((v,i)=>v/(i%2?h:w)),rotation:f.rotation??0};}
+    const index=elements.length;elements.push({from:e.from,to:e.to,origin,rotation,faces});if(e.uuid)elementByUuid.set(String(e.uuid),index);
+  }
+  const bones=[];
+  if(bb&&Array.isArray(source.outliner)){
+    const groups=new Map();function indexGroups(nodes,parent=null,depth=0){if(depth>32)throw Error('Blockbench-Hierarchie ist zu tief (maximal 32 Ebenen).');for(const node of nodes??[]){if(typeof node==='string')continue;if(!node||typeof node!=='object')continue;const id=String(node.uuid??'');if(id){if(groups.has(id))throw Error('Doppelte Blockbench-Gruppen-ID.');groups.set(id,{node,parent});}indexGroups(node.children,id||parent,depth+1);}}indexGroups(source.outliner);
+    const referenced=new Set();function build(node,depth=0){if(depth>32)throw Error('Blockbench-Hierarchie ist zu tief (maximal 32 Ebenen).');const result={name:String(node.name??'Bone').slice(0,80),origin:Array.isArray(node.origin)?node.origin:[8,8,8],rotation:Array.isArray(node.rotation)?node.rotation:[0,0,0],elements:[],children:[]};for(const child of node.children??[]){if(typeof child==='string'){if(elementByUuid.has(child)){result.elements.push(elementByUuid.get(child));referenced.add(child);}else if(groups.has(child)){const next=groups.get(child).node;if(next.parent!==node.uuid)continue;result.children.push(build(next,depth+1));}}else if(child&&typeof child==='object'&&Array.isArray(child.children))result.children.push(build(child,depth+1));}return result;}
+    for(const node of source.outliner){if(node&&typeof node==='object')bones.push(build(node));}
+    // Blockbench can leave cubes outside groups; keep those visible at the root.
+    const loose=[];for(const [uuid,index] of elementByUuid)if(!referenced.has(uuid))loose.push(index);if(loose.length)bones.push({name:'root',origin:[8,8,8],rotation:[0,0,0],elements:loose,children:[]});
+  }
+  return {format:2,elements,meshes:[],bones,textures};
 }
