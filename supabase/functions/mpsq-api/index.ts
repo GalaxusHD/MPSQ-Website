@@ -12,7 +12,7 @@ const out = (body: unknown, status = 200) => new Response(JSON.stringify(body), 
   headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store, no-cache, max-age=0" }
 });
 const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-const validNpcGlowColors = new Set(["none","#c3971f","#8027b0","#2149c4","#ec2f53","#087078","#c19701","#9146ff","#cf2020","#282323"]);
+const validNpcGlowColors = new Set(["none","minecraft:glowing","#c3971f","#8027b0","#2149c4","#ec2f53","#087078","#c19701","#9146ff","#cf2020","#282323"]);
 const code = () => Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 const token = () => crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
 const forbiddenChatFragments = ["arschloch", "bastard", "behindert", "fick", "fotze", "hurensohn", "missgeburt", "neger", "nigger", "scheisse", "schwuchtel", "spast", "wichser"];
