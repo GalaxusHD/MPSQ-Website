@@ -666,7 +666,7 @@ serve(async req => {
       if (trigger.action_type === "OPEN_LINK" && !fired?.cooldown) {
         const actionData = trigger.action_data ?? {};
         const screenId = String(actionData.screenId ?? "");
-        const screenResponse = await rest(`/mpsq_screens?id=eq.${encodeURIComponent(screenId)}&select=id,mode,playback_state`);
+        const screenResponse = await rest(`/mpsq_screens?id=eq.${encodeURIComponent(screenId)}&select=id,mode,cinema_url,playback_state,updated_at`);
         const screens = await screenResponse.json();
         const screen = Array.isArray(screens) ? screens[0] : null;
         const videoUrl = String(actionData.url ?? "");
@@ -676,12 +676,34 @@ serve(async req => {
         const oldState = screen.playback_state && typeof screen.playback_state === "object"
           ? screen.playback_state : {};
         const revision = Number.isSafeInteger(oldState.revision) ? oldState.revision : 0;
+        const now = Date.now();
+        const activeTrigger = String(oldState.activeTriggerId ?? "");
+        const sameTrigger = activeTrigger === String(trigger.id);
+        const wasPlaying = oldState.playing === true;
+        let playbackState: Record<string, unknown>;
+        let cinemaUrl = screen.cinema_url ?? "";
+
+        if (sameTrigger && wasPlaying) {
+          const storedPosition = Number.isFinite(Number(oldState.positionMs)) ? Number(oldState.positionMs) : 0;
+          const startedAt = typeof oldState.startedAtMs === "number"
+            ? oldState.startedAtMs
+            : Date.parse(String(screen.updated_at ?? ""));
+          const positionMs = storedPosition + (Number.isFinite(startedAt) ? Math.max(0, now - startedAt) : 0);
+          playbackState = { ...oldState, playing: false, positionMs, revision: revision + 1, activeTriggerId: trigger.id, startedAtMs: 0 };
+        } else {
+          const resumingSameVideo = sameTrigger && !wasPlaying && cinemaUrl === videoUrl;
+          const positionMs = resumingSameVideo && Number.isFinite(Number(oldState.positionMs))
+            ? Math.max(0, Number(oldState.positionMs)) : 0;
+          cinemaUrl = videoUrl;
+          playbackState = { ...oldState, playing: true, positionMs, revision: revision + 1, activeTriggerId: trigger.id, startedAtMs: now };
+        }
         const update = await rest(`/mpsq_screens?id=eq.${encodeURIComponent(screenId)}`, {
           method: "PATCH",
           headers: { Prefer: "return=representation" },
           body: JSON.stringify({
-            cinema_url: videoUrl,
-            playback_state: { playing: true, positionMs: 0, revision: revision + 1 }
+            cinema_url: cinemaUrl,
+            playback_state: playbackState,
+            updated_at: new Date(now).toISOString()
           })
         });
         if (!update.ok) return out({ error: "Bildschirm konnte nicht gestartet werden." }, update.status);
