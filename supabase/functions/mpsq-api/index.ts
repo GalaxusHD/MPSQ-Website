@@ -1080,11 +1080,32 @@ serve(async req => {
     }
 
     if (req.method === "GET" && path === "/screens") {
-      const ids = await screenIdsFor(clientId); if (!ids.length) return out([]);
+      const personalIds = await screenIdsFor(clientId);
+      const personalSet = new Set(personalIds);
+      const linkedIds = new Set<string>();
+      const server = (url.searchParams.get("server") ?? "").trim().toLowerCase();
+      const world = (url.searchParams.get("world") ?? "").trim();
+      if (/^(?:play\.)?mixelpixel\.net(?::\d+)?$/.test(server) && world.length > 0 && world.length <= 128) {
+        const triggersResponse = await rest(`/mpsq_action_triggers?server_id=eq.${encodeURIComponent(server)}&world_id=eq.${encodeURIComponent(world)}&enabled=eq.true&action_type=eq.OPEN_LINK&select=action_data&limit=200`);
+        const triggers = await triggersResponse.json();
+        if (!triggersResponse.ok) return out(triggers, triggersResponse.status);
+        for (const trigger of triggers) {
+          const screenId = trigger?.action_data?.screenId;
+          if (typeof screenId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(screenId)) linkedIds.add(screenId);
+        }
+      }
+      const ids = [...new Set([...personalIds, ...linkedIds])]; if (!ids.length) return out([]);
       const r = await rest(`/mpsq_screens?id=in.(${ids.join(",")})&select=*,mpsq_screen_cameras(camera_id,sort_order),mpsq_screen_groups(id,activation_code)&order=created_at.asc`);
       const screens = await r.json();
       if (!r.ok) return out(screens, r.status);
-      return out(screens.map((screen: any) => ({ ...screen, is_owner: screen.owner_id === clientId })));
+      return out(screens.filter((screen: any) => personalSet.has(screen.id) || (linkedIds.has(screen.id) && screen.mode === "KINO")).map((screen: any) => {
+        if (personalSet.has(screen.id)) return { ...screen, is_owner: screen.owner_id === clientId, is_trigger_linked_only: false };
+        const viewOnly = { ...screen };
+        delete viewOnly.owner_id;
+        delete viewOnly.activation_code;
+        delete viewOnly.mpsq_screen_groups;
+        return { ...viewOnly, owner_id: null, activation_code: null, mpsq_screen_groups: null, is_owner: false, is_trigger_linked_only: true };
+      }));
     }
     if (req.method === "POST" && path === "/screens") {
       const b = await json(req); const mode = b.mode === "CAMERA" ? "CAMERA" : "KINO";
