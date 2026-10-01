@@ -191,16 +191,19 @@ function validAction(type:string,data:any):boolean {
   case "PLAY_AUDIO":return validSoundSource(data);
   case "START_PLAYLIST":return Array.isArray(data.tracks)&&data.tracks.length>0&&data.tracks.length<=100&&(String(data.sourceType??"minecraft")==="minecraft"?data.tracks.every(sound):["mp3","mp4"].includes(String(data.sourceType))&&data.tracks.every((x:any)=>typeof x==="string"&&/^[a-z0-9_-]{1,64}$/i.test(x)));
   case "START_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256;
+  case "TOGGLE_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256;
   case "SHOW_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256;
+  case "TOGGLE_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256;
+  case "TOGGLE_AUDIO":return validSoundSource(data);
   case "SHOW_DIALOGUE":return Array.isArray(data.pages)&&data.pages.length>0&&data.pages.length<=12&&data.pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);
-  case "OPEN_LINK":return (data.platform==="youtube"||data.platform==="twitch")&&typeof data.screenId==="string"&&/^[0-9a-f-]{36}$/i.test(data.screenId);
+  case "OPEN_LINK":try{const u=new URL(data.url);return u.protocol==="https:"&&!u.username&&!u.password&&u.href.length<=2048&&typeof data.screenId==="string"&&/^[0-9a-f-]{36}$/i.test(data.screenId);}catch{return false;}
   case "STOP_AUDIO":case "HIDE_BOSSBAR":return true;
   default:return false;
  }
 }
 const NPC_GLOW_COLORS=["none","white","orange","magenta","light_blue","yellow","lime","pink","gray","light_gray","cyan","purple","blue","brown","green","red","black"];
-const NPC_ANIMATIONS=["none","bob","turn","pulse"];
-function validNpcPages(pages:any):boolean{return Array.isArray(pages)&&pages.length>=1&&pages.length<=12&&pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);}
+const NPC_ANIMATIONS=["none","bob","turn","pulse","nod","tilt","look_around","shake","wave"];
+function validNpcPages(pages:any):boolean{return Array.isArray(pages)&&pages.length<=12&&pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);}
 function validSoundSource(data:any):boolean{
   const kind=String(data.sourceType??"minecraft"),value=data.sound;
   if(kind==="minecraft")return typeof value==="string"&&/^(?:[a-z0-9_.-]+:)?[a-z0-9_./-]+$/.test(value)&&value.length<=128;
@@ -321,6 +324,7 @@ serve(async req => {
           for(const field of ["from","to","origin","rotation"])if(!Array.isArray(e[field])||e[field].length!==3||e[field].some((n:any)=>!Number.isFinite(n)||Math.abs(n)>1024))return out({error:"Ungültige Modellkoordinaten"},400);
           if(!e.faces||Object.values(e.faces).some((f:any)=>!bundle.textures[f.texture]||!Array.isArray(f.uv)||f.uv.length!==4||f.uv.some((v:any)=>!Number.isFinite(v))))return out({error:"Ungültige Modellflächen"},400);
         }
+        if(bundle.bones!==undefined){let boneCount=0;const validateBones=(bones:any[],depth=0):boolean=>{if(!Array.isArray(bones)||depth>32)return false;for(const bone of bones){if(++boneCount>256||!bone||typeof bone!=="object"||!Array.isArray(bone.origin)||bone.origin.length!==3||bone.origin.some((n:any)=>!Number.isFinite(n)||Math.abs(n)>1024)||!Array.isArray(bone.rotation)||bone.rotation.length!==3||bone.rotation.some((n:any)=>!Number.isFinite(n)||Math.abs(n)>3600)||!Array.isArray(bone.elements??[])||(bone.elements??[]).some((i:any)=>!Number.isInteger(i)||i<0||i>=elements.length)||!validateBones(bone.children??[],depth+1))return false;}return true;};if(!validateBones(bundle.bones))return out({error:"Ungültige Blockbench-Knochenhierarchie"},400);}
         let vertexTotal=0;
         for(const mesh of meshes){
           if(!mesh||!bundle.textures[mesh.texture]||!Array.isArray(mesh.vertices)||!Array.isArray(mesh.indices)||mesh.vertices.length>200000)return out({error:"Ungültiges Mesh"},400);
@@ -464,6 +468,10 @@ serve(async req => {
     if(path==="/me/points" && req.method==="GET"){
       const rows=await(await rest(`/mpsq_point_accounts?client_id=eq.${clientId}&select=balance&limit=1`)).json();return out({points:Number(rows?.[0]?.balance??0),currency:"MPSQ-Punkte"});
     }
+    if(path==="/me/points/grant" && req.method==="POST"){
+      const self=await teamProfile(clientId);if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);const body=await json(req),amount=Number(body.amount);if(!Number.isInteger(amount)||amount<1||amount>10000)return out({error:"Punkte: 1–10000"},400);
+      const r=await rest("/rpc/mpsq_grant_points",{method:"POST",body:JSON.stringify({p_client_id:clientId,p_amount:amount})}),result=await r.json();return out(r.ok?result:{error:result?.message??"Punkte konnten nicht gutgeschrieben werden"},r.ok?200:r.status);
+    }
     if(path==="/me/accessories/buy" && req.method==="POST"){
       const body=await json(req);if(!/^[0-9a-f-]{36}$/i.test(String(body.accessoryId??"")))return out({error:"Accessoire ungültig"},400);
       const r=await rest("/rpc/mpsq_buy_accessory",{method:"POST",body:JSON.stringify({p_client_id:clientId,p_accessory_id:body.accessoryId})});const result=await r.json();return out(r.ok?result:{error:result?.message??"Kauf fehlgeschlagen"},r.status);
@@ -473,7 +481,7 @@ serve(async req => {
       if(!b.server||!b.world||![b.x,b.y,b.z].every((n:any)=>Number.isInteger(n)&&Math.abs(n)<=30000000))return out({error:"Server, Welt oder NPC-Koordinaten fehlen oder sind ungültig"},400);
       if(b.remove===true){const r=await rest(`/mpsq_world_npcs?server_id=eq.${encodeURIComponent(String(b.server).toLowerCase())}&world_id=eq.${encodeURIComponent(String(b.world))}&x=eq.${b.x}&y=eq.${b.y}&z=eq.${b.z}`,{method:"DELETE"});return out({ok:r.ok},r.ok?200:r.status);}
       if(!/^[a-z0-9_-]{1,64}$/.test(String(b.assetId??"")))return out({error:"Ungültige NPC-Modell-ID"},400);
-      const asset=await(await rest(`/mpsq_assets?id=eq.${encodeURIComponent(b.assetId)}&kind=eq.model&category=eq.npc_model&select=id`)).json();if(!asset[0])return out({error:"NPC-Modell nicht gefunden oder nicht dem NPC-Bereich zugeordnet"},404);
+      const asset=await(await rest(`/mpsq_assets?id=eq.${encodeURIComponent(b.assetId)}&kind=in.(model,npc_skin)&category=in.(npc_model,npc_skin_normal,npc_skin_slim)&select=id,kind,category`)).json();if(!asset[0])return out({error:"NPC-Modell oder Skin nicht gefunden oder nicht dem NPC-Bereich zugeordnet"},404);
       const displayName=String(b.name??asset[0].id).trim().slice(0,64)||String(asset[0].id);const scale=Number(b.scale??1),glow=String(b.glowColor??"none"),animation=String(b.animation??"none"),pages=b.interactionData?.pages??["Hallo!"],yaw=Number(b.yaw??0),pitch=Number(b.pitch??0),facePlayer=b.facePlayer===true,positionX=Number(b.positionX??(b.x+0.5)),positionY=Number(b.positionY??b.y),positionZ=Number(b.positionZ??(b.z+0.5));
       if(!Number.isFinite(scale)||scale<0.25||scale>3||!Number.isFinite(yaw)||Math.abs(yaw)>3600||!Number.isFinite(pitch)||pitch < -90||pitch > 90||![positionX,positionY,positionZ].every((n:any)=>Number.isFinite(n)&&Math.abs(n)<=30000000)||!NPC_GLOW_COLORS.includes(glow)||!NPC_ANIMATIONS.includes(animation)||!validNpcPages(pages))return out({error:"NPC-Eigenschaften ungültig"},400);
       const taskType=String(b.taskType??"none");if(!["none","accessories","tutorial","quest"].includes(taskType))return out({error:"NPC-Aufgabe ungültig"},400);
@@ -494,9 +502,9 @@ serve(async req => {
       }
       const self=await teamProfile(clientId);if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);const b=await json(req),npcId=await(await rest(`/mpsq_world_npcs?id=eq.${id}&server_id=eq.${encodeURIComponent(String(b.server??"").toLowerCase())}&world_id=eq.${encodeURIComponent(String(b.world??""))}&select=id,task_type&limit=1`)).json();if(npcId[0]?.task_type!=="quest")return out({error:"Quest-NPC nicht gefunden"},404);
       if(b.action==="delete"&&/^[0-9a-f-]{36}$/i.test(String(b.questId??""))){const r=await rest(`/mpsq_quests?id=eq.${b.questId}&npc_id=eq.${id}`,{method:"DELETE"});return out({ok:r.ok},r.ok?200:r.status);}
-      const title=String(b.title??"").trim(),icon=String(b.iconItem??"minecraft:paper"),item=String(b.objectiveItem??""),amount=Number(b.targetCount),points=Number(b.rewardPoints??0),reward=String(b.rewardAccessoryId??"");
-      if(title.length<1||title.length>80||!/^[a-z0-9_.-]+:[a-z0-9_./-]+$/i.test(icon)||!/^[a-z0-9_.-]+:[a-z0-9_./-]+$/i.test(item)||!Number.isInteger(amount)||amount<1||amount>1000000||!Number.isInteger(points)||points<0||points>1000000||(points>0&&reward)||((points===0)&&! /^[0-9a-f-]{36}$/i.test(reward)))return out({error:"Quest-Daten ungültig"},400);
-      const payload={npc_id:id,title,icon_item:icon,objective_item:item,target_count:amount,reward_points:points,reward_accessory_id:points>0?null:reward};let r:Response;
+      const title=String(b.title??"").trim(),description=String(b.description??"").trim(),icon=String(b.iconItem??"minecraft:paper"),item=String(b.objectiveItem??""),amount=Number(b.targetCount),points=Number(b.rewardPoints??0),reward=String(b.rewardAccessoryId??"");
+      if(title.length<1||title.length>80||description.length<1||description.length>240||!/^[a-z0-9_.-]+:[a-z0-9_./-]+$/i.test(icon)||!/^[a-z0-9_.-]+:[a-z0-9_./-]+$/i.test(item)||!Number.isInteger(amount)||amount<1||amount>1000000||!Number.isInteger(points)||points<0||points>1000000||(points>0&&reward)||((points===0)&&! /^[0-9a-f-]{36}$/i.test(reward)))return out({error:"Quest-Daten ungültig"},400);
+      const payload={npc_id:id,title,description,icon_item:icon,objective_item:item,target_count:amount,reward_points:points,reward_accessory_id:points>0?null:reward};let r:Response;
       if(/^[0-9a-f-]{36}$/i.test(String(b.questId??"")))r=await rest(`/mpsq_quests?id=eq.${b.questId}&npc_id=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(payload)});
       else r=await rest("/mpsq_quests",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(payload)});
       return out(r.ok?await r.json():{error:await r.text()},r.status);
@@ -538,7 +546,7 @@ serve(async req => {
       const self=await teamProfile(clientId); if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);
       const body=await json(req), type=String(body.actionType??""), data=body.actionData??{};
       if(!validAction(type,data))return out({error:"Ungültige Aktionsdaten"},400);
-      const supported=["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","SHOW_DIALOGUE"];
+      const supported=["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","TOGGLE_AUDIO","TOGGLE_COUNTDOWN","TOGGLE_BOSSBAR","SHOW_DIALOGUE"];
       if(!supported.includes(type)||!body.serverId||!body.worldId||JSON.stringify(data).length>8192)return out({error:"Ungültige Aktion"},400);
       if(type==="START_COUNTDOWN"&&(!Number.isInteger(data.duration)||data.duration<1||data.duration>7200))return out({error:"Ungültige Dauer"},400);
       if(["START_COUNTDOWN","SHOW_BOSSBAR"].includes(type)&&typeof data.title!=="string")return out({error:"Titel fehlt"},400);
@@ -631,12 +639,13 @@ serve(async req => {
       const actionType = String(body.actionType ?? "").trim().toUpperCase(); const blockId = String(body.blockId ?? "").trim();
       const pos = body.position ?? {};
       if(!validAction(actionType,body.actionData??{}))return out({error:"Ungültige Aktionsdaten"},400);
-      const supported = ["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","SHOW_DIALOGUE","OPEN_LINK"];
+      const supported = ["PLAY_AUDIO","START_PLAYLIST","STOP_AUDIO","SHOW_BOSSBAR","START_COUNTDOWN","HIDE_BOSSBAR","TOGGLE_AUDIO","TOGGLE_COUNTDOWN","TOGGLE_BOSSBAR","SHOW_DIALOGUE","OPEN_LINK"];
       if (!supported.includes(actionType) || !String(body.serverId ?? "").trim()) return out({error:"Aktion oder Server ungültig"},400);
       if (!validRank(String(body.minimumRank ?? "offizier"))) return out({error:"Ungültiger Mindestrang"},400);
       if (JSON.stringify(body.actionData ?? {}).length > 8192) return out({error:"Aktionsdaten zu groß"},400);
       if (actionType === "START_COUNTDOWN" && (!Number.isInteger(body.actionData?.duration) || body.actionData.duration<1 || body.actionData.duration>7200)) return out({error:"Dauer: 1–7200 Sekunden"},400);
       if (!worldId || !blockId || !actionType || !Number.isInteger(pos.x) || !Number.isInteger(pos.y) || !Number.isInteger(pos.z)) return out({ error: "Welt, Block und Position sind erforderlich" }, 400);
+      if(actionType==="OPEN_LINK" && !/^https:\/\//i.test(String(body.actionData?.url??"")))return out({error:"HTTPS-Link erforderlich"},400);
       const row = { server_id: String(body.serverId ?? "").trim().toLowerCase(), world_id: worldId, pos_x: pos.x, pos_y: pos.y, pos_z: pos.z, block_id: blockId, object_type: String(body.objectType ?? "TRIGGER"), action_type: actionType, action_data: body.actionData ?? {}, minimum_rank: String(body.minimumRank ?? "offizier"), created_by: clientId, updated_at: new Date().toISOString() };
       const result = await rest("/mpsq_action_triggers?on_conflict=server_id,world_id,pos_x,pos_y,pos_z", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=representation" }, body: JSON.stringify(row) });
       return out(await result.json(), result.ok ? 201 : result.status);
@@ -645,26 +654,11 @@ serve(async req => {
       const triggerId = path.split("/")[2]; const triggerRows = await (await rest(`/mpsq_action_triggers?id=eq.${triggerId}&enabled=eq.true&select=*`)).json();
       const trigger = triggerRows[0]; if (!trigger) return out({ error: "Trigger nicht gefunden" }, 404);
       const self = await teamProfile(clientId); if (!validRank(trigger.minimum_rank) || level(permissionRank(self)) < level(trigger.minimum_rank)) return out({ error: "Keine Berechtigung" }, 403);
-      if(trigger.action_type==="OPEN_LINK"&&(!/^[0-9a-f-]{36}$/i.test(String(trigger.action_data?.screenId??""))||!(trigger.action_data?.platform==="youtube"||trigger.action_data?.platform==="twitch")))return out({error:"Bitte den Knopf mit einer Plattform und einem MPSQ-Bildschirm neu einrichten"},400);
       const body = await json(req);
       const result = await rest("/rpc/mpsq_fire_action", { method: "POST", body: JSON.stringify({
         p_trigger: trigger.id, p_actor: clientId, p_server: String(body.serverId ?? "").toLowerCase(), p_world: String(body.worldId ?? "")
       }) });
-      const fired=await result.json();
-      if(!result.ok)return out(fired,result.status);
-      if(!fired?.cooldown&&trigger.action_type==="OPEN_LINK"){
-        const data=trigger.action_data??{};
-        const screenId=String(data.screenId??"");
-        const platform=String(data.platform??"");
-        const screens=await (await rest(`/mpsq_screens?id=eq.${screenId}&owner_id=eq.${trigger.created_by}&mode=eq.KINO&select=id,playback_state`)).json();
-        if(!screens[0])return out({error:"MPSQ-Kinobildschirm nicht gefunden"},404);
-        const previous=screens[0].playback_state??{};
-        const cinemaUrl=platform==="youtube"?"https://www.youtube.com/@mixelpixelsquidgame5684":"https://www.twitch.tv/mixelpixelofficial";
-        const update=await rest(`/mpsq_screens?id=eq.${screenId}&owner_id=eq.${trigger.created_by}`,{method:"PATCH",body:JSON.stringify({cinema_url:cinemaUrl,playback_state:{playing:true,positionMs:0,revision:(Number(previous.revision)||0)+1},updated_at:new Date().toISOString()})});
-        if(!update.ok)return out({error:"MPSQ-Bildschirm konnte nicht gestartet werden"},update.status);
-      fired.action_data={...fired.action_data,screenId,platform};
-      }
-      return out(fired,result.status);
+      return out(await result.json(), result.status);
     }
 
     // MPSQ Team: public rank display plus private staff tools. All permission
