@@ -658,7 +658,35 @@ serve(async req => {
       const result = await rest("/rpc/mpsq_fire_action", { method: "POST", body: JSON.stringify({
         p_trigger: trigger.id, p_actor: clientId, p_server: String(body.serverId ?? "").toLowerCase(), p_world: String(body.worldId ?? "")
       }) });
-      return out(await result.json(), result.status);
+      const fired = await result.json();
+      if (!result.ok) return out(fired, result.status);
+      // OPEN_LINK changes shared screen state as well as emitting the action
+      // event. Without this write, the next /screens refresh replaces the
+      // client's temporary URL with the previously saved empty value.
+      if (trigger.action_type === "OPEN_LINK" && !fired?.cooldown) {
+        const actionData = trigger.action_data ?? {};
+        const screenId = String(actionData.screenId ?? "");
+        const screenResponse = await rest(`/mpsq_screens?id=eq.${encodeURIComponent(screenId)}&select=id,mode,playback_state`);
+        const screens = await screenResponse.json();
+        const screen = Array.isArray(screens) ? screens[0] : null;
+        const videoUrl = String(actionData.url ?? "");
+        if (!screen || screen.mode !== "KINO" || !validAction("OPEN_LINK", actionData)) {
+          return out({ error: "Der verknüpfte Kinobildschirm ist nicht verfügbar." }, 404);
+        }
+        const oldState = screen.playback_state && typeof screen.playback_state === "object"
+          ? screen.playback_state : {};
+        const revision = Number.isSafeInteger(oldState.revision) ? oldState.revision : 0;
+        const update = await rest(`/mpsq_screens?id=eq.${encodeURIComponent(screenId)}`, {
+          method: "PATCH",
+          headers: { Prefer: "return=representation" },
+          body: JSON.stringify({
+            cinema_url: videoUrl,
+            playback_state: { playing: true, positionMs: 0, revision: revision + 1 }
+          })
+        });
+        if (!update.ok) return out({ error: "Bildschirm konnte nicht gestartet werden." }, update.status);
+      }
+      return out(fired, result.status);
     }
 
     // MPSQ Team: public rank display plus private staff tools. All permission
