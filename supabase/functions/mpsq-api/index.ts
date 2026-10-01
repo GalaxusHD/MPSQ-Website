@@ -186,14 +186,15 @@ async function rootInfo() {
 }
 function validAction(type:string,data:any):boolean {
  if(!data||typeof data!=="object"||Array.isArray(data)||JSON.stringify(data).length>8192)return false;
+ const validBarColor=(v:any)=>v===undefined||["purple","pink","red"].includes(v);
  const sound=(v:any)=>typeof v==="string"&&/^(?:[a-z0-9_.-]+:)?[a-z0-9_./-]+$/.test(v)&&v.length<=128;
  switch(type){
   case "PLAY_AUDIO":return validSoundSource(data);
   case "START_PLAYLIST":return Array.isArray(data.tracks)&&data.tracks.length>0&&data.tracks.length<=100&&(String(data.sourceType??"minecraft")==="minecraft"?data.tracks.every(sound):["mp3","mp4"].includes(String(data.sourceType))&&data.tracks.every((x:any)=>typeof x==="string"&&/^[a-z0-9_-]{1,64}$/i.test(x)));
-  case "START_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256;
-  case "TOGGLE_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256;
-  case "SHOW_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256;
-  case "TOGGLE_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256;
+  case "START_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256&&validBarColor(data.color);
+  case "TOGGLE_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256&&validBarColor(data.color);
+  case "SHOW_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256&&validBarColor(data.color);
+  case "TOGGLE_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256&&validBarColor(data.color);
   case "TOGGLE_AUDIO":return validSoundSource(data);
   case "SHOW_DIALOGUE":return Array.isArray(data.pages)&&data.pages.length>0&&data.pages.length<=12&&data.pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);
   case "OPEN_LINK":try{const u=new URL(data.url);return u.protocol==="https:"&&!u.username&&!u.password&&u.href.length<=2048&&typeof data.screenId==="string"&&/^[0-9a-f-]{36}$/i.test(data.screenId);}catch{return false;}
@@ -666,7 +667,7 @@ serve(async req => {
       if (trigger.action_type === "OPEN_LINK" && !fired?.cooldown) {
         const actionData = trigger.action_data ?? {};
         const screenId = String(actionData.screenId ?? "");
-        const screenResponse = await rest(`/mpsq_screens?id=eq.${encodeURIComponent(screenId)}&select=id,mode,cinema_url,playback_state,updated_at`);
+        const screenResponse = await rest(`/mpsq_screens?id=eq.${encodeURIComponent(screenId)}&select=id,mode,playback_state`);
         const screens = await screenResponse.json();
         const screen = Array.isArray(screens) ? screens[0] : null;
         const videoUrl = String(actionData.url ?? "");
@@ -676,34 +677,12 @@ serve(async req => {
         const oldState = screen.playback_state && typeof screen.playback_state === "object"
           ? screen.playback_state : {};
         const revision = Number.isSafeInteger(oldState.revision) ? oldState.revision : 0;
-        const now = Date.now();
-        const activeTrigger = String(oldState.activeTriggerId ?? "");
-        const sameTrigger = activeTrigger === String(trigger.id);
-        const wasPlaying = oldState.playing === true;
-        let playbackState: Record<string, unknown>;
-        let cinemaUrl = screen.cinema_url ?? "";
-
-        if (sameTrigger && wasPlaying) {
-          const storedPosition = Number.isFinite(Number(oldState.positionMs)) ? Number(oldState.positionMs) : 0;
-          const startedAt = typeof oldState.startedAtMs === "number"
-            ? oldState.startedAtMs
-            : Date.parse(String(screen.updated_at ?? ""));
-          const positionMs = storedPosition + (Number.isFinite(startedAt) ? Math.max(0, now - startedAt) : 0);
-          playbackState = { ...oldState, playing: false, positionMs, revision: revision + 1, activeTriggerId: trigger.id, startedAtMs: 0 };
-        } else {
-          const resumingSameVideo = sameTrigger && !wasPlaying && cinemaUrl === videoUrl;
-          const positionMs = resumingSameVideo && Number.isFinite(Number(oldState.positionMs))
-            ? Math.max(0, Number(oldState.positionMs)) : 0;
-          cinemaUrl = videoUrl;
-          playbackState = { ...oldState, playing: true, positionMs, revision: revision + 1, activeTriggerId: trigger.id, startedAtMs: now };
-        }
         const update = await rest(`/mpsq_screens?id=eq.${encodeURIComponent(screenId)}`, {
           method: "PATCH",
           headers: { Prefer: "return=representation" },
           body: JSON.stringify({
-            cinema_url: cinemaUrl,
-            playback_state: playbackState,
-            updated_at: new Date(now).toISOString()
+            cinema_url: videoUrl,
+            playback_state: { playing: true, positionMs: 0, revision: revision + 1 }
           })
         });
         if (!update.ok) return out({ error: "Bildschirm konnte nicht gestartet werden." }, update.status);
@@ -1102,32 +1081,11 @@ serve(async req => {
     }
 
     if (req.method === "GET" && path === "/screens") {
-      const personalIds = await screenIdsFor(clientId);
-      const personalSet = new Set(personalIds);
-      const linkedIds = new Set<string>();
-      const server = (url.searchParams.get("server") ?? "").trim().toLowerCase();
-      const world = (url.searchParams.get("world") ?? "").trim();
-      if (/^(?:play\.)?mixelpixel\.net(?::\d+)?$/.test(server) && world.length > 0 && world.length <= 128) {
-        const triggersResponse = await rest(`/mpsq_action_triggers?server_id=eq.${encodeURIComponent(server)}&world_id=eq.${encodeURIComponent(world)}&enabled=eq.true&action_type=eq.OPEN_LINK&select=action_data&limit=200`);
-        const triggers = await triggersResponse.json();
-        if (!triggersResponse.ok) return out(triggers, triggersResponse.status);
-        for (const trigger of triggers) {
-          const screenId = trigger?.action_data?.screenId;
-          if (typeof screenId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(screenId)) linkedIds.add(screenId);
-        }
-      }
-      const ids = [...new Set([...personalIds, ...linkedIds])]; if (!ids.length) return out([]);
+      const ids = await screenIdsFor(clientId); if (!ids.length) return out([]);
       const r = await rest(`/mpsq_screens?id=in.(${ids.join(",")})&select=*,mpsq_screen_cameras(camera_id,sort_order),mpsq_screen_groups(id,activation_code)&order=created_at.asc`);
       const screens = await r.json();
       if (!r.ok) return out(screens, r.status);
-      return out(screens.filter((screen: any) => personalSet.has(screen.id) || (linkedIds.has(screen.id) && screen.mode === "KINO")).map((screen: any) => {
-        if (personalSet.has(screen.id)) return { ...screen, is_owner: screen.owner_id === clientId, is_trigger_linked_only: false };
-        const viewOnly = { ...screen };
-        delete viewOnly.owner_id;
-        delete viewOnly.activation_code;
-        delete viewOnly.mpsq_screen_groups;
-        return { ...viewOnly, owner_id: null, activation_code: null, mpsq_screen_groups: null, is_owner: false, is_trigger_linked_only: true };
-      }));
+      return out(screens.map((screen: any) => ({ ...screen, is_owner: screen.owner_id === clientId })));
     }
     if (req.method === "POST" && path === "/screens") {
       const b = await json(req); const mode = b.mode === "CAMERA" ? "CAMERA" : "KINO";
