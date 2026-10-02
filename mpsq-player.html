@@ -6,7 +6,7 @@
   <title>MPSQ Player</title>
   <style>
     html, body, #player, iframe { margin: 0; width: 100%; height: 100%; border: 0; background: #000; overflow: hidden; }
-    #caption-shield { position: fixed; inset: 0; z-index: 2; background: #000; }
+    #caption-shield { position: fixed; inset: 0; z-index: 2; background: #000; pointer-events: none; }
     #message { color: #fff; font: 16px sans-serif; display: grid; place-items: center; height: 100%; }
   </style>
 </head>
@@ -30,6 +30,57 @@
       captionShield.id = "caption-shield";
       document.body.appendChild(captionShield);
 
+      let captionCheckTimer = 0;
+      let playingSince = 0;
+      let captionsOffSince = 0;
+      let shieldReleased = false;
+
+      function disableCaptions(player) {
+        try {
+          const modules = player.getOptions();
+          if (Array.isArray(modules) && modules.includes("captions")) {
+            player.unloadModule("captions");
+          }
+        } catch (_) {
+          // The player may not have finished exposing its options yet.
+        }
+        try {
+          // Also cover the case where YouTube has loaded the captions module
+          // but getOptions() has not reported the module change yet.
+          player.unloadModule("captions");
+        } catch (_) {
+          // Retried from onApiChange and while the player is starting.
+        }
+      }
+
+      function checkCaptionsUntilOff(player) {
+        disableCaptions(player);
+        let loaded = true;
+        try {
+          loaded = player.getOptions().includes("captions");
+        } catch (_) {
+          // Keep the shield up until the IFrame API can confirm the state.
+        }
+
+        if (loaded) {
+          captionsOffSince = 0;
+        } else if (!captionsOffSince) {
+          captionsOffSince = Date.now();
+        }
+
+        const stableOff = captionsOffSince && Date.now() - captionsOffSince >= 1000;
+        const playedLongEnough = playingSince && Date.now() - playingSince >= 1000;
+        if (!shieldReleased && !loaded && stableOff && playedLongEnough) {
+          shieldReleased = true;
+          captionShield.remove();
+          window.clearTimeout(captionCheckTimer);
+          return;
+        }
+        if (!shieldReleased) {
+          captionCheckTimer = window.setTimeout(() => checkCaptionsUntilOff(player), 100);
+        }
+      }
+
       window.onYouTubeIframeAPIReady = () => {
         new YT.Player("player", {
           videoId,
@@ -46,20 +97,26 @@
           },
           events: {
             onReady(event) {
-              // Chromium can remember the previous muted state. Explicitly undo it.
               event.target.unMute();
               event.target.setVolume(100);
-              // cc_load_policy=0 sets the default, but YouTube can remember a
-              // viewer's caption preference. Explicitly unload that module.
-              event.target.unloadModule("captions");
+              disableCaptions(event.target);
               event.target.playVideo();
+            },
+            onApiChange(event) {
+              // YouTube may add captions after onReady, for example after
+              // restoring the viewer's remembered caption preference.
+              disableCaptions(event.target);
+              if (playingSince && !shieldReleased) checkCaptionsUntilOff(event.target);
             },
             onStateChange(event) {
               if (event.data === YT.PlayerState.PLAYING) {
-                event.target.unloadModule("captions");
-                // A screen Start/Stop creates a fresh player. Keep its first
-                // frames covered until playback has started with captions off.
-                requestAnimationFrame(() => requestAnimationFrame(() => captionShield.remove()));
+                playingSince = Date.now();
+                captionsOffSince = 0;
+                disableCaptions(event.target);
+                window.clearTimeout(captionCheckTimer);
+                checkCaptionsUntilOff(event.target);
+              } else {
+                window.clearTimeout(captionCheckTimer);
               }
             }
           }
