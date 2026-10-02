@@ -45,7 +45,15 @@
               // Chromium can remember the previous muted state. Explicitly undo it.
               event.target.unMute();
               event.target.setVolume(100);
+              // cc_load_policy=0 sets the default, but YouTube can remember a
+              // viewer's caption preference. Explicitly unload that module.
+              event.target.unloadModule("captions");
               event.target.playVideo();
+            },
+            onStateChange(event) {
+              if (event.data === YT.PlayerState.PLAYING) {
+                event.target.unloadModule("captions");
+              }
             }
           }
         });
