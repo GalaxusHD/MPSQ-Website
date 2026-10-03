@@ -31,9 +31,17 @@
       document.body.appendChild(captionShield);
 
       let captionCheckTimer = 0;
-      let playingSince = 0;
+      let shieldFallbackTimer = 0;
       let captionsOffSince = 0;
       let shieldReleased = false;
+
+      function releaseCaptionShield() {
+        if (shieldReleased) return;
+        shieldReleased = true;
+        captionShield.remove();
+        window.clearTimeout(captionCheckTimer);
+        window.clearTimeout(shieldFallbackTimer);
+      }
 
       function disableCaptions(player) {
         try {
@@ -69,11 +77,8 @@
         }
 
         const stableOff = captionsOffSince && Date.now() - captionsOffSince >= 1000;
-        const playedLongEnough = playingSince && Date.now() - playingSince >= 1000;
-        if (!shieldReleased && !loaded && stableOff && playedLongEnough) {
-          shieldReleased = true;
-          captionShield.remove();
-          window.clearTimeout(captionCheckTimer);
+        if (!shieldReleased && !loaded && stableOff) {
+          releaseCaptionShield();
           return;
         }
         if (!shieldReleased) {
@@ -101,22 +106,24 @@
               event.target.setVolume(100);
               disableCaptions(event.target);
               event.target.playVideo();
+              // Start caption verification as soon as the player is ready.
+              // Waiting only for PLAYING can leave this full-screen black
+              // shield in place forever in embedded MCEF browsers.
+              checkCaptionsUntilOff(event.target);
+              shieldFallbackTimer = window.setTimeout(releaseCaptionShield, 5000);
             },
             onApiChange(event) {
               // YouTube may add captions after onReady, for example after
               // restoring the viewer's remembered caption preference.
               disableCaptions(event.target);
-              if (playingSince && !shieldReleased) checkCaptionsUntilOff(event.target);
+              if (!shieldReleased) checkCaptionsUntilOff(event.target);
             },
             onStateChange(event) {
               if (event.data === YT.PlayerState.PLAYING) {
-                playingSince = Date.now();
                 captionsOffSince = 0;
                 disableCaptions(event.target);
                 window.clearTimeout(captionCheckTimer);
                 checkCaptionsUntilOff(event.target);
-              } else {
-                window.clearTimeout(captionCheckTimer);
               }
             }
           }
