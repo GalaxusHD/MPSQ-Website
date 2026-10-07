@@ -186,15 +186,14 @@ async function rootInfo() {
 }
 function validAction(type:string,data:any):boolean {
  if(!data||typeof data!=="object"||Array.isArray(data)||JSON.stringify(data).length>8192)return false;
- const validBarColor=(v:any)=>v===undefined||["purple","pink","red"].includes(v);
  const sound=(v:any)=>typeof v==="string"&&/^(?:[a-z0-9_.-]+:)?[a-z0-9_./-]+$/.test(v)&&v.length<=128;
  switch(type){
   case "PLAY_AUDIO":return validSoundSource(data);
   case "START_PLAYLIST":return Array.isArray(data.tracks)&&data.tracks.length>0&&data.tracks.length<=100&&(String(data.sourceType??"minecraft")==="minecraft"?data.tracks.every(sound):["mp3","mp4"].includes(String(data.sourceType))&&data.tracks.every((x:any)=>typeof x==="string"&&/^[a-z0-9_-]{1,64}$/i.test(x)));
-  case "START_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256&&validBarColor(data.color);
-  case "TOGGLE_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256&&validBarColor(data.color);
-  case "SHOW_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256&&validBarColor(data.color);
-  case "TOGGLE_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256&&validBarColor(data.color);
+  case "START_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256;
+  case "TOGGLE_COUNTDOWN":return Number.isInteger(data.duration)&&data.duration>=1&&data.duration<=7200&&typeof data.title==="string"&&data.title.length<=256;
+  case "SHOW_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256;
+  case "TOGGLE_BOSSBAR":return typeof data.title==="string"&&data.title.length<=256;
   case "TOGGLE_AUDIO":return validSoundSource(data);
   case "SHOW_DIALOGUE":return Array.isArray(data.pages)&&data.pages.length>0&&data.pages.length<=12&&data.pages.every((p:any)=>typeof p==="string"&&p.trim().length>0&&p.length<=240);
   case "OPEN_LINK":try{const u=new URL(data.url);return u.protocol==="https:"&&!u.username&&!u.password&&u.href.length<=2048&&typeof data.screenId==="string"&&/^[0-9a-f-]{36}$/i.test(data.screenId);}catch{return false;}
@@ -439,7 +438,7 @@ serve(async req => {
       if(!Array.isArray(assets))return out({error:"Accessoirekatalog nicht verfügbar"},502);
       const defs=await(await rest("/mpsq_accessories?select=id,accessory_key,display_name,model_id,description,price_points&order=display_name.asc&limit=500")).json();
       const owned=await(await rest(`/mpsq_user_accessories?client_id=eq.${clientId}&select=accessory_id`)).json(),ownedIds=new Set(Array.isArray(owned)?owned.map((x:any)=>x.accessory_id):[]);
-      return out(assets.map((a:any)=>{const d=defs.find((x:any)=>x.model_id===a.id);return {id:a.id,asset_id:a.id,accessory_id:d?.id??null,display_name:d?.display_name??a.display_name??a.id,description:d?.description??null,price_points:Number(d?.price_points??500),owned:ownedIds.has(d?.id),category:a.category,filename:a.filename,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${a.path}`};}));
+      return out(assets.map((a:any)=>{const d=defs.find((x:any)=>x.model_id===a.id);return {id:a.id,asset_id:a.id,accessory_id:d?.id??null,accessory_key:d?.accessory_key??null,display_name:d?.display_name??a.display_name??a.id,description:d?.description??null,price_points:Number(d?.price_points??500),owned:ownedIds.has(d?.id),category:a.category,filename:a.filename,url:`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${a.path}`};}));
     }
     if(path==="/models/catalog" && req.method==="GET"){
       const self=await teamProfile(clientId);if(level(permissionRank(self))<level("offizier"))return out({error:"Keine Berechtigung"},403);
@@ -532,7 +531,7 @@ serve(async req => {
       return out(r.ok?{ok:true}:{error:"Accessoire nicht freigeschaltet"},r.ok?200:403);
     }
     if(path==="/accessory-wearers" && req.method==="GET"){
-      const r=await rest("/mpsq_user_accessories?equipped=eq.true&select=client_id,mpsq_accessories(model_id)");
+      const r=await rest("/mpsq_user_accessories?equipped=eq.true&select=client_id,mpsq_accessories(model_id,accessory_key)");
       if(!r.ok)return out({error:"Accessoires nicht verfügbar"},r.status);
       const worn=await r.json();
       const ids=[...new Set(worn.map((w:any)=>w.client_id))];
@@ -540,8 +539,8 @@ serve(async req => {
       const assets=await(await rest("/mpsq_assets?kind=eq.model&category=in.(accessory,shared)&select=id,path")).json();
       return out(worn.map((w:any)=>{
         const asset=assets.find((a:any)=>a.id===w.mpsq_accessories?.model_id);
-        return {name:users.find((u:any)=>u.id===w.client_id)?.display_name,url:asset?`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${asset.path}`:null};
-      }).filter((w:any)=>w.name&&w.url));
+        return {name:users.find((u:any)=>u.id===w.client_id)?.display_name,accessory_key:w.mpsq_accessories?.accessory_key??null,url:asset?`${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/mpsq-assets/${asset.path}`:null};
+      }).filter((w:any)=>w.name&&(w.url||w.accessory_key)));
     }
     if(path === "/actions" && req.method === "POST") {
       const self=await teamProfile(clientId); if(!canEditEvent(self))return out({error:"Keine Berechtigung"},403);
